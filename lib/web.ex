@@ -30,7 +30,7 @@ defmodule MediaWatchWeb do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/media_watch_web/templates",
+        root: "lib/web/templates",
         namespace: MediaWatchWeb
 
       # Import convenience functions from controllers
