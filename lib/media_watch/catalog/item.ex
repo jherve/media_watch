@@ -2,18 +2,18 @@ defmodule MediaWatch.Catalog.Item do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Item
-  alias MediaWatch.Catalog.Podcast
+  alias MediaWatch.Catalog.Show
 
   schema "watched_items" do
-    has_one :podcast, Podcast, foreign_key: :id
+    has_one :show, Show, foreign_key: :id
   end
 
   @doc false
   def changeset(item \\ %Item{}, attrs) do
     item
     |> cast(attrs, [:id])
-    |> cast_assoc(:podcast)
-    |> validate_required_inclusion([:podcast])
+    |> cast_assoc(:show)
+    |> validate_required_inclusion([:show])
   end
 
   def validate_required_inclusion(changeset, fields) do

@@ -13,9 +13,9 @@
 defmodule Utils do
   require Logger
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.{Item, Podcast}
+  alias MediaWatch.Catalog.{Item, Show}
 
-  def podcast(attrs), do: struct(Podcast, attrs) |> Map.put(:item, %Item{id: nil})
+  def as_item(show = %Show{}), do: %Item{show: show}
 
   def insert(item) do
     with {:ok, inserted} <- item |> Repo.insert(), do: inserted
@@ -25,11 +25,12 @@ defmodule Utils do
   end
 end
 
+alias MediaWatch.Catalog.{Item, Show}
 alias MediaWatch.Repo
 
 [
-  %{name: "L'invité de 8h20'", url: "http://radiofrance-podcast.net/podcast09/rss_10239.xml"},
-  %{name: "L'invité de RTL", url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}
+  %Show{name: "L'invité de 8h20'", url: "https://www.franceinter.fr/emissions/l-invite"},
+  %Show{name: "L'invité de RTL", url: "https://www.rtl.fr/programmes/l-invite-de-rtl"}
 ]
-|> Enum.map(&Utils.podcast/1)
+|> Enum.map(&Utils.as_item/1)
 |> Enum.each(&Utils.insert/1)

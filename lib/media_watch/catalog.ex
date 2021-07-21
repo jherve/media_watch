@@ -1,6 +1,6 @@
 defmodule MediaWatch.Catalog do
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.Podcast
+  alias MediaWatch.Catalog.Show
 
-  def list_all(), do: Podcast |> Repo.all()
+  def list_all(), do: Show |> Repo.all()
 end
