@@ -14,9 +14,8 @@ defmodule MediaWatch.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: MediaWatch.PubSub},
       # Start the Endpoint (http/https)
-      MediaWatchWeb.Endpoint
-      # Start a worker by calling: MediaWatch.Worker.start_link(arg)
-      # {MediaWatch.Worker, arg}
+      MediaWatchWeb.Endpoint,
+      {Finch, name: MediaWatch.Finch}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -16,4 +16,6 @@ defmodule MediaWatch.Snapshots.Strategy do
     |> cast(attrs, [:id])
     |> cast_assoc(:rss_feed)
   end
+
+  def get_actual_strategy(%Strategy{rss_feed: feed}) when not is_nil(feed), do: feed
 end
