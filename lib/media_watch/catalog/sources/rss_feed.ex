@@ -1,14 +1,14 @@
-defmodule MediaWatch.Snapshots.Strategy.RssFeed do
+defmodule MediaWatch.Catalog.Source.RssFeed do
   @behaviour MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Http
-  alias MediaWatch.Snapshots.Strategy
+  alias MediaWatch.Catalog.Source
   alias __MODULE__, as: RssFeed
 
   schema "rss_feeds" do
     field :url, :string
-    belongs_to :strategy, Strategy, foreign_key: :id, define_field: false
+    belongs_to :strategy, Source, foreign_key: :id, define_field: false
   end
 
   @doc false

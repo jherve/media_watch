@@ -23,21 +23,21 @@ defmodule Utils do
 end
 
 alias MediaWatch.Catalog.{Item, Show}
-alias MediaWatch.Snapshots.Strategy
-alias MediaWatch.Snapshots.Strategy.RssFeed
+alias MediaWatch.Catalog.Source
+alias MediaWatch.Catalog.Source.RssFeed
 alias MediaWatch.Repo
 
 [
   %Item{
     show: %Show{name: "L'invité de 8h20'", url: "https://www.franceinter.fr/emissions/l-invite"},
-    strategies: [
-      %Strategy{rss_feed: %RssFeed{url: "http://radiofrance-podcast.net/podcast09/rss_10239.xml"}}
+    sources: [
+      %Source{rss_feed: %RssFeed{url: "http://radiofrance-podcast.net/podcast09/rss_10239.xml"}}
     ]
   },
   %Item{
     show: %Show{name: "L'invité de RTL", url: "https://www.rtl.fr/programmes/l-invite-de-rtl"},
-    strategies: [
-      %Strategy{rss_feed: %RssFeed{url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}}
+    sources: [
+      %Source{rss_feed: %RssFeed{url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}}
     ]
   }
 ]
