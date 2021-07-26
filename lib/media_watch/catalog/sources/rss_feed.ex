@@ -21,6 +21,6 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
   end
 
   @impl true
-  def get_snapshot(%RssFeed{url: url}),
+  def make_snapshot(%RssFeed{url: url}),
     do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{xml: %{content: content}}})
 end

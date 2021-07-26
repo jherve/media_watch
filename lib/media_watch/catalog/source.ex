@@ -20,9 +20,9 @@ defmodule MediaWatch.Catalog.Source do
   end
 
   @impl true
-  def get_snapshot(source) do
+  def make_snapshot(source) do
     with actual = %struct{} <- source |> get_actual_source,
-         {:ok, attrs} <- actual |> struct.get_snapshot() do
+         {:ok, attrs} <- actual |> struct.make_snapshot() do
       {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}
     end
   end

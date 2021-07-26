@@ -9,5 +9,5 @@ defmodule MediaWatch.Snapshots.Job do
 
   @impl true
   def run(%Job{source: source}),
-    do: with({:ok, cs} <- Source.get_snapshot(source), do: cs |> Repo.insert())
+    do: with({:ok, cs} <- Source.make_snapshot(source), do: cs |> Repo.insert())
 end
