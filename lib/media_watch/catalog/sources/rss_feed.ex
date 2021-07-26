@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
   import Ecto.Changeset
   alias MediaWatch.Http
   alias MediaWatch.Catalog.Source
-  alias MediaWatch.Snapshots.Snapshot
+  alias MediaWatch.Snapshots.Snapshot.Xml
   alias __MODULE__, as: RssFeed
 
   schema "rss_feeds" do
@@ -22,5 +22,5 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
 
   @impl true
   def get_snapshot(%RssFeed{url: url}),
-    do: with({:ok, content} <- Http.get_body(url), do: %{xml: %{content: content}})
+    do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{xml: %{content: content}}})
 end

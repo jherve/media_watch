@@ -20,12 +20,12 @@ defmodule MediaWatch.Catalog.Source do
   end
 
   @impl true
-  def get_snapshot(source),
-    do:
-      with(
-        actual = %struct{} <- source |> get_actual_source,
-        do: Snapshot.changeset(%Snapshot{source: source}, actual |> struct.get_snapshot())
-      )
+  def get_snapshot(source) do
+    with actual = %struct{} <- source |> get_actual_source,
+         {:ok, attrs} <- actual |> struct.get_snapshot() do
+      {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}
+    end
+  end
 
   defp get_actual_source(%Source{rss_feed: feed}) when not is_nil(feed), do: feed
 end
