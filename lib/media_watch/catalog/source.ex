@@ -1,8 +1,10 @@
 defmodule MediaWatch.Catalog.Source do
+  @behaviour MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Item
   alias MediaWatch.Catalog.Source.RssFeed
+  alias MediaWatch.Snapshots.Snapshot
   alias __MODULE__, as: Source
 
   schema "sources" do
@@ -17,5 +19,13 @@ defmodule MediaWatch.Catalog.Source do
     |> cast_assoc(:rss_feed)
   end
 
-  def get_actual_source(%Source{rss_feed: feed}) when not is_nil(feed), do: feed
+  @impl true
+  def get_snapshot(source),
+    do:
+      with(
+        actual = %struct{} <- source |> get_actual_source,
+        do: Snapshot.changeset(%Snapshot{source: source}, actual |> struct.get_snapshot())
+      )
+
+  defp get_actual_source(%Source{rss_feed: feed}) when not is_nil(feed), do: feed
 end
