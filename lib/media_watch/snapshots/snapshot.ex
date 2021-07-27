@@ -1,4 +1,5 @@
 defmodule MediaWatch.Snapshots.Snapshot do
+  @behaviour MediaWatch.Parsing.Parsable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
@@ -19,4 +20,7 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:xml)
   end
+
+  @impl true
+  def parse(%Snapshot{xml: xml}) when not is_nil(xml), do: xml |> Xml.parse()
 end
