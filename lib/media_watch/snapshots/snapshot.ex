@@ -4,6 +4,7 @@ defmodule MediaWatch.Snapshots.Snapshot do
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot.Xml
+  alias MediaWatch.Parsing.ParsedSnapshot
   alias __MODULE__, as: Snapshot
 
   schema "snapshots" do
@@ -22,5 +23,9 @@ defmodule MediaWatch.Snapshots.Snapshot do
   end
 
   @impl true
-  def parse(%Snapshot{xml: xml}) when not is_nil(xml), do: xml |> Xml.parse()
+  def parse(snap = %Snapshot{xml: xml}) when not is_nil(xml) do
+    with {:ok, attrs} <- xml |> Xml.parse() do
+      {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, attrs)}
+    end
+  end
 end

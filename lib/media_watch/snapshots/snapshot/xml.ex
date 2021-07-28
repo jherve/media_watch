@@ -18,7 +18,7 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
   @impl true
   def parse(%Xml{content: content}) do
     with {:ok, parsed} <- content |> ElixirFeedParser.parse(),
-         do: {:ok, parsed |> prune_root |> prune_entries}
+         do: {:ok, %{data: parsed |> prune_root |> prune_entries}}
   end
 
   defp prune_entries(parsed = %{entries: entries}) when is_map(parsed),
