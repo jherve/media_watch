@@ -6,3 +6,5 @@ alias MediaWatch.Catalog.Source
 alias MediaWatch.Catalog.Source.RssFeed
 alias MediaWatch.Snapshots.Snapshot
 alias MediaWatch.Snapshots.Snapshot.Xml
+alias MediaWatch.Parsing
+alias MediaWatch.Parsing.ParsedSnapshot
