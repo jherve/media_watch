@@ -2,7 +2,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Analysis.Facet.ShowOccurrence
+  alias MediaWatch.Analysis.Facet
   alias __MODULE__, as: ParsedSnapshot
   @primary_key false
 
@@ -22,7 +22,9 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(%ParsedSnapshot{data: data, snapshot: %{xml: xml}}) when not is_nil(xml) do
-    data |> Map.get("entries") |> Enum.map(&ShowOccurrence.changeset/1)
+  def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{xml: xml}}) when not is_nil(xml) do
+    data
+    |> Map.get("entries")
+    |> Enum.map(&Facet.changeset(%Facet{parsed_snapshot: parsed}, %{show_occurrence: &1}))
   end
 end
