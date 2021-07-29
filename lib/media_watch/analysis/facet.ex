@@ -6,6 +6,9 @@ defmodule MediaWatch.Analysis.Facet do
   alias __MODULE__, as: Facet
 
   schema "facets" do
+    field :date_start, :utc_datetime
+    field :date_end, :utc_datetime
+
     belongs_to :parsed_snapshot, ParsedSnapshot
     has_one :show_occurrence, ShowOccurrence, foreign_key: :id
 
@@ -15,7 +18,8 @@ defmodule MediaWatch.Analysis.Facet do
   @doc false
   def changeset(facet \\ %Facet{}, attrs) do
     facet
-    |> cast(attrs, [:id])
+    |> cast(attrs, [:id, :date_start, :date_end])
+    |> validate_required([:date_start, :date_end])
     |> cast_assoc(:parsed_snapshot, required: true)
     |> cast_assoc(:show_occurrence)
   end

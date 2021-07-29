@@ -25,6 +25,14 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{xml: xml}}) when not is_nil(xml) do
     data
     |> Map.get("entries")
-    |> Enum.map(&Facet.changeset(%Facet{parsed_snapshot: parsed}, %{show_occurrence: &1}))
+    |> Enum.map(fn entry = %{"updated" => date} ->
+      relevant_date = date |> Timex.parse!("{ISO:Extended}")
+
+      Facet.changeset(%Facet{parsed_snapshot: parsed}, %{
+        date_start: relevant_date,
+        date_end: relevant_date,
+        show_occurrence: entry
+      })
+    end)
   end
 end
