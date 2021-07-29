@@ -1,4 +1,4 @@
-defmodule MediaWatch.Analysis.Facets.ShowOccurrence do
+defmodule MediaWatch.Analysis.Facet.ShowOccurrence do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: ShowOccurrence
@@ -13,9 +13,5 @@ defmodule MediaWatch.Analysis.Facets.ShowOccurrence do
   def changeset(occurrence \\ %ShowOccurrence{}, attrs) do
     occurrence
     |> cast(attrs, [:title, :description, :url])
-  end
-
-  def slice(parsed = %{data: data}) do
-    data |> Map.get("entries") |> Enum.map(&changeset/1)
   end
 end
