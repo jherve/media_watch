@@ -1,20 +1,11 @@
 # MediaWatch
 
-To start your Phoenix server:
+## Basic commands
 
-  * Install dependencies with `mix deps.get`
-  * Create and migrate your database with `mix ecto.setup`
-  * Install Node.js dependencies with `npm install` inside the `assets` directory
-  * Start Phoenix endpoint with `mix phx.server`
+Add sources : `mix run priv/repo/seeds.exs`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Make snapshots : `Snapshots.get_jobs() |> Snapshots.run_jobs`
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+Run snapshots' parsing: `Parsing.get_jobs |> Parsing.run_jobs`
 
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+Run analysis of a parsed snapshot : `Parsing.get_all |> List.first |> MediaWatch.Parsing.ParsedSnapshot.slice |> Enum.map(& Repo.insert/1)`
