@@ -1,4 +1,4 @@
-defmodule MediaWatch.Repo.Migrations.AddSnapshotStrategies do
+defmodule MediaWatch.Repo.Migrations.AddSources do
   use Ecto.Migration
 
   def change do
