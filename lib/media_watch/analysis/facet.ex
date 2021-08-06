@@ -25,5 +25,6 @@ defmodule MediaWatch.Analysis.Facet do
     |> cast_assoc(:parsed_snapshot, required: true)
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:show_occurrence)
+    |> unique_constraint([:source_id, :date_start, :date_end])
   end
 end

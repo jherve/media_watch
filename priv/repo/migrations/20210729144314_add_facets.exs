@@ -11,6 +11,8 @@ defmodule MediaWatch.Repo.Migrations.AddFacets do
       timestamps(type: :utc_datetime)
     end
 
+    create unique_index(:facets, [:source_id, :date_start, :date_end])
+
     create table(:show_occurrences, primary_key: false) do
       add :id, references(:facets, column: :id), primary_key: true
 
