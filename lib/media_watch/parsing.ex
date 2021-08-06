@@ -7,5 +7,5 @@ defmodule MediaWatch.Parsing do
 
   def run_jobs(jobs) when is_list(jobs), do: jobs |> Enum.map(&Job.run/1)
 
-  def get_all(), do: ParsedSnapshot |> Repo.all() |> Repo.preload(snapshot: [:xml])
+  def get_all(), do: ParsedSnapshot |> Repo.all() |> Repo.preload(snapshot: [:xml, :source])
 end

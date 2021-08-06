@@ -23,13 +23,13 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{xml: xml}}) when not is_nil(xml) do
+  def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}}) when not is_nil(xml) do
     data
     |> Map.get("entries")
     |> Enum.map(fn entry = %{"updated" => date} ->
       relevant_date = date |> Timex.parse!("{ISO:Extended}")
 
-      Facet.changeset(%Facet{parsed_snapshot: parsed}, %{
+      Facet.changeset(%Facet{parsed_snapshot: parsed, source: source}, %{
         date_start: relevant_date,
         date_end: relevant_date,
         show_occurrence: entry

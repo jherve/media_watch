@@ -3,6 +3,7 @@ defmodule MediaWatch.Repo.Migrations.AddFacets do
 
   def change do
     create table(:facets) do
+      add :source_id, references(:sources, column: :id), null: false
       add :parsed_snapshot_id, references(:parsed_snapshots, column: :id), null: false
       add :date_start, :utc_datetime, null: false
       add :date_end, :utc_datetime, null: false
