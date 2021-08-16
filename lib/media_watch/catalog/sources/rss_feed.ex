@@ -4,7 +4,6 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
   import Ecto.Changeset
   alias MediaWatch.Http
   alias MediaWatch.Catalog.Source
-  alias MediaWatch.Snapshots.Snapshot.Xml
   alias __MODULE__, as: RssFeed
 
   schema "rss_feeds" do
