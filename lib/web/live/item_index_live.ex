@@ -13,7 +13,11 @@ defmodule MediaWatchWeb.ItemIndexLive do
 
       <ul>
         <%= for i <- @items do %>
-          <li> <%= i.show.name %></li>
+          <li>
+              <%= link to: MediaWatchWeb.Router.Helpers.item_path(MediaWatchWeb.Endpoint, :detail, i.id) do %>
+                <%= i.show.name %>
+              <% end %>
+          </li>
         <% end %>
       </ul>
     """

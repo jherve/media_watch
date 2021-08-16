@@ -19,6 +19,7 @@ defmodule MediaWatchWeb.Router do
 
     live "/", PageLive, :index
     live "/items", ItemIndexLive, :index
+    live "/items/:id", ItemLive, :detail
   end
 
   # Other scopes may use custom stacks.
