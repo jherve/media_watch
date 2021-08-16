@@ -20,5 +20,14 @@ defmodule MediaWatch.Repo.Migrations.AddFacets do
       add :description, :string, null: false
       add :url, :string, null: false
     end
+
+    create table(:descriptions, primary_key: false) do
+      add :id, references(:facets, column: :id), primary_key: true
+
+      add :title, :string, null: false
+      add :description, :string, null: false
+      add :url, :string, null: false
+      add :image, :string, null: false
+    end
   end
 end

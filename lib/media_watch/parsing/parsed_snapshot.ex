@@ -2,6 +2,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   @behaviour MediaWatch.Analysis.Sliceable
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.DateTime
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Analysis.Facet
   alias __MODULE__, as: ParsedSnapshot
@@ -23,7 +24,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed), do: get_entries(parsed)
+  def slice(parsed), do: get_entries(parsed) ++ [get_description(parsed)]
 
   defp get_entries(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
        when not is_nil(xml),
@@ -39,4 +40,27 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
              show_occurrence: entry
            })
          end)
+
+  defp get_description(
+         parsed = %ParsedSnapshot{
+           data: %{
+             "description" => desc,
+             "title" => title,
+             "url" => url,
+             "image" => %{"url" => image_url}
+           },
+           snapshot: %{source: source}
+         }
+       ),
+       do:
+         Facet.changeset(%Facet{parsed_snapshot: parsed, source: source}, %{
+           date_start: DateTime.min(),
+           date_end: DateTime.max(),
+           description: %{
+             "description" => desc,
+             "title" => title,
+             "url" => url,
+             "image" => image_url
+           }
+         })
 end
