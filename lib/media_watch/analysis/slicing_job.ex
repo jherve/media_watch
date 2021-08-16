@@ -16,7 +16,9 @@ defmodule MediaWatch.Analysis.SlicingJob do
         multi <-
           cs_list
           |> Enum.with_index()
-          |> Enum.reduce(Multi.new(), fn {cs, idx}, multi -> multi |> Multi.insert({:facet, idx}, cs) end),
+          |> Enum.reduce(Multi.new(), fn {cs, idx}, multi ->
+            multi |> Multi.insert({:facet, idx}, cs)
+          end),
         do: multi |> Repo.transaction()
       )
 end

@@ -23,7 +23,8 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}}) when not is_nil(xml) do
+  def slice(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
+      when not is_nil(xml) do
     data
     |> Map.get("entries")
     |> Enum.map(fn entry = %{"updated" => date} ->
