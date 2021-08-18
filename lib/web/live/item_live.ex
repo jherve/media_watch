@@ -28,6 +28,21 @@ defmodule MediaWatchWeb.ItemLive do
         <dt>Image</dt>
         <dd><img src="<%= @description.description.image %>"/></dd>
       </dl>
+
+      <h2>Emissions</h2>
+
+      <ul>
+        <%= for o <- @occurrences do %>
+          <li><%= render_occurrence(o) %></li>
+        <% end %>
+      </ul>
+    """
+
+  defp render_occurrence(o),
+    do: ~E"""
+      <h3><%= o.date_start |> Timex.to_date %> : <%= o.show_occurrence.title %></h3>
+      <p><%= o.show_occurrence.description %></p>
+      <p><%= link "Lien", to: o.show_occurrence.url %></p>
     """
 
   defp group_facets(facets) do
