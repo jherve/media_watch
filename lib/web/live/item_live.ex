@@ -3,7 +3,7 @@ defmodule MediaWatchWeb.ItemLive do
   alias MediaWatch.{Catalog, Analysis}
 
   @impl true
-  def mount(params = %{"id" => id}, _session, socket) do
+  def mount(_params = %{"id" => id}, _session, socket) do
     {description, occurrences} = Analysis.get_all_facets(id) |> group_facets
 
     {:ok,
@@ -15,6 +15,7 @@ defmodule MediaWatchWeb.ItemLive do
      )}
   end
 
+  @impl true
   def render(assigns),
     do: ~L"""
       <h1><%= @item.show.name %></h1>

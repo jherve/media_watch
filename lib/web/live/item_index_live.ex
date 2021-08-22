@@ -7,6 +7,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
     {:ok, socket |> assign(items: Catalog.list_all())}
   end
 
+  @impl true
   def render(assigns),
     do: ~L"""
       <h1>Liste des émissions</h1>
