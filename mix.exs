@@ -50,7 +50,9 @@ defmodule MediaWatch.MixProject do
       {:ecto_sqlite3, "~> 0.5.6"},
       {:finch, "~> 0.8"},
       {:elixir_feed_parser, "~> 2.1.0"},
-      {:timex, "~> 3.7.5"}
+      {:timex, "~> 3.7.5"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
   end
 
