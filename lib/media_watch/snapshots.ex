@@ -1,7 +1,7 @@
 defmodule MediaWatch.Snapshots do
   alias MediaWatch.Repo
   alias MediaWatch.Catalog
-  alias MediaWatch.Snapshots.{Job, Snapshot}
+  alias MediaWatch.Snapshots.{Job, Snapshot, Snapshotter}
 
   def get_jobs(), do: Catalog.get_all_sources() |> Enum.map(&%Job{source: &1})
 
@@ -10,4 +10,6 @@ defmodule MediaWatch.Snapshots do
   def get_snapshot(id), do: Snapshot |> Repo.get(id) |> Repo.preload(:xml)
 
   def get_all_snapshots(), do: Snapshot |> Repo.all() |> Repo.preload(:xml)
+
+  defdelegate do_snapshots(id), to: Snapshotter
 end
