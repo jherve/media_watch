@@ -1,8 +1,8 @@
 defmodule MediaWatch.Parsing.Parser do
   use GenServer
-  alias MediaWatch.PubSub
+  alias MediaWatch.{PubSub, Parsing}
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Parsing.{Job, ParsedSnapshot}
+  alias MediaWatch.Parsing.ParsedSnapshot
   @name MediaWatch.Parsing.Parser
 
   def start_link(opts) do
@@ -17,7 +17,7 @@ defmodule MediaWatch.Parsing.Parser do
 
   @impl true
   def handle_info(snap = %Snapshot{}, state) do
-    %Job{snapshot: snap} |> Job.run() |> publish_results()
+    snap |> Parsing.do_parsing() |> publish_results()
     {:noreply, state}
   end
 

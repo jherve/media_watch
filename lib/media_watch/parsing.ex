@@ -1,12 +1,11 @@
 defmodule MediaWatch.Parsing do
   alias MediaWatch.Repo
-  alias MediaWatch.Snapshots
-  alias MediaWatch.Parsing.{Job, ParsedSnapshot}
+  alias MediaWatch.Snapshots.Snapshot
+  alias MediaWatch.Parsing.ParsedSnapshot
   @parsed_preloads [:xml, :source]
 
-  def get_jobs(), do: Snapshots.get_all_snapshots() |> Enum.map(&%Job{snapshot: &1})
-
-  def run_jobs(jobs) when is_list(jobs), do: jobs |> Enum.map(&Job.run/1)
+  def do_parsing(snap = %Snapshot{}),
+    do: with({:ok, cs} <- Snapshot.parse(snap), do: cs |> Repo.insert())
 
   def get(id), do: ParsedSnapshot |> Repo.get(id) |> Repo.preload(snapshot: @parsed_preloads)
   def get_all(), do: ParsedSnapshot |> Repo.all() |> Repo.preload(snapshot: @parsed_preloads)

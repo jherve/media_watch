@@ -1,8 +1,7 @@
 defmodule MediaWatch.Analysis.Slicer do
   use GenServer
-  alias MediaWatch.PubSub
+  alias MediaWatch.{PubSub, Analysis}
   alias MediaWatch.Parsing.ParsedSnapshot
-  alias MediaWatch.Analysis.SlicingJob
   @name MediaWatch.Analysis.Slicer
 
   def start_link(opts) do
@@ -17,8 +16,7 @@ defmodule MediaWatch.Analysis.Slicer do
 
   @impl true
   def handle_info(snap = %ParsedSnapshot{}, state) do
-    snap = MediaWatch.Parsing.get(snap.id)
-    %SlicingJob{snapshot: snap} |> SlicingJob.run() |> publish_results
+    MediaWatch.Parsing.get(snap.id) |> Analysis.do_slicing() |> publish_results
     {:noreply, state}
   end
 

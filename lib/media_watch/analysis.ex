@@ -1,15 +1,24 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
+  alias Ecto.Multi
   alias MediaWatch.Repo
-  alias MediaWatch.Parsing
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.Source
-  alias MediaWatch.Analysis.{SlicingJob, Facet}
+  alias MediaWatch.Analysis.Facet
 
-  def get_jobs(), do: Parsing.get_all() |> Enum.map(&%SlicingJob{snapshot: &1})
-
-  def run_jobs(jobs) when is_list(jobs), do: jobs |> Enum.map(&SlicingJob.run/1)
+  def do_slicing(snap = %ParsedSnapshot{}),
+    do:
+      with(
+        cs_list when is_list(cs_list) <- ParsedSnapshot.slice(snap),
+        multi <-
+          cs_list
+          |> Enum.with_index()
+          |> Enum.reduce(Multi.new(), fn {cs, idx}, multi ->
+            multi |> Multi.insert({:facet, idx}, cs)
+          end),
+        do: multi |> Repo.transaction()
+      )
 
   def get_all_facets(item_id) do
     from(f in Facet,
