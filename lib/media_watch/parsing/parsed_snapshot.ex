@@ -27,7 +27,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   def slice(parsed), do: get_entries(parsed) ++ [get_description(parsed)]
 
   defp get_entries(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
-       when not is_nil(xml),
+       when not is_nil(source) and not is_nil(xml),
        do:
          data
          |> Map.get("entries")

@@ -15,7 +15,10 @@ defmodule MediaWatch.Application do
       {Phoenix.PubSub, name: MediaWatch.PubSub},
       # Start the Endpoint (http/https)
       MediaWatchWeb.Endpoint,
-      {Finch, name: MediaWatch.Finch}
+      {Finch, name: MediaWatch.Finch},
+      MediaWatch.Snapshots.Snapshotter,
+      MediaWatch.Parsing.Parser,
+      MediaWatch.Analysis.Slicer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
