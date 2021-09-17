@@ -1,6 +1,5 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
-  alias Ecto.Multi
   alias MediaWatch.Repo
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Snapshots.Snapshot
@@ -11,13 +10,7 @@ defmodule MediaWatch.Analysis do
     do:
       with(
         cs_list when is_list(cs_list) <- ParsedSnapshot.slice(snap),
-        multi <-
-          cs_list
-          |> Enum.with_index()
-          |> Enum.reduce(Multi.new(), fn {cs, idx}, multi ->
-            multi |> Multi.insert({:facet, idx}, cs)
-          end),
-        do: multi |> Repo.transaction()
+        do: cs_list |> insert_all_facets
       )
 
   def get_all_facets(item_id) do
@@ -34,4 +27,35 @@ defmodule MediaWatch.Analysis do
     )
     |> Repo.all()
   end
+
+  defp insert_all_facets(cs_list) do
+    res =
+      cs_list
+      |> Enum.map(&Repo.insert/1)
+      |> Enum.group_by(&get_error_reason/1, fn {_, val} -> val end)
+
+    {ok, unique, failures} =
+      {res |> Map.get(:ok, []), res |> Map.get(:unique, []), res |> Map.get(:error, [])}
+
+    if failures |> Enum.empty?(), do: {:ok, ok, unique}, else: {:error, ok, unique, failures}
+  end
+
+  defp get_error_reason({:ok, _obj}), do: :ok
+
+  defp get_error_reason(
+         {:error,
+          %{
+            errors: [
+              source_id:
+                {_,
+                 [
+                   constraint: :unique,
+                   constraint_name: "facets_source_id_date_start_date_end_index"
+                 ]}
+            ]
+          }}
+       ),
+       do: :unique
+
+  defp get_error_reason({:error, _cs}), do: :error
 end

@@ -1,5 +1,6 @@
 defmodule MediaWatch.Analysis.Slicer do
   use GenServer
+  require Logger
   alias MediaWatch.{PubSub, Analysis}
   alias MediaWatch.Parsing.ParsedSnapshot
   @name MediaWatch.Analysis.Slicer
@@ -16,12 +17,22 @@ defmodule MediaWatch.Analysis.Slicer do
 
   @impl true
   def handle_info(snap = %ParsedSnapshot{}, state) do
-    MediaWatch.Parsing.get(snap.id) |> Analysis.do_slicing() |> publish_results
+    ok_res =
+      case MediaWatch.Parsing.get(snap.id) |> Analysis.do_slicing() do
+        {:ok, ok, _} ->
+          ok
+
+        {:error, ok, _, errors} ->
+          Logger.error("#{errors |> Enum.count()} errors on facets insertion")
+          ok
+      end
+
+    ok_res |> publish_results
     {:noreply, state}
   end
 
-  defp publish_results({:ok, facets_map}) when is_map(facets_map) do
-    facets_map
-    |> Enum.each(fn {{:facet, _id}, facet} -> PubSub.broadcast("slicing", facet) end)
-  end
+  defp publish_results(facets_list) when is_list(facets_list),
+    do:
+      facets_list
+      |> Enum.each(&PubSub.broadcast("slicing", &1))
 end
