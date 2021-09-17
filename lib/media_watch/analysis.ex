@@ -29,7 +29,8 @@ defmodule MediaWatch.Analysis do
       join: s in Source,
       on: snap.source_id == s.id,
       where: s.item_id == ^item_id,
-      preload: [:show_occurrence, :description]
+      preload: [:show_occurrence, :description],
+      order_by: [desc: f.date_start]
     )
     |> Repo.all()
   end
