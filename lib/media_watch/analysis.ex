@@ -27,7 +27,7 @@ defmodule MediaWatch.Analysis do
       join: snap in Snapshot,
       on: snap.id == ps.id,
       join: s in Source,
-      on: snap.id == s.id,
+      on: snap.source_id == s.id,
       where: s.item_id == ^item_id,
       preload: [:show_occurrence, :description]
     )
