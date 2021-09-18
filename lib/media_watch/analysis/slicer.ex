@@ -31,8 +31,17 @@ defmodule MediaWatch.Analysis.Slicer do
     {:noreply, state}
   end
 
-  defp publish_results(facets_list) when is_list(facets_list),
-    do:
-      facets_list
-      |> Enum.each(&PubSub.broadcast("slicing", &1))
+  defp publish_results(facets_list) when is_list(facets_list) do
+    # Broadcast one message per facet on a generic topic
+    facets_list
+    |> Enum.each(&PubSub.broadcast("slicing", &1))
+
+    # Broadcast a message containing all the new facets of each source
+    # onto a specific topic
+    facets_list
+    |> Enum.group_by(& &1.source_id)
+    |> Enum.each(fn {source_id, facets} ->
+      PubSub.broadcast("slicing:#{source_id}", {:new_facets, facets})
+    end)
+  end
 end

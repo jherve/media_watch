@@ -1,6 +1,6 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
-  alias MediaWatch.Repo
+  alias MediaWatch.{Repo, Catalog, PubSub}
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.Source
@@ -27,6 +27,11 @@ defmodule MediaWatch.Analysis do
     )
     |> Repo.all()
   end
+
+  def subscribe(item_id),
+    do:
+      Catalog.get_source_ids(item_id)
+      |> Enum.map(&PubSub.subscribe("slicing:#{&1}"))
 
   defp insert_all_facets(cs_list) do
     res =
