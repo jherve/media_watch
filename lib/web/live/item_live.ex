@@ -1,6 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Catalog, Analysis}
+  alias MediaWatchWeb.ItemView
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
@@ -18,7 +19,7 @@ defmodule MediaWatchWeb.ItemLive do
   @impl true
   def render(assigns),
     do: ~L"""
-      <h1><%= @item.show.name %></h1>
+      <h1><%= ItemView.item_title(@item) %></h1>
 
       <%= render_description(assigns) %>
 

@@ -3,7 +3,7 @@ defmodule MediaWatch.Catalog do
   alias MediaWatch.Repo
   alias MediaWatch.Catalog.{Item, Source}
   @source_preloads [:rss_feed]
-  @preloads [:show, sources: @source_preloads]
+  @preloads [:channels, :show, sources: @source_preloads]
 
   def get_all_sources(), do: list_all() |> Enum.flat_map(& &1.sources)
 
