@@ -28,6 +28,14 @@ defmodule MediaWatch.Analysis do
     |> Repo.all()
   end
 
+  def get_facets_by_date(date_start, date_end) do
+    from(f in Facet,
+      where: f.date_start >= ^date_start and f.date_end <= ^date_end,
+      preload: [:show_occurrence, :description]
+    )
+    |> Repo.all()
+  end
+
   def subscribe(item_id),
     do:
       Catalog.get_source_ids(item_id)
