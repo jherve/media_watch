@@ -2,6 +2,8 @@ defmodule MediaWatch.Analysis.Facet.Description do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Description
+  @all_fields [:title, :description, :url, :image]
+  @required_fields @all_fields
 
   schema "descriptions" do
     field :title, :string
@@ -13,6 +15,7 @@ defmodule MediaWatch.Analysis.Facet.Description do
   @doc false
   def changeset(occurrence \\ %Description{}, attrs) do
     occurrence
-    |> cast(attrs, [:title, :description, :url, :image])
+    |> cast(attrs, @all_fields)
+    |> validate_required(@required_fields)
   end
 end
