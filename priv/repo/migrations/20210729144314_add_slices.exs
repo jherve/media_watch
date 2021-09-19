@@ -33,7 +33,7 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
 
       add :title, :string, null: false
       add :description, :string, null: false
-      add :link, :string, null: false
+      add :link, :string
       add :image, :map
     end
   end

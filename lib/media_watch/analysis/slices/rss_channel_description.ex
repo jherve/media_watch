@@ -3,7 +3,7 @@ defmodule MediaWatch.Analysis.Slice.RssChannelDescription do
   import Ecto.Changeset
   alias __MODULE__, as: RssChannelDescription
   @all_fields [:title, :description, :link, :image]
-  @required_fields [:title, :description, :link]
+  @required_fields [:title, :description]
 
   schema "rss_channel_descriptions" do
     field :title, :string
