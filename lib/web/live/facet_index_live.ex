@@ -8,6 +8,7 @@ defmodule MediaWatchWeb.FacetIndexLive do
     {:ok, socket |> assign(facets: [])}
   end
 
+  @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
     with {:ok, date} <- date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
       date_after = Timex.add(date, @one_day)
@@ -20,7 +21,7 @@ defmodule MediaWatchWeb.FacetIndexLive do
     end
   end
 
-  def handle_params(params, _, socket) do
+  def handle_params(_params, _, socket) do
     {:noreply, socket |> set_dates() |> set_dates_url()}
   end
 

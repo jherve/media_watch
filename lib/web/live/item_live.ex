@@ -10,17 +10,20 @@ defmodule MediaWatchWeb.ItemLive do
     {:ok, socket |> assign(item: Catalog.get(id))}
   end
 
-  def handle_params(params = %{"id" => id}, _, socket) do
+  @impl true
+  def handle_params(_params, _, socket) do
     {description, occurrences} = Analysis.get_all_facets(socket.assigns.item.id) |> group_facets
 
     {:noreply, socket |> assign(description: description, occurrences: occurrences)}
   end
 
+  @impl true
   def handle_info({:new_facets, facets}, socket) when is_list(facets),
     do:
       {:noreply,
        socket |> push_patch(to: Routes.item_path(socket, :detail, socket.assigns.item.id))}
 
+  @impl true
   def handle_event("trigger_snapshots", %{}, socket) do
     socket.assigns.item.id |> Snapshots.do_snapshots()
     {:noreply, socket}
