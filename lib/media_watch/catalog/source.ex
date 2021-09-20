@@ -19,6 +19,7 @@ defmodule MediaWatch.Catalog.Source do
     strategy
     |> cast(attrs, [:id])
     |> cast_assoc(:rss_feed)
+    |> set_type()
   end
 
   @impl true
@@ -30,4 +31,15 @@ defmodule MediaWatch.Catalog.Source do
   end
 
   defp get_actual_source(%Source{rss_feed: feed}) when not is_nil(feed), do: feed
+
+  defp set_type(cs) do
+    if has_field?(cs, :rss_feed), do: cs |> put_change(:type, :rss_feed), else: cs
+  end
+
+  defp has_field?(cs, field) do
+    case cs |> fetch_field(field) do
+      {_, val} when not is_nil(val) -> true
+      _ -> false
+    end
+  end
 end
