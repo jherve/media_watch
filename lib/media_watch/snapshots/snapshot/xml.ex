@@ -24,7 +24,12 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
   defp prune_entries(parsed = %{entries: entries}) when is_map(parsed),
     do: %{
       parsed
-      | entries: entries |> Enum.map(&(&1 |> Map.take([:title, :url, :description, :updated])))
+      | entries:
+          entries
+          |> Enum.map(
+            &(&1
+              |> Map.take([:title, :description, :"rss2:guid", :"rss2:link", :"rss2:pubDate"]))
+          )
     }
 
   defp prune_root(parsed) when is_map(parsed),

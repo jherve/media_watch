@@ -9,13 +9,17 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       timestamps(type: :utc_datetime)
     end
 
-    create table(:show_occurrences, primary_key: false) do
+    create table(:rss_entries, primary_key: false) do
       add :id, references(:slices, column: :id), primary_key: true
 
+      add :guid, :string, null: false
       add :title, :string, null: false
       add :description, :string, null: false
-      add :url, :string, null: false
+      add :link, :string
+      add :pub_date, :utc_datetime, null: false
     end
+
+    create unique_index(:rss_entries, [:guid])
 
     create table(:rss_channel_descriptions, primary_key: false) do
       add :id, references(:slices, column: :id), primary_key: true

@@ -52,7 +52,7 @@ defmodule MediaWatchWeb.ItemLive do
       <dt>Description</dt>
       <dd><%= @description.rss_channel_description.description %></dd>
       <dt>Image</dt>
-      <dd><img src="<%= @description.rss_channel_description.image.link %>"/></dd>
+      <dd><img src="<%= @description.rss_channel_description.image["url"] %>"/></dd>
     </dl>
     """
 
@@ -70,17 +70,15 @@ defmodule MediaWatchWeb.ItemLive do
 
   defp render_occurrence(o),
     do: ~E"""
-      <h3><%= o.date_start |> Timex.to_date %> : <%= o.show_occurrence.title %></h3>
-      <p><%= o.show_occurrence.description %></p>
-      <p><%= link "Lien", to: o.show_occurrence.url %></p>
+      <h3><%= o.rss_entry.pub_date |> Timex.to_date %> : <%= o.rss_entry.title %></h3>
+      <p><%= o.rss_entry.description %></p>
+      <p><%= link "Lien", to: o.rss_entry.link %></p>
     """
 
   defp group_slices(slices) do
-    # TODO : This case prevents loading a description when there is no show_occurrence yet
+    # TODO : This case prevents loading a description when there is no rss_entry yet
     case slices
-         |> Enum.group_by(
-           &{not is_nil(&1.show_occurrence), not is_nil(&1.rss_channel_description)}
-         ) do
+         |> Enum.group_by(&{not is_nil(&1.rss_entry), not is_nil(&1.rss_channel_description)}) do
       %{{false, true} => [description], {true, false} => occurrences} ->
         {description, occurrences}
 

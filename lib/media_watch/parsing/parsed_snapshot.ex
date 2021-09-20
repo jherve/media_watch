@@ -23,18 +23,32 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed), do: [get_channel_description(parsed)]
+  def slice(parsed), do: get_entries(parsed) ++ [get_channel_description(parsed)]
 
   defp get_entries(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
        when not is_nil(source) and not is_nil(xml),
        do:
          data
          |> Map.get("entries")
-         |> Enum.map(fn entry ->
-           Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-             show_occurrence: entry
-           })
-         end)
+         |> Enum.map(
+           fn entry = %{
+                "title" => title,
+                "description" => description,
+                "rss2:guid" => guid,
+                "rss2:link" => link,
+                "rss2:pubDate" => pub_date
+              } ->
+             Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
+               rss_entry: %{
+                 guid: guid,
+                 link: link,
+                 pub_date: pub_date,
+                 title: title,
+                 description: description
+               }
+             })
+           end
+         )
 
   defp get_channel_description(
          parsed = %ParsedSnapshot{

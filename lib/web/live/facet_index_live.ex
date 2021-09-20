@@ -42,9 +42,9 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   defp render_occurrence(o) do
     ~E"""
-      <h3><%= o.show_occurrence.title %></h3>
-      <p><%= o.show_occurrence.description %></p>
-      <p><%= link "Lien", to: o.show_occurrence.url %></p>
+      <h3><%= o.rss_entry.title %></h3>
+      <p><%= o.rss_entry.description %></p>
+      <p><%= link "Lien", to: o.rss_entry.url %></p>
     """
   end
 
