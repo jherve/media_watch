@@ -10,5 +10,5 @@ alias MediaWatch.Snapshots.Snapshot.Xml
 
 alias MediaWatch.Parsing.ParsedSnapshot
 
-alias MediaWatch.Analysis.Facet
-alias MediaWatch.Analysis.Facet.{ShowOccurrence, Description}
+alias MediaWatch.Analysis.Slice
+alias MediaWatch.Analysis.Slice.{ShowOccurrence, Description}

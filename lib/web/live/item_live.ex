@@ -12,13 +12,13 @@ defmodule MediaWatchWeb.ItemLive do
 
   @impl true
   def handle_params(_params, _, socket) do
-    {description, occurrences} = Analysis.get_all_facets(socket.assigns.item.id) |> group_facets
+    {description, occurrences} = Analysis.get_all_slices(socket.assigns.item.id) |> group_slices
 
     {:noreply, socket |> assign(description: description, occurrences: occurrences)}
   end
 
   @impl true
-  def handle_info({:new_facets, facets}, socket) when is_list(facets),
+  def handle_info({:new_slices, slices}, socket) when is_list(slices),
     do:
       {:noreply,
        socket |> push_patch(to: Routes.item_path(socket, :detail, socket.assigns.item.id))}
@@ -75,8 +75,8 @@ defmodule MediaWatchWeb.ItemLive do
       <p><%= link "Lien", to: o.show_occurrence.url %></p>
     """
 
-  defp group_facets(facets) do
-    case facets
+  defp group_slices(slices) do
+    case slices
          |> Enum.group_by(&{not is_nil(&1.show_occurrence), not is_nil(&1.description)}) do
       %{{false, true} => [description], {true, false} => occurrences} ->
         {description, occurrences}

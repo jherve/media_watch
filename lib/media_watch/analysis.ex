@@ -4,33 +4,33 @@ defmodule MediaWatch.Analysis do
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.Source
-  alias MediaWatch.Analysis.Facet
+  alias MediaWatch.Analysis.Slice
 
   def do_slicing(snap = %ParsedSnapshot{}),
     do:
       with(
         cs_list when is_list(cs_list) <- ParsedSnapshot.slice(snap),
-        do: cs_list |> insert_all_facets
+        do: cs_list |> insert_all_slices
       )
 
-  def get_all_facets(item_id) do
-    from(f in Facet,
+  def get_all_slices(item_id) do
+    from(sl in Slice,
       join: ps in ParsedSnapshot,
-      on: ps.id == f.parsed_snapshot_id,
+      on: ps.id == sl.parsed_snapshot_id,
       join: snap in Snapshot,
       on: snap.id == ps.id,
       join: s in Source,
       on: snap.source_id == s.id,
       where: s.item_id == ^item_id,
       preload: [:show_occurrence, :description],
-      order_by: [desc: f.date_start]
+      order_by: [desc: sl.date_start]
     )
     |> Repo.all()
   end
 
-  def get_facets_by_date(date_start, date_end) do
-    from(f in Facet,
-      where: f.date_start >= ^date_start and f.date_end <= ^date_end,
+  def get_slices_by_date(date_start, date_end) do
+    from(s in Slice,
+      where: s.date_start >= ^date_start and s.date_end <= ^date_end,
       preload: [:show_occurrence, :description]
     )
     |> Repo.all()
@@ -41,7 +41,7 @@ defmodule MediaWatch.Analysis do
       Catalog.get_source_ids(item_id)
       |> Enum.map(&PubSub.subscribe("slicing:#{&1}"))
 
-  defp insert_all_facets(cs_list) do
+  defp insert_all_slices(cs_list) do
     res =
       cs_list
       |> Enum.map(&Repo.insert/1)
@@ -63,7 +63,7 @@ defmodule MediaWatch.Analysis do
                 {_,
                  [
                    constraint: :unique,
-                   constraint_name: "facets_source_id_date_start_date_end_index"
+                   constraint_name: "slices_source_id_date_start_date_end_index"
                  ]}
             ]
           }}

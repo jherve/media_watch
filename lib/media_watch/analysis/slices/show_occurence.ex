@@ -1,4 +1,4 @@
-defmodule MediaWatch.Analysis.Facet.ShowOccurrence do
+defmodule MediaWatch.Analysis.Slice.ShowOccurrence do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: ShowOccurrence

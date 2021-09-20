@@ -1,4 +1,4 @@
-defmodule MediaWatch.Analysis.Facet.Description do
+defmodule MediaWatch.Analysis.Slice.Description do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Description

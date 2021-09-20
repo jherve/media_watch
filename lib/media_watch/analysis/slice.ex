@@ -1,12 +1,12 @@
-defmodule MediaWatch.Analysis.Facet do
+defmodule MediaWatch.Analysis.Slice do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
-  alias MediaWatch.Analysis.Facet.{ShowOccurrence, Description}
-  alias __MODULE__, as: Facet
+  alias MediaWatch.Analysis.Slice.{ShowOccurrence, Description}
+  alias __MODULE__, as: Slice
 
-  schema "facets" do
+  schema "slices" do
     field :date_start, :utc_datetime
     field :date_end, :utc_datetime
 
@@ -19,8 +19,8 @@ defmodule MediaWatch.Analysis.Facet do
   end
 
   @doc false
-  def changeset(facet \\ %Facet{}, attrs) do
-    facet
+  def changeset(slice \\ %Slice{}, attrs) do
+    slice
     |> cast(attrs, [:id, :date_start, :date_end])
     |> validate_required([:date_start, :date_end])
     |> cast_assoc(:parsed_snapshot, required: true)

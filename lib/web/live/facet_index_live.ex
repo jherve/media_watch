@@ -1,11 +1,11 @@
-defmodule MediaWatchWeb.FacetIndexLive do
+defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
   @one_day Timex.Duration.from_days(1)
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(facets: [])}
+    {:ok, socket |> assign(slices: [])}
   end
 
   @impl true
@@ -17,7 +17,7 @@ defmodule MediaWatchWeb.FacetIndexLive do
        socket
        |> set_dates(date)
        |> set_dates_url()
-       |> assign(facets: Analysis.get_facets_by_date(date, date_after))}
+       |> assign(slices: Analysis.get_slices_by_date(date, date_after))}
     end
   end
 
@@ -32,9 +32,9 @@ defmodule MediaWatchWeb.FacetIndexLive do
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
       <ul>
-        <%= for f <- @facets do %>
+        <%= for s <- @slices do %>
           <li>
-              <%= f |> render_occurrence %>
+              <%= s |> render_occurrence %>
           </li>
         <% end %>
       </ul>
@@ -62,8 +62,8 @@ defmodule MediaWatchWeb.FacetIndexLive do
       socket
       |> assign(
         next_day_link:
-          Routes.facet_index_path(socket, :index, date: "#{socket.assigns.next_day}"),
+          Routes.slice_index_path(socket, :index, date: "#{socket.assigns.next_day}"),
         previous_day_link:
-          Routes.facet_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
+          Routes.slice_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
 end

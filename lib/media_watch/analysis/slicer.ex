@@ -23,7 +23,7 @@ defmodule MediaWatch.Analysis.Slicer do
           ok
 
         {:error, ok, _, errors} ->
-          Logger.error("#{errors |> Enum.count()} errors on facets insertion")
+          Logger.error("#{errors |> Enum.count()} errors on slices insertion")
           ok
       end
 
@@ -31,17 +31,17 @@ defmodule MediaWatch.Analysis.Slicer do
     {:noreply, state}
   end
 
-  defp publish_results(facets_list) when is_list(facets_list) do
-    # Broadcast one message per facet on a generic topic
-    facets_list
+  defp publish_results(slices_list) when is_list(slices_list) do
+    # Broadcast one message per slice on a generic topic
+    slices_list
     |> Enum.each(&PubSub.broadcast("slicing", &1))
 
-    # Broadcast a message containing all the new facets of each source
+    # Broadcast a message containing all the new slices of each source
     # onto a specific topic
-    facets_list
+    slices_list
     |> Enum.group_by(& &1.source_id)
-    |> Enum.each(fn {source_id, facets} ->
-      PubSub.broadcast("slicing:#{source_id}", {:new_facets, facets})
+    |> Enum.each(fn {source_id, slices} ->
+      PubSub.broadcast("slicing:#{source_id}", {:new_slices, slices})
     end)
   end
 end

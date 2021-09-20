@@ -4,7 +4,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   import Ecto.Changeset
   alias MediaWatch.DateTime
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Analysis.Facet
+  alias MediaWatch.Analysis.Slice
   alias __MODULE__, as: ParsedSnapshot
   @primary_key false
 
@@ -34,7 +34,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
          |> Enum.map(fn entry = %{"updated" => date} ->
            relevant_date = date |> Timex.parse!("{ISO:Extended}")
 
-           Facet.changeset(%Facet{parsed_snapshot: parsed, source: source}, %{
+           Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
              date_start: relevant_date,
              date_end: relevant_date,
              show_occurrence: entry
@@ -53,7 +53,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
          }
        ),
        do:
-         Facet.changeset(%Facet{parsed_snapshot: parsed, source: source}, %{
+         Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
            date_start: DateTime.min(),
            date_end: DateTime.max(),
            description: %{
