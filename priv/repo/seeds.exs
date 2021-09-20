@@ -85,6 +85,7 @@ items = %{
        },
        sources: [
          %Source{
+           type: :rss_feed,
            rss_feed: %RssFeed{url: "http://radiofrance-podcast.net/podcast09/rss_10239.xml"}
          }
        ]
@@ -93,7 +94,10 @@ items = %{
     {%Item{
        show: %Show{name: "L'invité de RTL", url: "https://www.rtl.fr/programmes/l-invite-de-rtl"},
        sources: [
-         %Source{rss_feed: %RssFeed{url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}}
+         %Source{
+           type: :rss_feed,
+           rss_feed: %RssFeed{url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}
+         }
        ]
      }, :rtl}
 }

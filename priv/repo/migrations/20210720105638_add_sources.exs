@@ -4,6 +4,7 @@ defmodule MediaWatch.Repo.Migrations.AddSources do
   def change do
     create table(:sources) do
       add :item_id, references(:watched_items, column: :id), null: false
+      add :type, :string, null: false
     end
 
     create table(:rss_feeds, primary_key: false) do
