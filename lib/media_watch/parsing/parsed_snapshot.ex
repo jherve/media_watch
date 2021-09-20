@@ -2,7 +2,6 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   @behaviour MediaWatch.Analysis.Sliceable
   use Ecto.Schema
   import Ecto.Changeset
-  alias MediaWatch.DateTime
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Analysis.Slice
   alias __MODULE__, as: ParsedSnapshot
@@ -31,12 +30,8 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
        do:
          data
          |> Map.get("entries")
-         |> Enum.map(fn entry = %{"updated" => date} ->
-           relevant_date = date |> Timex.parse!("{ISO:Extended}")
-
+         |> Enum.map(fn entry ->
            Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-             date_start: relevant_date,
-             date_end: relevant_date,
              show_occurrence: entry
            })
          end)
@@ -54,8 +49,6 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
        ),
        do:
          Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-           date_start: DateTime.min(),
-           date_end: DateTime.max(),
            rss_channel_description: %{
              "description" => desc,
              "title" => title,
