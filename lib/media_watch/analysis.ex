@@ -72,5 +72,20 @@ defmodule MediaWatch.Analysis do
        ),
        do: :unique
 
+  defp get_error_reason(
+         {:error,
+          %{
+            errors: [],
+            changes: %{
+              rss_entry: %{
+                errors: [
+                  guid: {_, [constraint: :unique, constraint_name: "rss_entries_guid_index"]}
+                ]
+              }
+            }
+          }}
+       ),
+       do: :unique
+
   defp get_error_reason({:error, _cs}), do: :error
 end
