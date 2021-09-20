@@ -30,25 +30,23 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
        do:
          data
          |> Map.get("entries")
-         |> Enum.map(
-           fn entry = %{
-                "title" => title,
-                "description" => description,
-                "rss2:guid" => guid,
-                "rss2:link" => link,
-                "rss2:pubDate" => pub_date
-              } ->
-             Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-               rss_entry: %{
-                 guid: guid,
-                 link: link,
-                 pub_date: pub_date,
-                 title: title,
-                 description: description
-               }
-             })
-           end
-         )
+         |> Enum.map(fn %{
+                          "title" => title,
+                          "description" => description,
+                          "rss2:guid" => guid,
+                          "rss2:link" => link,
+                          "rss2:pubDate" => pub_date
+                        } ->
+           Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
+             rss_entry: %{
+               guid: guid,
+               link: link,
+               pub_date: pub_date,
+               title: title,
+               description: description
+             }
+           })
+         end)
 
   defp get_channel_description(
          parsed = %ParsedSnapshot{
