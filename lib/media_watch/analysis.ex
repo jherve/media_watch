@@ -22,7 +22,7 @@ defmodule MediaWatch.Analysis do
       join: s in Source,
       on: snap.source_id == s.id,
       where: s.item_id == ^item_id,
-      preload: [:show_occurrence, :description],
+      preload: [:show_occurrence, :rss_channel_description],
       order_by: [desc: sl.date_start]
     )
     |> Repo.all()
@@ -31,7 +31,7 @@ defmodule MediaWatch.Analysis do
   def get_slices_by_date(date_start, date_end) do
     from(s in Slice,
       where: s.date_start >= ^date_start and s.date_end <= ^date_end,
-      preload: [:show_occurrence, :description]
+      preload: [:show_occurrence, :rss_channel_description]
     )
     |> Repo.all()
   end

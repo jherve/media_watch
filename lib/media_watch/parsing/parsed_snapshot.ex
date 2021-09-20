@@ -24,7 +24,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed), do: get_entries(parsed) ++ [get_description(parsed)]
+  def slice(parsed), do: [get_channel_description(parsed)]
 
   defp get_entries(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
        when not is_nil(source) and not is_nil(xml),
@@ -41,13 +41,13 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
            })
          end)
 
-  defp get_description(
+  defp get_channel_description(
          parsed = %ParsedSnapshot{
            data: %{
              "description" => desc,
              "title" => title,
              "url" => url,
-             "image" => %{"url" => image_url}
+             "image" => image
            },
            snapshot: %{source: source}
          }
@@ -56,11 +56,11 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
          Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
            date_start: DateTime.min(),
            date_end: DateTime.max(),
-           description: %{
+           rss_channel_description: %{
              "description" => desc,
              "title" => title,
-             "url" => url,
-             "image" => image_url
+             "link" => url,
+             "image" => image
            }
          })
 end

@@ -21,13 +21,13 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :url, :string, null: false
     end
 
-    create table(:descriptions, primary_key: false) do
+    create table(:rss_channel_descriptions, primary_key: false) do
       add :id, references(:slices, column: :id), primary_key: true
 
       add :title, :string, null: false
       add :description, :string, null: false
-      add :url, :string, null: false
-      add :image, :string, null: false
+      add :link, :string, null: false
+      add :image, :map
     end
   end
 end
