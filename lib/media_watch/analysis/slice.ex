@@ -29,6 +29,7 @@ defmodule MediaWatch.Analysis.Slice do
     |> cast_assoc(:rss_channel_description)
     |> set_type()
     |> validate_required(@required_fields)
+    |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
 
   defp set_type(cs) do

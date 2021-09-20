@@ -54,6 +54,9 @@ defmodule MediaWatch.Analysis do
 
   defp get_error_reason({:ok, _obj}), do: :ok
 
+  # TODO : for some reason (a bug in Ecto ?) the constraint name does not appear as
+  # its actual name : "slices_rss_channel_descriptions_index" but with a name that appears
+  # to be made-up by Ecto
   defp get_error_reason(
          {:error,
           %{
@@ -62,7 +65,7 @@ defmodule MediaWatch.Analysis do
                 {_,
                  [
                    constraint: :unique,
-                   constraint_name: "slices_source_id_date_start_date_end_index"
+                   constraint_name: "slices_source_id_index"
                  ]}
             ]
           }}

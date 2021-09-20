@@ -11,6 +11,11 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       timestamps(type: :utc_datetime)
     end
 
+    create unique_index(:slices, [:source_id],
+             where: "type = 'rss_channel_description'",
+             name: :slices_rss_channel_descriptions_index
+           )
+
     create table(:rss_entries, primary_key: false) do
       add :id, references(:slices, column: :id), primary_key: true
 
