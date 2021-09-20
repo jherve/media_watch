@@ -5,6 +5,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    raise "This feature is unavailable since the switch to 'slices' / rss_entry / ..."
     {:ok, socket |> assign(slices: [])}
   end
 
