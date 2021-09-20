@@ -1,9 +1,9 @@
-defmodule MediaWatch.Analysis.Slicer do
+defmodule MediaWatch.Parsing.Slicer do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Analysis}
+  alias MediaWatch.{PubSub, Parsing}
   alias MediaWatch.Parsing.ParsedSnapshot
-  @name MediaWatch.Analysis.Slicer
+  @name MediaWatch.Parsing.Slicer
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: @name)
@@ -18,7 +18,7 @@ defmodule MediaWatch.Analysis.Slicer do
   @impl true
   def handle_info(snap = %ParsedSnapshot{}, state) do
     ok_res =
-      case MediaWatch.Parsing.get(snap.id) |> Analysis.do_slicing() do
+      case Parsing.get(snap.id) |> Parsing.do_slicing() do
         {:ok, ok, _} ->
           ok
 

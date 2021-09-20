@@ -1,4 +1,4 @@
-defmodule MediaWatch.Analysis.Slice.RssEntry do
+defmodule MediaWatch.Parsing.Slice.RssEntry do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: RssEntry

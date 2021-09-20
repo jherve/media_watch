@@ -1,9 +1,9 @@
-defmodule MediaWatch.Analysis.Slice do
+defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
-  alias MediaWatch.Analysis.Slice.{RssEntry, RssChannelDescription}
+  alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description]
   @required_fields [:type]
@@ -31,6 +31,43 @@ defmodule MediaWatch.Analysis.Slice do
     |> validate_required(@required_fields)
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
+
+  def get_error_reason({:ok, _obj}), do: :ok
+
+  # TODO : for some reason (a bug in Ecto ?) the constraint name does not appear as
+  # its actual name : "slices_rss_channel_descriptions_index" but with a name that appears
+  # to be made-up by Ecto
+  def get_error_reason(
+        {:error,
+         %{
+           errors: [
+             source_id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name: "slices_source_id_index"
+                ]}
+           ]
+         }}
+      ),
+      do: :unique
+
+  def get_error_reason(
+        {:error,
+         %{
+           errors: [],
+           changes: %{
+             rss_entry: %{
+               errors: [
+                 guid: {_, [constraint: :unique, constraint_name: "rss_entries_guid_index"]}
+               ]
+             }
+           }
+         }}
+      ),
+      do: :unique
+
+  def get_error_reason({:error, _cs}), do: :error
 
   defp set_type(cs) do
     case get_type(cs) do

@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.{Snapshots, Catalog, Analysis}
+  alias MediaWatch.{Snapshots, Catalog, Parsing, Analysis}
   alias MediaWatchWeb.ItemView
 
   @impl true
@@ -12,7 +12,7 @@ defmodule MediaWatchWeb.ItemLive do
 
   @impl true
   def handle_params(_params, _, socket) do
-    {description, occurrences} = Analysis.get_all_slices(socket.assigns.item.id) |> group_slices
+    {description, occurrences} = Parsing.get_all_slices(socket.assigns.item.id) |> group_slices
 
     {:noreply, socket |> assign(description: description, occurrences: occurrences)}
   end

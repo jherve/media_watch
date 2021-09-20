@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.Analysis
+  alias MediaWatch.Parsing
   @one_day Timex.Duration.from_days(1)
 
   @impl true
@@ -18,7 +18,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
        socket
        |> set_dates(date)
        |> set_dates_url()
-       |> assign(slices: Analysis.get_slices_by_date(date, date_after))}
+       |> assign(slices: Parsing.get_slices_by_date(date, date_after))}
     end
   end
 

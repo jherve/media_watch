@@ -8,7 +8,5 @@ alias MediaWatch.Catalog.Source.RssFeed
 alias MediaWatch.Snapshots.Snapshot
 alias MediaWatch.Snapshots.Snapshot.Xml
 
-alias MediaWatch.Parsing.ParsedSnapshot
-
-alias MediaWatch.Analysis.Slice
-alias MediaWatch.Analysis.Slice.{RssEntry, RssChannelDescription}
+alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
+alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}

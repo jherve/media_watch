@@ -1,9 +1,9 @@
 defmodule MediaWatch.Parsing.ParsedSnapshot do
-  @behaviour MediaWatch.Analysis.Sliceable
+  @behaviour MediaWatch.Parsing.Sliceable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Analysis.Slice
+  alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ParsedSnapshot
   @primary_key false
 
