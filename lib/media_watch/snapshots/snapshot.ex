@@ -8,6 +8,8 @@ defmodule MediaWatch.Snapshots.Snapshot do
   alias __MODULE__, as: Snapshot
 
   schema "snapshots" do
+    field :type, Ecto.Enum, values: [:xml]
+
     belongs_to :source, Source
     has_one :xml, Xml, foreign_key: :id
 
@@ -20,12 +22,20 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> cast(attrs, [:id])
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:xml)
+    |> set_type()
+    |> validate_required([:type])
   end
 
   @impl true
   def parse(snap = %Snapshot{xml: xml}) when not is_nil(xml) do
     with {:ok, attrs} <- xml |> Xml.parse() do
       {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, attrs)}
+    end
+  end
+
+  defp set_type(cs) do
+    case cs |> fetch_field(:xml) do
+      {_, %Xml{}} -> cs |> put_change(:type, :xml)
     end
   end
 end

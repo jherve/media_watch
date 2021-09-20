@@ -4,6 +4,7 @@ defmodule MediaWatch.Repo.Migrations.AddSnapshots do
   def change do
     create table(:snapshots) do
       add :source_id, references(:sources, column: :id)
+      add :type, :string, null: false
       timestamps(type: :utc_datetime)
     end
 
