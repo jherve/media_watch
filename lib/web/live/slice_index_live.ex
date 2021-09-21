@@ -48,7 +48,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
     ~E"""
       <h3><%= o.title %></h3>
       <p><%= o.description %></p>
-      <p><%= link "Lien", to: o.link || '#' %></p>
+      <p><%= if o.link, do: link("Lien", to: o.link) %></p>
     """
   end
 

@@ -73,6 +73,6 @@ defmodule MediaWatchWeb.ItemLive do
     do: ~E"""
       <h3><%= o.date_start |> Timex.to_date %> : <%= o.title %></h3>
       <p><%= o.description %></p>
-      <p><%= link "Lien", to: o.link %></p>
+      <p><%= if o.link, do: link("Lien", to: o.link) %></p>
     """
 end
