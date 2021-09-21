@@ -10,20 +10,13 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
-    with {:ok, date} <- date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
-      date_after = Timex.add(date, @one_day)
-
-      {:noreply,
-       socket
-       |> set_dates(date)
-       |> set_dates_url()
-       |> assign(items: Analysis.get_analyzed_item_by_date(date, date_after))}
+    case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
+      {:ok, date} -> {:noreply, socket |> set_dates(date) |> set_dates_url() |> set_items()}
     end
   end
 
-  def handle_params(_params, _, socket) do
-    {:noreply, socket |> set_dates() |> set_dates_url()}
-  end
+  def handle_params(_params, _, socket),
+    do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_items()}
 
   @impl true
   def render(assigns),
@@ -70,4 +63,9 @@ defmodule MediaWatchWeb.SliceIndexLive do
         previous_day_link:
           Routes.slice_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
+
+  defp set_items(socket = %{assigns: %{day: day, next_day: next_day}}),
+    do:
+      socket
+      |> assign(items: Analysis.get_analyzed_item_by_date(day, next_day))
 end
