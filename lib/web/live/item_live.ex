@@ -6,22 +6,23 @@ defmodule MediaWatchWeb.ItemLive do
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
     Analysis.subscribe(id)
+    item = Analysis.get_analyzed_item(id)
 
-    {:ok, socket |> assign(item: Catalog.get(id))}
+    {:ok,
+     socket
+     |> assign(item: item, description: item.description, occurrences: item.show.occurrences)}
   end
 
   @impl true
-  def handle_params(_params, _, socket) do
-    {description, occurrences} = Parsing.get_all_slices(socket.assigns.item.id) |> group_slices
+  def handle_info({:new_description, desc}, socket),
+    do: {:noreply, socket |> assign(description: desc)}
 
-    {:noreply, socket |> assign(description: description, occurrences: occurrences)}
+  def handle_info({:new_occurrence, occ}, socket) do
+    occurrences =
+      (socket.assigns.occurrences ++ [occ]) |> Enum.sort_by(& &1.date_start, {:desc, DateTime})
+
+    {:noreply, socket |> assign(occurrences: occurrences)}
   end
-
-  @impl true
-  def handle_info({:new_slices, slices}, socket) when is_list(slices),
-    do:
-      {:noreply,
-       socket |> push_patch(to: Routes.item_path(socket, :detail, socket.assigns.item.id))}
 
   @impl true
   def handle_event("trigger_snapshots", %{}, socket) do
@@ -41,22 +42,22 @@ defmodule MediaWatchWeb.ItemLive do
       <%= render_occurrences_list(assigns) %>
     """
 
-  defp render_description(assigns = %{description: :error}),
+  defp render_description(assigns = %{description: nil}),
     do: ~L"<dl>Pas de description disponible</dl>"
 
   defp render_description(assigns),
     do: ~L"""
     <dl>
       <dt>URL</dt>
-      <dd><%= link @description.rss_channel_description.link, to: @description.rss_channel_description.link %></dd>
+      <dd><%= link @description.link, to: @description.link %></dd>
       <dt>Description</dt>
-      <dd><%= @description.rss_channel_description.description %></dd>
+      <dd><%= @description.description %></dd>
       <dt>Image</dt>
-      <dd><img src="<%= @description.rss_channel_description.image["url"] %>"/></dd>
+      <dd><img src="<%= @description.image["url"] %>"/></dd>
     </dl>
     """
 
-  defp render_occurrences_list(assigns = %{occurrences: :error}),
+  defp render_occurrences_list(assigns = %{occurrences: []}),
     do: ~L"<p>Pas d'émission disponible</p>"
 
   defp render_occurrences_list(assigns),
@@ -70,20 +71,8 @@ defmodule MediaWatchWeb.ItemLive do
 
   defp render_occurrence(o),
     do: ~E"""
-      <h3><%= o.rss_entry.pub_date |> Timex.to_date %> : <%= o.rss_entry.title %></h3>
-      <p><%= o.rss_entry.description %></p>
-      <p><%= link "Lien", to: o.rss_entry.link %></p>
+      <h3><%= o.date_start |> Timex.to_date %> : <%= o.title %></h3>
+      <p><%= o.description %></p>
+      <p><%= link "Lien", to: o.link %></p>
     """
-
-  defp group_slices(slices) do
-    # TODO : This case prevents loading a description when there is no rss_entry yet
-    case slices
-         |> Enum.group_by(&{not is_nil(&1.rss_entry), not is_nil(&1.rss_channel_description)}) do
-      %{{false, true} => [description], {true, false} => occurrences} ->
-        {description, occurrences}
-
-      %{} ->
-        {:error, :error}
-    end
-  end
 end

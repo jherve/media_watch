@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog do
   import Ecto.Query
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.{Item, Source}
+  alias MediaWatch.Catalog.{Item, Source, Show}
   @source_preloads [:rss_feed]
   @preloads [:channels, :show, sources: @source_preloads]
 
@@ -15,4 +15,16 @@ defmodule MediaWatch.Catalog do
 
   def list_all(), do: Item |> Repo.all() |> Repo.preload(@preloads)
   def get(id), do: Item |> Repo.get(id) |> Repo.preload(@preloads)
+
+  def get_show_id(source_id) do
+    from(s in Show,
+      join: i in Item,
+      on: i.id == s.id,
+      join: source in Source,
+      on: source.item_id == i.id,
+      where: source.id == ^source_id,
+      select: s.id
+    )
+    |> Repo.one()
+  end
 end

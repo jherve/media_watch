@@ -5,12 +5,14 @@ defmodule MediaWatch.Catalog.Item do
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Catalog.ChannelItem
+  alias MediaWatch.Analysis.Description
 
   schema "watched_items" do
     has_one :show, Show, foreign_key: :id
     has_many :sources, Source, foreign_key: :item_id
     has_many :channel_items, ChannelItem
     has_many :channels, through: [:channel_items, :channel]
+    has_one :description, Description, foreign_key: :id
   end
 
   @doc false

@@ -18,7 +18,9 @@ defmodule MediaWatch.Application do
       {Finch, name: MediaWatch.Finch},
       MediaWatch.Snapshots.Snapshotter,
       MediaWatch.Parsing.Parser,
-      MediaWatch.Parsing.Slicer
+      MediaWatch.Parsing.Slicer,
+      MediaWatch.Analysis.Descriptor,
+      MediaWatch.Analysis.OccurrenceFormatter
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
