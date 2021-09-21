@@ -1,12 +1,11 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.Parsing
+  alias MediaWatch.Analysis
   @one_day Timex.Duration.from_days(1)
 
   @impl true
   def mount(_params, _session, socket) do
-    raise "This feature is unavailable since the switch to 'slices' / rss_entry / ..."
-    {:ok, socket |> assign(slices: [])}
+    {:ok, socket |> assign(items: [])}
   end
 
   @impl true
@@ -18,7 +17,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
        socket
        |> set_dates(date)
        |> set_dates_url()
-       |> assign(slices: Parsing.get_slices_by_date(date, date_after))}
+       |> assign(items: Analysis.get_analyzed_item_by_date(date, date_after))}
     end
   end
 
@@ -33,9 +32,13 @@ defmodule MediaWatchWeb.SliceIndexLive do
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
       <ul>
-        <%= for s <- @slices do %>
-          <li>
-              <%= s |> render_occurrence %>
+        <%= for i <- @items do %>
+          <li><%= (i.description || %{title: ""}).title %>
+            <ul>
+              <%= for i <- i.show.occurrences do %>
+                <li><%= i |> render_occurrence %></li>
+              <% end %>
+            </ul>
           </li>
         <% end %>
       </ul>
@@ -43,9 +46,9 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   defp render_occurrence(o) do
     ~E"""
-      <h3><%= o.rss_entry.title %></h3>
-      <p><%= o.rss_entry.description %></p>
-      <p><%= link "Lien", to: o.rss_entry.url %></p>
+      <h3><%= o.title %></h3>
+      <p><%= o.description %></p>
+      <p><%= link "Lien", to: o.link || '#' %></p>
     """
   end
 
