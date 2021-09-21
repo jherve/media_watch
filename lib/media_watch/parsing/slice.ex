@@ -1,6 +1,7 @@
 defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
@@ -29,14 +30,12 @@ defmodule MediaWatch.Parsing.Slice do
     |> cast_assoc(:rss_channel_description)
     |> set_type()
     |> validate_required(@required_fields)
+    |> unsafe_unique_constraint()
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
 
   def get_error_reason({:ok, _obj}), do: :ok
 
-  # TODO : for some reason (a bug in Ecto ?) the constraint name does not appear as
-  # its actual name : "slices_rss_channel_descriptions_index" but with a name that appears
-  # to be made-up by Ecto
   def get_error_reason(
         {:error,
          %{
@@ -45,7 +44,7 @@ defmodule MediaWatch.Parsing.Slice do
                {_,
                 [
                   constraint: :unique,
-                  constraint_name: "slices_source_id_index"
+                  constraint_name: "slices_rss_channel_descriptions_index"
                 ]}
            ]
          }}
@@ -64,6 +63,16 @@ defmodule MediaWatch.Parsing.Slice do
              }
            }
          }}
+      ),
+      do: :unique
+
+  def get_error_reason(
+        {:error, %{errors: [source_id: {_, [validation: :unsafe_unique_description]}]}}
+      ),
+      do: :unique
+
+  def get_error_reason(
+        {:error, %{errors: [rss_entry: {_, [validation: :unsafe_unique_entry_pub_date]}]}}
       ),
       do: :unique
 
@@ -87,6 +96,54 @@ defmodule MediaWatch.Parsing.Slice do
     case cs |> fetch_field(field) do
       {_, val} when not is_nil(val) -> true
       _ -> false
+    end
+  end
+
+  # SQLite adapter can not recognize the constraint that was violated, and the error reporting
+  # is therefore a bit shaky and auto-magically guessed by ecto_sqlite3 (in some cases, badly)
+  # (see https://hexdocs.pm/ecto_sqlite3/Ecto.Adapters.SQLite3.html#module-handling-foreign-key-constraints-in-changesets)
+  # To prevent this, we use this function that checks beforehand whether a conflicting record
+  # already exists in the db (inspired by Ecto's unsafe_validate_unique that does not work
+  # properly with FK fields). This allows proper error detection, and the constraint is checked
+  # by the database anyway (but most likely it will be more difficult to recover)
+  defp unsafe_unique_constraint(cs) do
+    case cs |> fetch_field(:type) do
+      {_, :rss_channel_description} -> cs |> unsafe_unique_description()
+      {_, :rss_entry} -> cs |> unsafe_unique_entry_pub_date()
+    end
+  end
+
+  defp unsafe_unique_description(cs) do
+    with {_, %{id: id}} <- cs |> fetch_field(:source) do
+      query = from(s in Slice, where: s.source_id == ^id)
+
+      if query |> MediaWatch.Repo.exists?(),
+        do:
+          cs
+          |> add_error(:source_id, "has already been taken",
+            validation: :unsafe_unique_description
+          ),
+        else: cs
+    end
+  end
+
+  defp unsafe_unique_entry_pub_date(cs) do
+    with {_, %{id: id}} <- cs |> fetch_field(:source),
+         {_, %{pub_date: pub_date}} <- cs |> fetch_field(:rss_entry) do
+      query =
+        from(s in Slice,
+          join: r in RssEntry,
+          on: r.id == s.id,
+          where: s.source_id == ^id and r.pub_date == ^pub_date
+        )
+
+      if query |> MediaWatch.Repo.exists?(),
+        do:
+          cs
+          |> add_error(:rss_entry, "has already been taken",
+            validation: :unsafe_unique_entry_pub_date
+          ),
+        else: cs
     end
   end
 end
