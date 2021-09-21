@@ -77,21 +77,72 @@ alias MediaWatch.Repo
 channels =
   %{
     france_inter: %{name: "France Inter", url: "https://www.franceinter.fr"},
+    france_culture: %{name: "France Culture", url: "https://www.franceculture.fr"},
+    france_info: %{name: "France Info", url: "https://www.francetvinfo.fr"},
+    rmc: %{name: "RMC", url: "https://rmc.bfmtv.com/"},
     rtl: %{name: "RTL", url: "https://www.rtl.fr"}
   }
   |> Map.new(fn {k, v} -> {k, v |> Channel.changeset()} end)
 
 items =
   %{
+    invite_7h50:
+      {%{
+         show: %{
+           name: "L'invité de 7h50",
+           url: "https://www.franceinter.fr/emissions/invite-de-7h50"
+         },
+         sources: [%{rss_feed: %{url: "http://radiofrance-podcast.net/podcast09/rss_11710.xml"}}]
+       }, :france_inter},
     invite_8h20:
       {%{
          show: %{name: "L'invité de 8h20'", url: "https://www.franceinter.fr/emissions/l-invite"},
          sources: [%{rss_feed: %{url: "http://radiofrance-podcast.net/podcast09/rss_10239.xml"}}]
        }, :france_inter},
+    invite_des_matins:
+      {%{
+         show: %{
+           name: "L'Invité(e) des Matins",
+           url: "https://www.franceculture.fr/emissions/linvite-des-matins"
+         },
+         sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_13983.xml"}}]
+       }, :france_culture},
+    la_grande_table_idees:
+      {%{
+         show: %{
+           name: "La Grande Table idées",
+           url: "https://www.franceculture.fr/emissions/la-grande-table-2eme-partie"
+         },
+         sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_12360.xml"}}]
+       }, :france_culture},
+    "8h30_france_info":
+      {%{
+         show: %{
+           name: "8h30 franceinfo",
+           url: "https://www.francetvinfo.fr/replay-radio/8h30-fauvelle-dely/"
+         },
+         sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16370.xml"}}]
+       }, :france_info},
+    bourdin_direct:
+      {%{
+         show: %{
+           name: "Bourdin Direct",
+           url: "https://rmc.bfmtv.com/emission/bourdin-direct/"
+         },
+         sources: [%{rss_feed: %{url: "https://podcast.rmc.fr/channel30/RMCInfochannel30.xml"}}]
+       }, :rmc},
     invite_rtl:
       {%{
          show: %{name: "L'invité de RTL", url: "https://www.rtl.fr/programmes/l-invite-de-rtl"},
          sources: [%{rss_feed: %{url: "https://www.rtl.fr/podcast/linvite-de-rtl.xml"}}]
+       }, :rtl},
+    invite_rtl_soir:
+      {%{
+         show: %{
+           name: "L'invité de RTL Soir",
+           url: "https://www.rtl.fr/programmes/l-invite-de-rtl-soir"
+         },
+         sources: [%{rss_feed: %{url: "https://www.rtl.fr/podcast/l-invite-de-rtl-soir.xml"}}]
        }, :rtl}
   }
   |> Map.new(fn {k, {v, channels}} -> {k, {v |> Item.changeset(), channels}} end)
