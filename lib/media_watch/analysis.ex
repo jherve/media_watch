@@ -39,7 +39,10 @@ defmodule MediaWatch.Analysis do
     |> Repo.all()
   end
 
-  def make_description(slice = %Slice{}), do: Description.from(slice) |> Repo.insert()
+  def make_description(slice = %Slice{}) do
+    item_id = Catalog.get_item_id(slice.source_id)
+    Description.from(slice, item_id) |> Repo.insert()
+  end
 
   def make_show_occurrence(slice = %Slice{}) do
     show_id = Catalog.get_show_id(slice.source_id)

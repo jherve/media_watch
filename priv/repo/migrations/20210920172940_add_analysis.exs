@@ -3,7 +3,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
 
   def change do
     create table(:descriptions, primary_key: false) do
-      add :id, references(:watched_items, column: :id), primary_key: true
+      add :item_id, references(:watched_items, column: :id), primary_key: true
 
       add :title, :string, null: false
       add :description, :string, null: false

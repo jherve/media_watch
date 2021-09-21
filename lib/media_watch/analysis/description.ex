@@ -2,11 +2,15 @@ defmodule MediaWatch.Analysis.Description do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Parsing.Slice
+  alias MediaWatch.Catalog.Item
   alias __MODULE__, as: Description
-  @all_fields [:title, :description, :link, :image, :slice_ids]
-  @required_fields [:title, :description]
+  @primary_key false
+  @all_fields [:item_id, :title, :description, :link, :image, :slice_ids]
+  @required_fields [:item_id, :title, :description]
 
   schema "descriptions" do
+    belongs_to :item, Item
+
     field :title, :string
     field :description, :string
     field :link, :string
@@ -23,8 +27,9 @@ defmodule MediaWatch.Analysis.Description do
     |> validate_length(:slice_ids, min: 1)
   end
 
-  def from(%Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}) do
+  def from(%Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}, item_id) do
     changeset(%{
+      item_id: item_id,
       title: desc.title,
       description: desc.description,
       link: desc.link,

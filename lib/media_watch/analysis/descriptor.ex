@@ -25,6 +25,6 @@ defmodule MediaWatch.Analysis.Descriptor do
 
   defp publish_results({:ok, desc = %Description{}}) do
     PubSub.broadcast("description", desc)
-    PubSub.broadcast("description:#{desc.id}", {:new_description, desc})
+    PubSub.broadcast("description:#{desc.item_id}", {:new_description, desc})
   end
 end

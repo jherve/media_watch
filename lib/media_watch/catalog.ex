@@ -16,6 +16,10 @@ defmodule MediaWatch.Catalog do
   def list_all(), do: Item |> Repo.all() |> Repo.preload(@preloads)
   def get(id), do: Item |> Repo.get(id) |> Repo.preload(@preloads)
 
+  def get_item_id(source_id) do
+    from(s in Source, where: s.id == ^source_id, select: s.item_id) |> Repo.one()
+  end
+
   def get_show_id(source_id) do
     from(s in Show,
       join: i in Item,
