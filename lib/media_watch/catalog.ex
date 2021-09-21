@@ -7,6 +7,9 @@ defmodule MediaWatch.Catalog do
 
   def get_all_sources(), do: list_all() |> Enum.flat_map(& &1.sources)
 
+  def select_all_sources(),
+    do: from(s in Source, preload: ^@source_preloads)
+
   def select_sources(item_id),
     do: from(s in Source, where: s.item_id == ^item_id, preload: ^@source_preloads)
 
