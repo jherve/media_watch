@@ -16,6 +16,7 @@ defmodule MediaWatch.Application do
       # Start the Endpoint (http/https)
       MediaWatchWeb.Endpoint,
       {Finch, name: MediaWatch.Finch},
+      {Task.Supervisor, name: MediaWatch.TaskSupervisor},
       MediaWatch.Snapshots.Snapshotter,
       MediaWatch.Parsing.Parser,
       MediaWatch.Parsing.Slicer,
