@@ -8,6 +8,7 @@ defmodule MediaWatch.Catalog.Item do
   alias MediaWatch.Analysis.Description
 
   schema "watched_items" do
+    field :layout, Ecto.Enum, values: MediaWatch.Catalog.all()
     has_one :show, Show, foreign_key: :id
     has_many :sources, Source, foreign_key: :item_id
     has_many :channel_items, ChannelItem
@@ -18,7 +19,7 @@ defmodule MediaWatch.Catalog.Item do
   @doc false
   def changeset(item \\ %Item{}, attrs) do
     item
-    |> cast(attrs, [:id])
+    |> cast(attrs, [:id, :layout])
     |> cast_assoc(:show)
     |> validate_required_inclusion([:show])
     |> cast_assoc(:sources, required: true)

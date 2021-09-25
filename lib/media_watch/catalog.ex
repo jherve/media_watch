@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog do
   import Ecto.Query
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.{Item, Source, Show}
+  alias MediaWatch.Catalog.{Item, Source, Show, Channel}
   @source_preloads [:rss_feed]
   @preloads [:channels, :show, sources: @source_preloads]
 
@@ -29,4 +29,28 @@ defmodule MediaWatch.Catalog do
     )
     |> Repo.one()
   end
+
+  def all_channels(),
+    do: %{
+      france_inter: %{name: "France Inter", url: "https://www.franceinter.fr"},
+      france_culture: %{name: "France Culture", url: "https://www.franceculture.fr"},
+      france_info: %{name: "France Info", url: "https://www.francetvinfo.fr"},
+      rmc: %{name: "RMC", url: "https://rmc.bfmtv.com/"},
+      rtl: %{name: "RTL", url: "https://www.rtl.fr"}
+    }
+
+  def try_to_insert_all_channels(),
+    do: all_channels() |> Map.values() |> Enum.each(&(&1 |> Channel.changeset() |> Repo.insert()))
+
+  def all(),
+    do: [
+      Item.Le8h30FranceInfo,
+      Item.BourdinDirect,
+      Item.Invite7h50,
+      Item.Invite8h20,
+      Item.InviteDesMatins,
+      Item.InviteRTL,
+      Item.InviteRTLSoir,
+      Item.LaGrandeTableIdees
+    ]
 end

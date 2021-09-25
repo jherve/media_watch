@@ -17,5 +17,6 @@ defmodule MediaWatch.Catalog.Channel do
     channel
     |> cast(attrs, [:name, :url])
     |> validate_required([:name, :url])
+    |> unique_constraint(:name)
   end
 end

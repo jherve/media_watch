@@ -1,9 +1,8 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
-  alias MediaWatch.{Repo, Catalog, PubSub}
+  alias MediaWatch.{Repo, PubSub}
   alias MediaWatch.Catalog.{Item, Show}
-  alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.{Description, ShowOccurrence}
+  alias MediaWatch.Analysis.ShowOccurrence
 
   def subscribe(item_id) do
     PubSub.subscribe("description:#{item_id}")
@@ -37,15 +36,5 @@ defmodule MediaWatch.Analysis do
       order_by: [i.id, desc: so.date_start]
     )
     |> Repo.all()
-  end
-
-  def make_description(slice = %Slice{}) do
-    item_id = Catalog.get_item_id(slice.source_id)
-    Description.from(slice, item_id) |> Repo.insert()
-  end
-
-  def make_show_occurrence(slice = %Slice{}) do
-    show_id = Catalog.get_show_id(slice.source_id)
-    ShowOccurrence.from(slice, show_id) |> Repo.insert()
   end
 end

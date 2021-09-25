@@ -1,5 +1,4 @@
 defmodule MediaWatch.Catalog.Source do
-  @behaviour MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Item
@@ -22,7 +21,6 @@ defmodule MediaWatch.Catalog.Source do
     |> set_type()
   end
 
-  @impl true
   def make_snapshot(source) do
     with actual = %struct{} <- source |> get_actual_source,
          {:ok, attrs} <- actual |> struct.make_snapshot() do
