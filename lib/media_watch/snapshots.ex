@@ -4,5 +4,5 @@ defmodule MediaWatch.Snapshots do
 
   def do_all_snapshots(), do: Catalog.all() |> Enum.each(&do_snapshots/1)
 
-  defdelegate do_snapshots(layout), to: ItemTask
+  defdelegate do_snapshots(module), to: ItemTask
 end

@@ -26,7 +26,7 @@ defmodule MediaWatchWeb.ItemLive do
 
   @impl true
   def handle_event("trigger_snapshots", %{}, socket) do
-    socket.assigns.item.layout |> Snapshots.do_snapshots()
+    socket.assigns.item.module |> Snapshots.do_snapshots()
     {:noreply, socket}
   end
 

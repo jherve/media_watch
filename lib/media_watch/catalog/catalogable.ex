@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Catalogable do
-  @callback get_layout() :: atom()
+  @callback get_module() :: atom()
   @callback get_item_args() :: map()
   @callback get_sources() :: list(map())
   @callback get_channel_names() :: list(binary())
@@ -10,13 +10,13 @@ defmodule MediaWatch.Catalog.Catalogable do
     quote do
       @behaviour MediaWatch.Catalog.Catalogable
 
-      def get_layout(), do: __MODULE__
+      def get_module(), do: __MODULE__
 
       def insert(repo) do
         channels = get_channels(repo)
 
         %{
-          layout: get_layout(),
+          module: get_module(),
           sources: get_sources()
         }
         |> Map.merge(get_item_args())
@@ -31,10 +31,10 @@ defmodule MediaWatch.Catalog.Catalogable do
         import Ecto.Query
         alias MediaWatch.Catalog.Item
 
-        layout = get_layout()
+        module = get_module()
 
         from(i in Item,
-          where: i.layout == ^layout,
+          where: i.module == ^module,
           preload: [:channels, :show, sources: [:rss_feed]]
         )
         |> repo.one()

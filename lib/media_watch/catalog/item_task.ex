@@ -7,22 +7,22 @@ defmodule MediaWatch.Catalog.ItemTask do
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   alias MediaWatch.Analysis.{Description, ShowOccurrence}
 
-  def start_link(layout) when is_atom(layout) do
-    GenServer.start_link(__MODULE__, layout, name: layout)
+  def start_link(module) when is_atom(module) do
+    GenServer.start_link(__MODULE__, module, name: module)
   end
 
-  def do_snapshots(layout) when is_atom(layout), do: GenServer.cast(layout, :do_snapshots)
+  def do_snapshots(module) when is_atom(module), do: GenServer.cast(module, :do_snapshots)
 
   @impl true
-  def init(layout) when is_atom(layout) do
-    case layout.get(Repo) do
+  def init(module) when is_atom(module) do
+    case module.get(Repo) do
       nil ->
-        case layout.insert(Repo) do
+        case module.insert(Repo) do
           {:ok, item} ->
             item |> init()
 
           {:error, _} ->
-            Logger.warning("Could not start #{layout}")
+            Logger.warning("Could not start #{module}")
             {:ok, nil}
         end
 
@@ -43,7 +43,7 @@ defmodule MediaWatch.Catalog.ItemTask do
     success_snaps =
       Catalog.select_sources(state.id)
       |> Repo.all()
-      |> Enum.map(&make_snapshot(&1, state.item.layout))
+      |> Enum.map(&make_snapshot(&1, state.item.module))
       |> keep_ok_results()
 
     success_snaps |> publish_result(state.id)
@@ -53,41 +53,41 @@ defmodule MediaWatch.Catalog.ItemTask do
 
   @impl true
   def handle_info(snap = %Snapshot{}, state) do
-    snap |> parse_snapshot(state.item.layout) |> publish_result(state.id)
+    snap |> parse_snapshot(state.item.module) |> publish_result(state.id)
 
     {:noreply, state}
   end
 
   def handle_info(snap = %ParsedSnapshot{}, state) do
-    snap |> slice_snapshot(state.item.layout) |> publish_result(state.id)
+    snap |> slice_snapshot(state.item.module) |> publish_result(state.id)
 
     {:noreply, state}
   end
 
   def handle_info(slice = %Slice{type: :rss_channel_description}, state) do
-    slice |> state.item.layout.describe() |> Repo.insert() |> publish_result(state.id)
+    slice |> state.item.module.describe() |> Repo.insert() |> publish_result(state.id)
 
     {:noreply, state}
   end
 
   def handle_info(slice = %Slice{type: :rss_entry}, state) do
-    slice |> state.item.layout.format_occurrence() |> Repo.insert() |> publish_result(state.id)
+    slice |> state.item.module.format_occurrence() |> Repo.insert() |> publish_result(state.id)
 
     {:noreply, state}
   end
 
-  defp make_snapshot(source, layout) do
-    with {:ok, cs} <- layout.make_snapshot(source), do: cs |> Repo.insert()
+  defp make_snapshot(source, module) do
+    with {:ok, cs} <- module.make_snapshot(source), do: cs |> Repo.insert()
   end
 
-  defp parse_snapshot(snap = %Snapshot{}, layout) do
-    with {:ok, cs} <- layout.parse(snap), do: cs |> Repo.insert()
+  defp parse_snapshot(snap = %Snapshot{}, module) do
+    with {:ok, cs} <- module.parse(snap), do: cs |> Repo.insert()
   end
 
-  defp slice_snapshot(snap = %ParsedSnapshot{}, layout) do
+  defp slice_snapshot(snap = %ParsedSnapshot{}, module) do
     snap = Parsing.get(snap.id)
 
-    with cs_list when is_list(cs_list) <- layout.slice(snap) do
+    with cs_list when is_list(cs_list) <- module.slice(snap) do
       case cs_list |> insert_all_slices do
         {:ok, ok, _} ->
           ok
