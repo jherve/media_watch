@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Snapshots, Analysis}
-  alias MediaWatchWeb.Component.{Item, Description}
+  alias MediaWatchWeb.Component.{Item, Description, ShowOccurrence}
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
@@ -39,25 +39,6 @@ defmodule MediaWatchWeb.ItemLive do
 
       <h2>Emissions</h2>
 
-      <%= render_occurrences_list(assigns) %>
-    """
-
-  defp render_occurrences_list(assigns = %{occurrences: []}),
-    do: ~H"<p>Pas d'émission disponible</p>"
-
-  defp render_occurrences_list(assigns),
-    do: ~H"""
-    <ul>
-      <%= for o <- @occurrences do %>
-        <li><%= render_occurrence(o) %></li>
-      <% end %>
-    </ul>
-    """
-
-  defp render_occurrence(o),
-    do: ~E"""
-      <h3><%= o.date_start |> Timex.to_date %> : <%= o.title %></h3>
-      <p><%= o.description %></p>
-      <p><%= if o.link, do: link("Lien", to: o.link) %></p>
+      <ShowOccurrence.list occurrences={@occurrences} />
     """
 end
