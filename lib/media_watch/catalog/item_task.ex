@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemTask do
   use GenServer
   require Logger
-  alias MediaWatch.{Catalog, Repo, PubSub, Parsing}
+  alias MediaWatch.{Repo, PubSub, Parsing}
   alias MediaWatch.Catalog.Item
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
@@ -36,14 +36,13 @@ defmodule MediaWatch.Catalog.ItemTask do
     PubSub.subscribe("snapshots:#{id}")
     PubSub.subscribe("parsing:#{id}")
     PubSub.subscribe("slicing:#{id}")
-    {:ok, %{id: id, item: item}}
+    {:ok, %{id: id, item: item, sources: item.sources}}
   end
 
   @impl true
-  def handle_cast(:do_snapshots, state) do
+  def handle_cast(:do_snapshots, state = %{sources: sources}) do
     success_snaps =
-      Catalog.select_sources(state.id)
-      |> Repo.all()
+      sources
       |> Enum.map(&make_snapshot(&1, state.item.module))
       |> keep_ok_results()
 
