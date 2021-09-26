@@ -6,6 +6,7 @@ defmodule MediaWatch.Catalog.ItemTask do
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   alias MediaWatch.Analysis.{Description, ShowOccurrence}
+  @max_snapshot_retries 3
 
   def start_link(module) when is_atom(module) do
     GenServer.start_link(__MODULE__, module, name: module)
@@ -76,8 +77,24 @@ defmodule MediaWatch.Catalog.ItemTask do
     {:noreply, state}
   end
 
-  defp make_snapshot(source, module) do
-    with {:ok, cs} <- module.make_snapshot(source), do: cs |> Repo.insert()
+  defp make_snapshot(source, module, nb_retries \\ 0)
+
+  defp make_snapshot(_, module, nb_retries) when nb_retries > @max_snapshot_retries do
+    Logger.warning("Could not snapshot #{module} despite #{nb_retries} retries")
+    {:error, reason: :max_retries}
+  end
+
+  defp make_snapshot(source, module, nb_retries) do
+    with {:ok, cs} <- module.make_snapshot(source) do
+      cs |> Repo.insert()
+    else
+      {:error, %{reason: :timeout}} ->
+        Logger.warning("Retrying snapshot for #{module}")
+        make_snapshot(source, module, nb_retries + 1)
+
+      error = {:error, _} ->
+        error
+    end
   end
 
   defp parse_snapshot(snap = %Snapshot{}, module) do
