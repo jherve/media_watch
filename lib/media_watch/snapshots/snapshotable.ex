@@ -12,9 +12,7 @@ defmodule MediaWatch.Snapshots.Snapshotable do
         with {:ok, cs} <- make_snapshot(source), do: cs |> repo.insert()
       end
 
-      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
-
-      defoverridable make_snapshot: 1, make_snapshot_and_insert: 2
+      defoverridable make_snapshot_and_insert: 2
     end
   end
 end

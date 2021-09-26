@@ -6,7 +6,6 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
           data: map()
         }
 
-  @behaviour MediaWatch.Parsing.Sliceable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Snapshots.Snapshot
@@ -75,4 +74,15 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
              "image" => image
            }
          })
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Parsing.Sliceable
+
+      @impl true
+      defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
+
+      defoverridable slice: 1
+    end
+  end
 end

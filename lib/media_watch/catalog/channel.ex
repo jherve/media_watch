@@ -1,4 +1,8 @@
 defmodule MediaWatch.Catalog.Channel do
+  @callback get_module() :: atom()
+  @callback get_name() :: binary()
+  @callback get_url() :: binary()
+
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Channel
@@ -20,5 +24,30 @@ defmodule MediaWatch.Catalog.Channel do
     |> cast(attrs, [:module, :name, :url])
     |> validate_required([:module, :name, :url])
     |> unique_constraint(:module)
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Catalog.Catalogable
+      @behaviour Channel
+
+      def get_module(), do: __MODULE__
+
+      @impl true
+      def insert(repo) do
+        %{module: get_module(), name: get_name(), url: get_url()}
+        |> Channel.changeset()
+        |> repo.insert()
+      end
+
+      @impl true
+      def get(repo) do
+        import Ecto.Query
+        module = get_module()
+
+        from(c in Channel, where: c.module == ^module)
+        |> repo.one()
+      end
+    end
   end
 end

@@ -2,9 +2,12 @@ defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
+  alias MediaWatch.Catalog
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
+  alias MediaWatch.Analysis.{Description, ShowOccurrence}
+
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description]
   @required_fields [:type]
@@ -32,6 +35,16 @@ defmodule MediaWatch.Parsing.Slice do
     |> validate_required(@required_fields)
     |> unsafe_unique_constraint()
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
+  end
+
+  def describe(slice = %Slice{}) do
+    item_id = Catalog.get_item_id(slice.source_id)
+    Description.from(slice, item_id)
+  end
+
+  def format_occurrence(slice = %Slice{}) do
+    show_id = Catalog.get_show_id(slice.source_id)
+    ShowOccurrence.from(slice, show_id)
   end
 
   def get_error_reason({:ok, _obj}), do: :ok
@@ -144,6 +157,21 @@ defmodule MediaWatch.Parsing.Slice do
             validation: :unsafe_unique_entry_pub_date
           ),
         else: cs
+    end
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Analysis.Describable
+      use MediaWatch.Analysis.Recurrent
+
+      @impl true
+      defdelegate describe(slice), to: MediaWatch.Parsing.Slice
+
+      @impl true
+      defdelegate format_occurrence(slice), to: MediaWatch.Parsing.Slice
+
+      defoverridable describe: 1, format_occurrence: 1
     end
   end
 end

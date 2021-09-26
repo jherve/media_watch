@@ -6,10 +6,6 @@ defmodule MediaWatch.Parsing.Sliceable do
   defmacro __using__(_opts) do
     quote do
       @behaviour MediaWatch.Parsing.Sliceable
-
-      defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
-
-      defoverridable slice: 1
     end
   end
 end

@@ -7,7 +7,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
           xml: MediaWatch.Snapshots.Snapshot.Xml.t() | nil
         }
 
-  @behaviour MediaWatch.Parsing.Parsable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
@@ -34,7 +33,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> validate_required([:type])
   end
 
-  @impl true
   def parse(snap = %Snapshot{type: :xml, xml: xml}) when not is_nil(xml) do
     with {:ok, data} <- xml |> Xml.into_parsed_snapshot_data() do
       {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, %{data: data})}
@@ -44,6 +42,17 @@ defmodule MediaWatch.Snapshots.Snapshot do
   defp set_type(cs) do
     case cs |> fetch_field(:xml) do
       {_, %Xml{}} -> cs |> put_change(:type, :xml)
+    end
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Parsing.Parsable
+
+      @impl true
+      defdelegate parse(source), to: MediaWatch.Snapshots.Snapshot
+
+      defoverridable parse: 1
     end
   end
 end

@@ -5,6 +5,10 @@ defmodule MediaWatch.Catalog.Item do
           id: integer() | nil,
           module: atom()
         }
+  @callback get_module() :: atom()
+  @callback get_item_args() :: map()
+  @callback get_sources() :: list(map())
+  @callback get_channel_names() :: list(binary())
 
   use Ecto.Schema
   import Ecto.Changeset
@@ -46,6 +50,45 @@ defmodule MediaWatch.Catalog.Item do
     case changeset |> fetch_field(field) do
       {_, val} when not is_nil(val) -> true
       {_, nil} -> false
+    end
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Catalog.Catalogable
+      @behaviour MediaWatch.Catalog.Item
+
+      def get_module(), do: __MODULE__
+
+      def insert(repo) do
+        channels = get_channels(repo)
+
+        %{module: get_module(), sources: get_sources()}
+        |> Map.merge(get_item_args())
+        |> Item.changeset()
+        |> change(channel_items: channels |> Enum.map(&%ChannelItem{channel: &1}))
+        |> repo.insert()
+      end
+
+      def get(repo) do
+        import Ecto.Query
+        module = get_module()
+
+        from(i in Item,
+          where: i.module == ^module,
+          preload: [:channels, :show, sources: [:rss_feed]]
+        )
+        |> repo.one()
+      end
+
+      defp get_channels(repo) do
+        import Ecto.Query
+        alias MediaWatch.Catalog.Channel
+        channel_names = get_channel_names()
+
+        from(c in Channel, where: c.name in ^channel_names)
+        |> repo.all()
+      end
     end
   end
 end

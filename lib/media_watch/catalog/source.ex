@@ -7,7 +7,6 @@ defmodule MediaWatch.Catalog.Source do
           item: MediaWatch.Catalog.Item.t() | nil
         }
 
-  use MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Item
@@ -30,7 +29,6 @@ defmodule MediaWatch.Catalog.Source do
     |> set_type()
   end
 
-  @impl true
   def make_snapshot(source = %{type: :rss_feed, rss_feed: feed}) when not is_nil(feed) do
     with {:ok, attrs} <- feed |> RssFeed.into_snapshot_attrs() do
       {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}
@@ -45,6 +43,17 @@ defmodule MediaWatch.Catalog.Source do
     case cs |> fetch_field(field) do
       {_, val} when not is_nil(val) -> true
       _ -> false
+    end
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Snapshots.Snapshotable
+
+      @impl true
+      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
+
+      defoverridable make_snapshot: 1
     end
   end
 end

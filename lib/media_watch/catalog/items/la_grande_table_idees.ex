@@ -1,11 +1,11 @@
 defmodule MediaWatch.Catalog.Item.LaGrandeTableIdees do
-  use MediaWatch.Catalog.CatalogableItem
-  use MediaWatch.Snapshots.Snapshotable
-  use MediaWatch.Parsing.Parsable
-  use MediaWatch.Parsing.Sliceable
-  use MediaWatch.Analysis.Describable
-  use MediaWatch.Analysis.Recurrent
+  use MediaWatch.Catalog.Item
+  use MediaWatch.Catalog.Source
+  use MediaWatch.Snapshots.Snapshot
+  use MediaWatch.Parsing.ParsedSnapshot
+  use MediaWatch.Parsing.Slice
 
+  @impl true
   def get_item_args(),
     do: %{
       show: %{
@@ -14,8 +14,10 @@ defmodule MediaWatch.Catalog.Item.LaGrandeTableIdees do
       }
     }
 
+  @impl true
   def get_sources(),
     do: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_12360.xml"}}]
 
+  @impl true
   def get_channel_names(), do: ["France Culture"]
 end
