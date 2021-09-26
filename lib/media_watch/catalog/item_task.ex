@@ -53,7 +53,7 @@ defmodule MediaWatch.Catalog.ItemTask do
 
   @impl true
   def handle_info(snap = %Snapshot{}, state) do
-    snap |> parse_snapshot(state.item.module) |> publish_result(state.id)
+    snap |> state.item.module.parse_and_insert(Repo) |> publish_result(state.id)
 
     {:noreply, state}
   end
@@ -95,10 +95,6 @@ defmodule MediaWatch.Catalog.ItemTask do
       error = {:error, _} ->
         error
     end
-  end
-
-  defp parse_snapshot(snap = %Snapshot{}, module) do
-    with {:ok, cs} <- module.parse(snap), do: cs |> Repo.insert()
   end
 
   defp slice_snapshot(snap = %ParsedSnapshot{}, module) do
