@@ -16,7 +16,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
 
   @impl true
   def render(assigns),
-    do: ~L"""
+    do: ~H"""
       <h1>Liste des émissions <button phx-click="trigger_all_snapshots">Lancer tous les snapshots</button></h1>
 
       <ul>

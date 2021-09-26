@@ -32,7 +32,7 @@ defmodule MediaWatchWeb.ItemLive do
 
   @impl true
   def render(assigns),
-    do: ~L"""
+    do: ~H"""
       <h1><%= ItemView.item_title(@item) %><button phx-click="trigger_snapshots">Lancer les snapshots</button></h1>
 
       <%= render_description(assigns) %>
@@ -43,25 +43,25 @@ defmodule MediaWatchWeb.ItemLive do
     """
 
   defp render_description(assigns = %{description: nil}),
-    do: ~L"<dl>Pas de description disponible</dl>"
+    do: ~H"<dl>Pas de description disponible</dl>"
 
   defp render_description(assigns),
-    do: ~L"""
+    do: ~H"""
     <dl>
       <dt>URL</dt>
       <dd><%= link @description.link, to: @description.link %></dd>
       <dt>Description</dt>
       <dd><%= @description.description %></dd>
       <dt>Image</dt>
-      <dd><img src="<%= @description.image["url"] %>"/></dd>
+      <dd><img src={@description.image["url"]}/></dd>
     </dl>
     """
 
   defp render_occurrences_list(assigns = %{occurrences: []}),
-    do: ~L"<p>Pas d'émission disponible</p>"
+    do: ~H"<p>Pas d'émission disponible</p>"
 
   defp render_occurrences_list(assigns),
-    do: ~L"""
+    do: ~H"""
     <ul>
       <%= for o <- @occurrences do %>
         <li><%= render_occurrence(o) %></li>

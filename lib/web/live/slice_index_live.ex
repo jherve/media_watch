@@ -20,7 +20,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   @impl true
   def render(assigns),
-    do: ~L"""
+    do: ~H"""
       <h1>Liste des diffusions le <%= @day %></h1>
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
