@@ -98,30 +98,14 @@ defmodule MediaWatch.Catalog.ItemTask do
   end
 
   defp slice_snapshot(snap = %ParsedSnapshot{}, module) do
-    snap = Parsing.get(snap.id)
+    case Parsing.get(snap.id) |> module.slice_and_insert(Repo) do
+      {:ok, ok, _} ->
+        ok
 
-    with cs_list when is_list(cs_list) <- module.slice(snap) do
-      case cs_list |> insert_all_slices do
-        {:ok, ok, _} ->
-          ok
-
-        {:error, ok, _, errors} ->
-          Logger.error("#{errors |> Enum.count()} errors on slices insertion")
-          ok
-      end
+      {:error, ok, _, errors} ->
+        Logger.error("#{errors |> Enum.count()} errors on slices insertion")
+        ok
     end
-  end
-
-  defp insert_all_slices(cs_list) do
-    res =
-      cs_list
-      |> Enum.map(&Repo.insert/1)
-      |> Enum.group_by(&Slice.get_error_reason/1, fn {_, val} -> val end)
-
-    {ok, unique, failures} =
-      {res |> Map.get(:ok, []), res |> Map.get(:unique, []), res |> Map.get(:error, [])}
-
-    if failures |> Enum.empty?(), do: {:ok, ok, unique}, else: {:error, ok, unique, failures}
   end
 
   defp keep_ok_results(res_list) when is_list(res_list),
