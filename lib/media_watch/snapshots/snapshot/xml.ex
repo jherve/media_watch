@@ -1,5 +1,10 @@
 defmodule MediaWatch.Snapshots.Snapshot.Xml do
-  @behaviour MediaWatch.Parsing.Parsable
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          content: binary()
+        }
+
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Xml
@@ -15,10 +20,9 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
     |> validate_required([:content])
   end
 
-  @impl true
-  def parse(%Xml{content: content}) do
+  def into_parsed_snapshot_data(%Xml{content: content}) do
     with {:ok, parsed} <- content |> ElixirFeedParser.parse(),
-         do: {:ok, %{data: parsed |> prune_root |> prune_entries}}
+         do: {:ok, parsed |> prune_root |> prune_entries}
   end
 
   defp prune_entries(parsed = %{entries: entries}) when is_map(parsed),

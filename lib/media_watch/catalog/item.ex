@@ -1,4 +1,11 @@
 defmodule MediaWatch.Catalog.Item do
+  # TODO this typespec is incomplete
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          module: atom()
+        }
+
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Item

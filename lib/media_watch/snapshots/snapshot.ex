@@ -1,4 +1,12 @@
 defmodule MediaWatch.Snapshots.Snapshot do
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          type: atom(),
+          source: MediaWatch.Catalog.Source.t() | nil,
+          xml: MediaWatch.Snapshots.Snapshot.Xml.t() | nil
+        }
+
   @behaviour MediaWatch.Parsing.Parsable
   use Ecto.Schema
   import Ecto.Changeset
@@ -27,9 +35,9 @@ defmodule MediaWatch.Snapshots.Snapshot do
   end
 
   @impl true
-  def parse(snap = %Snapshot{xml: xml}) when not is_nil(xml) do
-    with {:ok, attrs} <- xml |> Xml.parse() do
-      {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, attrs)}
+  def parse(snap = %Snapshot{type: :xml, xml: xml}) when not is_nil(xml) do
+    with {:ok, data} <- xml |> Xml.into_parsed_snapshot_data() do
+      {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, %{data: data})}
     end
   end
 

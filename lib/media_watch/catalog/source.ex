@@ -1,4 +1,13 @@
 defmodule MediaWatch.Catalog.Source do
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          type: atom(),
+          rss_feed: MediaWatch.Catalog.Source.RssFeed.t() | nil,
+          item: MediaWatch.Catalog.Item.t() | nil
+        }
+
+  @behaviour MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Item
@@ -21,14 +30,12 @@ defmodule MediaWatch.Catalog.Source do
     |> set_type()
   end
 
-  def make_snapshot(source) do
-    with actual = %struct{} <- source |> get_actual_source,
-         {:ok, attrs} <- actual |> struct.make_snapshot() do
+  @impl true
+  def make_snapshot(source = %{type: :rss_feed, rss_feed: feed}) when not is_nil(feed) do
+    with {:ok, attrs} <- feed |> RssFeed.into_snapshot_attrs() do
       {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}
     end
   end
-
-  defp get_actual_source(%Source{rss_feed: feed}) when not is_nil(feed), do: feed
 
   defp set_type(cs) do
     if has_field?(cs, :rss_feed), do: cs |> put_change(:type, :rss_feed), else: cs

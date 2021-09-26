@@ -1,14 +1,17 @@
 defmodule MediaWatch.Catalog.Source.RssFeed do
-  @behaviour MediaWatch.Snapshots.Snapshotable
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          url: binary()
+        }
+
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Http
-  alias MediaWatch.Catalog.Source
   alias __MODULE__, as: RssFeed
 
   schema "rss_feeds" do
     field :url, :string
-    belongs_to :strategy, Source, foreign_key: :id, define_field: false
   end
 
   @doc false
@@ -19,7 +22,6 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
     |> unique_constraint([:url])
   end
 
-  @impl true
-  def make_snapshot(%RssFeed{url: url}),
+  def into_snapshot_attrs(%RssFeed{url: url}),
     do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{xml: %{content: content}}})
 end

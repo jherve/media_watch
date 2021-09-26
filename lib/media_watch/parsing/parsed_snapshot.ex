@@ -1,4 +1,11 @@
 defmodule MediaWatch.Parsing.ParsedSnapshot do
+  @type t() :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: integer() | nil,
+          snapshot: MediaWatch.Snapshots.Snapshot.t() | nil,
+          data: map()
+        }
+
   @behaviour MediaWatch.Parsing.Sliceable
   use Ecto.Schema
   import Ecto.Changeset

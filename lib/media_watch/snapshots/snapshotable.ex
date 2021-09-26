@@ -1,5 +1,6 @@
 defmodule MediaWatch.Snapshots.Snapshotable do
-  @callback make_snapshot(any()) :: {:ok, Ecto.Changeset.t()} | {:error, atom()}
+  @callback make_snapshot(MediaWatch.Catalog.Source.t()) ::
+              {:ok, Ecto.Changeset.t()} | {:error, any()}
 
   defmacro __using__(_opts) do
     quote do

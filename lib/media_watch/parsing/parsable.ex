@@ -1,5 +1,6 @@
 defmodule MediaWatch.Parsing.Parsable do
-  @callback parse(any()) :: map()
+  @callback parse(MediaWatch.Snapshots.Snapshot.t()) ::
+              {:ok, Ecto.Changeset.t()} | {:error, any()}
 
   defmacro __using__(_opts) do
     quote do
