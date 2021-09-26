@@ -1,14 +1,20 @@
 defmodule MediaWatch.Snapshots.Snapshotable do
   @callback make_snapshot(MediaWatch.Catalog.Source.t()) ::
               {:ok, Ecto.Changeset.t()} | {:error, any()}
+  @callback make_snapshot_and_insert(MediaWatch.Catalog.Source.t(), Ecto.Repo.t()) ::
+              {:ok, MediaWatch.Snapshots.Snapshot} | {:error, any()}
 
   defmacro __using__(_opts) do
     quote do
       @behaviour MediaWatch.Snapshots.Snapshotable
 
+      def make_snapshot_and_insert(source, repo) do
+        with {:ok, cs} <- make_snapshot(source), do: cs |> repo.insert()
+      end
+
       defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
 
-      defoverridable make_snapshot: 1
+      defoverridable make_snapshot: 1, make_snapshot_and_insert: 2
     end
   end
 end

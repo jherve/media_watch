@@ -84,9 +84,10 @@ defmodule MediaWatch.Catalog.ItemTask do
   end
 
   defp make_snapshot(source, module, nb_retries) do
-    with {:ok, cs} <- module.make_snapshot(source) do
-      cs |> Repo.insert()
-    else
+    case module.make_snapshot_and_insert(source, MediaWatch.Repo) do
+      ok = {:ok, _} ->
+        ok
+
       {:error, %{reason: :timeout}} ->
         Logger.warning("Retrying snapshot for #{module}")
         make_snapshot(source, module, nb_retries + 1)

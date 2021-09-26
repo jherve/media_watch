@@ -7,7 +7,7 @@ defmodule MediaWatch.Catalog.Source do
           item: MediaWatch.Catalog.Item.t() | nil
         }
 
-  @behaviour MediaWatch.Snapshots.Snapshotable
+  use MediaWatch.Snapshots.Snapshotable
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Item
