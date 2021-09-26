@@ -1,6 +1,7 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
+  alias MediaWatchWeb.Component.Item
   @one_day Timex.Duration.from_days(1)
 
   @impl true
@@ -26,7 +27,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
       <ul>
         <%= for i <- @items do %>
-          <li><%= (i.description || %{title: ""}).title %>
+          <li><Item.clickable_link item={i}/>
             <ul>
               <%= for i <- i.show.occurrences do %>
                 <li><%= i |> render_occurrence %></li>

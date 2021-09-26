@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ItemIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Catalog, Snapshots}
-  alias MediaWatchWeb.ItemView
+  alias MediaWatchWeb.Component.Item
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,11 +21,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
 
       <ul>
         <%= for i <- @items do %>
-          <li>
-              <%= link to: MediaWatchWeb.Router.Helpers.item_path(MediaWatchWeb.Endpoint, :detail, i.id) do %>
-                <%= ItemView.item_title(i) %>
-              <% end %>
-          </li>
+          <li><Item.clickable_link item={i} /></li>
         <% end %>
       </ul>
     """
