@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Snapshots, Analysis}
-  alias MediaWatchWeb.Component.Item
+  alias MediaWatchWeb.Component.{Item, Description}
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
@@ -35,26 +35,11 @@ defmodule MediaWatchWeb.ItemLive do
     do: ~H"""
       <h1><Item.title item={@item} /><button phx-click="trigger_snapshots">Lancer les snapshots</button></h1>
 
-      <%= render_description(assigns) %>
+      <Description.description description={@description} />
 
       <h2>Emissions</h2>
 
       <%= render_occurrences_list(assigns) %>
-    """
-
-  defp render_description(assigns = %{description: nil}),
-    do: ~H"<dl>Pas de description disponible</dl>"
-
-  defp render_description(assigns),
-    do: ~H"""
-    <dl>
-      <dt>URL</dt>
-      <dd><%= link @description.link, to: @description.link %></dd>
-      <dt>Description</dt>
-      <dd><%= @description.description %></dd>
-      <dt>Image</dt>
-      <dd><img src={@description.image["url"]}/></dd>
-    </dl>
     """
 
   defp render_occurrences_list(assigns = %{occurrences: []}),
