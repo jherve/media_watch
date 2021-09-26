@@ -30,17 +30,17 @@ defmodule MediaWatch.Catalog do
     |> Repo.one()
   end
 
-  def all_channels(),
-    do: %{
-      france_inter: %{name: "France Inter", url: "https://www.franceinter.fr"},
-      france_culture: %{name: "France Culture", url: "https://www.franceculture.fr"},
-      france_info: %{name: "France Info", url: "https://www.francetvinfo.fr"},
-      rmc: %{name: "RMC", url: "https://rmc.bfmtv.com/"},
-      rtl: %{name: "RTL", url: "https://www.rtl.fr"}
-    }
-
   def try_to_insert_all_channels(),
-    do: all_channels() |> Map.values() |> Enum.each(&(&1 |> Channel.changeset() |> Repo.insert()))
+    do: all_channel_modules() |> Enum.each(& &1.insert(Repo))
+
+  def all_channel_modules(),
+    do: [
+      Channel.FranceInter,
+      Channel.FranceCulture,
+      Channel.FranceInfo,
+      Channel.RTL,
+      Channel.RMC
+    ]
 
   def all(),
     do: [

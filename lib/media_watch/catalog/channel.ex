@@ -2,9 +2,11 @@ defmodule MediaWatch.Catalog.Channel do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Channel
+  alias MediaWatch.Catalog
   alias MediaWatch.Catalog.ChannelItem
 
   schema "channels" do
+    field :module, Ecto.Enum, values: Catalog.all_channel_modules()
     field :name, :string
     field :url, :string
 
@@ -15,8 +17,8 @@ defmodule MediaWatch.Catalog.Channel do
   @doc false
   def changeset(channel \\ %Channel{}, attrs) do
     channel
-    |> cast(attrs, [:name, :url])
-    |> validate_required([:name, :url])
-    |> unique_constraint(:name)
+    |> cast(attrs, [:module, :name, :url])
+    |> validate_required([:module, :name, :url])
+    |> unique_constraint(:module)
   end
 end

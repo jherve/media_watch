@@ -3,11 +3,12 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
 
   def change do
     create table(:channels) do
+      add :module, :string, null: false
       add :name, :string, null: false
       add :url, :string, null: false
     end
 
-    create unique_index(:channels, [:name])
+    create unique_index(:channels, [:module])
 
     create table(:watched_items) do
       add :module, :string
