@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.LaGrandeTableIdees do
-  use MediaWatch.Catalog.Catalogable
+  use MediaWatch.Catalog.CatalogableItem
   use MediaWatch.Snapshots.Snapshotable
   use MediaWatch.Parsing.Parsable
   use MediaWatch.Parsing.Sliceable
