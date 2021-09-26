@@ -65,13 +65,13 @@ defmodule MediaWatch.Catalog.ItemTask do
   end
 
   def handle_info(slice = %Slice{type: :rss_channel_description}, state) do
-    slice |> state.item.module.describe() |> Repo.insert() |> publish_result(state.id)
+    slice |> state.item.module.describe_and_insert(Repo) |> publish_result(state.id)
 
     {:noreply, state}
   end
 
   def handle_info(slice = %Slice{type: :rss_entry}, state) do
-    slice |> state.item.module.format_occurrence() |> Repo.insert() |> publish_result(state.id)
+    slice |> state.item.module.format_occurrence_and_insert(Repo) |> publish_result(state.id)
 
     {:noreply, state}
   end
