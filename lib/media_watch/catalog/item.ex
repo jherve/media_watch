@@ -23,6 +23,7 @@ defmodule MediaWatch.Catalog.Item do
     |> cast_assoc(:show)
     |> validate_required_inclusion([:show])
     |> cast_assoc(:sources, required: true)
+    |> unique_constraint(:module)
   end
 
   def validate_required_inclusion(changeset, fields) do

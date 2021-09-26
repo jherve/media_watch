@@ -13,6 +13,8 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :module, :string
     end
 
+    create unique_index(:watched_items, [:module])
+
     create table(:channel_items, primary_key: false) do
       add :channel_id, references(:channels, column: :id), primary_key: true
       add :item_id, references(:watched_items, column: :id), primary_key: true
