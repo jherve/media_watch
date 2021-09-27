@@ -3,7 +3,7 @@ defmodule MediaWatch.Catalog.Item.InviteRTL do
   use MediaWatch.Catalog.Source
   use MediaWatch.Snapshots.Snapshot
   use MediaWatch.Parsing.ParsedSnapshot
-  use MediaWatch.Parsing.Slice
+  use MediaWatch.Catalog.Item.Layout.RTL
 
   @impl true
   def get_item_args(),
