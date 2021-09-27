@@ -17,7 +17,7 @@ defmodule MediaWatch.Parsing.Sliceable do
       defp insert_all_slices(cs_list, repo) do
         res =
           cs_list
-          |> Enum.map(&repo.insert/1)
+          |> Enum.map(&MediaWatch.Repo.insert_and_retry(&1, repo))
           |> Enum.group_by(&MediaWatch.Parsing.Slice.get_error_reason/1, fn {_, val} -> val end)
 
         {ok, unique, failures} =

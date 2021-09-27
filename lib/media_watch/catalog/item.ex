@@ -67,7 +67,7 @@ defmodule MediaWatch.Catalog.Item do
         |> Map.merge(get_item_args())
         |> Item.changeset()
         |> change(channel_items: channels |> Enum.map(&%ChannelItem{channel: &1}))
-        |> repo.insert()
+        |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
       def get(repo) do

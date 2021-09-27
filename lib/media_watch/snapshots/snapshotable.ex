@@ -9,7 +9,7 @@ defmodule MediaWatch.Snapshots.Snapshotable do
       @behaviour MediaWatch.Snapshots.Snapshotable
 
       def make_snapshot_and_insert(source, repo) do
-        with {:ok, cs} <- make_snapshot(source), do: cs |> repo.insert()
+        with {:ok, cs} <- make_snapshot(source), do: cs |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
       defoverridable make_snapshot_and_insert: 2

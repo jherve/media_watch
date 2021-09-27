@@ -1,7 +1,7 @@
 use Mix.Config
 
 # Configure your database
-config :media_watch, MediaWatch.Repo, database: "db.sqlite"
+config :media_watch, MediaWatch.Repo, database: "db.sqlite", busy_timeout: 0
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

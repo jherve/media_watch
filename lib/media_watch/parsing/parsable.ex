@@ -9,7 +9,7 @@ defmodule MediaWatch.Parsing.Parsable do
       @behaviour MediaWatch.Parsing.Parsable
 
       def parse_and_insert(snap, repo) do
-        with {:ok, cs} <- parse(snap), do: cs |> repo.insert()
+        with {:ok, cs} <- parse(snap), do: cs |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
       defoverridable parse_and_insert: 2

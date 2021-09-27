@@ -6,7 +6,8 @@ defmodule MediaWatch.Analysis.Describable do
     quote do
       @behaviour MediaWatch.Analysis.Describable
 
-      def describe_and_insert(slice, repo), do: slice |> describe() |> repo.insert()
+      def describe_and_insert(slice, repo),
+        do: slice |> describe() |> MediaWatch.Repo.insert_and_retry(repo)
 
       defoverridable describe_and_insert: 2
     end
