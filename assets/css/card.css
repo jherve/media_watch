@@ -1,0 +1,42 @@
+ul.card {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+ul.card > li ~ li {
+  margin-top: 2em;
+}
+
+li.card > a {
+  text-decoration: none;
+  color: inherit;
+}
+
+article.card {
+  display: grid;
+  grid-template-areas: "header header"
+  "image content"
+  "footer footer";
+}
+article.card.card-text {
+  grid-template-areas: "header header"
+  "content content"
+  "footer footer";
+}
+
+article.card h1 {
+  grid-area: header;
+  font-size: 1.5em;
+}
+article.card .content {
+  grid-area: content;
+  margin: 0 1em;
+}
+article.card img {
+  grid-area: image;
+  max-width: 20vw;
+}
+article.card .footer {
+  grid-area: footer;
+}

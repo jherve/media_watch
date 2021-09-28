@@ -9,6 +9,18 @@ defmodule MediaWatch.Analysis do
     PubSub.subscribe("occurrence_formatting:#{item_id}")
   end
 
+  def get_all_analyzed_items(),
+    do:
+      from(i in Item,
+        join: s in Show,
+        on: s.id == i.id,
+        left_join: so in ShowOccurrence,
+        on: so.show_id == s.id,
+        preload: [:channels, :description, show: {s, occurrences: so}],
+        order_by: [desc: so.date_start]
+      )
+      |> Repo.all()
+
   def get_analyzed_item(item_id),
     do:
       from(i in Item,

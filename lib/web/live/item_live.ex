@@ -33,9 +33,8 @@ defmodule MediaWatchWeb.ItemLive do
   @impl true
   def render(assigns),
     do: ~H"""
-      <h1><Item.title item={@item} /><button phx-click="trigger_snapshots">Lancer les snapshots</button></h1>
-
-      <Description.description description={@description} />
+      <Item.as_banner item={@item} id="item-banner" />
+      <button phx-click="trigger_snapshots">Lancer les snapshots</button>
 
       <h2>Emissions</h2>
 

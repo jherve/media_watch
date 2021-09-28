@@ -1,11 +1,11 @@
 defmodule MediaWatchWeb.ItemIndexLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.{Catalog, Snapshots}
+  alias MediaWatch.{Analysis, Snapshots}
   alias MediaWatchWeb.Component.Item
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(items: Catalog.list_all())}
+    {:ok, socket |> assign(items: Analysis.get_all_analyzed_items())}
   end
 
   @impl true
@@ -19,10 +19,6 @@ defmodule MediaWatchWeb.ItemIndexLive do
     do: ~H"""
       <h1>Liste des émissions <button phx-click="trigger_all_snapshots">Lancer tous les snapshots</button></h1>
 
-      <ul>
-        <%= for i <- @items do %>
-          <li><Item.clickable_link item={i} /></li>
-        <% end %>
-      </ul>
+      <Item.list items={@items} />
     """
 end

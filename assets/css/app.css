@@ -88,3 +88,14 @@
   display: block;
   margin: -1rem 0 2rem;
 }
+* {
+ box-sizing: border-box;
+}
+
+@import "card.css";
+@import "item.css";
+@import "occurrence.css";
+
+main > #item-banner {
+  margin-bottom: 2em;
+}
