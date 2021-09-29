@@ -1,7 +1,7 @@
 defmodule MediaWatch.Snapshots do
   import Ecto.Query
   alias MediaWatch.{Catalog, Repo}
-  alias MediaWatch.Catalog.ItemTask
+  alias MediaWatch.Catalog.ItemWorker
   alias MediaWatch.Snapshots.Snapshot
 
   def get_snapshots(source_ids),
@@ -15,5 +15,5 @@ defmodule MediaWatch.Snapshots do
 
   def do_all_snapshots(), do: Catalog.all() |> Enum.each(&do_snapshots/1)
 
-  defdelegate do_snapshots(module), to: ItemTask
+  defdelegate do_snapshots(module), to: ItemWorker
 end
