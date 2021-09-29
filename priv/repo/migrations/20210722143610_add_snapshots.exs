@@ -12,5 +12,10 @@ defmodule MediaWatch.Repo.Migrations.AddSnapshots do
       add :id, references(:snapshots, column: :id), primary_key: true
       add :content, :string, null: false
     end
+
+    # This should ideally be a trigger that checks uniqueness on content + source_id
+    # (from snapshots table) but it's highly unlikely that two distinct sources
+    # produce exactly the same snapshot.
+    create unique_index(:snapshots_xml, [:content])
   end
 end

@@ -18,6 +18,7 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
     xml
     |> cast(attrs, [:content])
     |> validate_required([:content])
+    |> unique_constraint(:content)
   end
 
   def into_parsed_snapshot_data(%Xml{content: content}) do
