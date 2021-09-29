@@ -45,15 +45,4 @@ defmodule MediaWatch.Catalog.Source do
       _ -> false
     end
   end
-
-  defmacro __using__(_opts) do
-    quote do
-      use MediaWatch.Snapshots.Snapshotable
-
-      @impl true
-      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
-
-      defoverridable make_snapshot: 1
-    end
-  end
 end

@@ -52,6 +52,11 @@ defmodule MediaWatch.Catalog.Item do
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       use MediaWatch.Catalog.Catalogable
+      use MediaWatch.Snapshots.Snapshotable
+      use MediaWatch.Parsing.Parsable
+      use MediaWatch.Parsing.Sliceable
+      use MediaWatch.Analysis.Describable
+      use MediaWatch.Analysis.Recurrent
 
       @show opts[:show]
       @item_args (cond do
@@ -61,6 +66,7 @@ defmodule MediaWatch.Catalog.Item do
       @sources opts[:sources] || raise("`sources` should be set")
       @channel_names opts[:channel_names] || raise("`channel_names` should be set")
 
+      @impl true
       def insert(repo) do
         channels = get_channels(repo)
 
@@ -71,6 +77,7 @@ defmodule MediaWatch.Catalog.Item do
         |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
+      @impl true
       def get(repo) do
         import Ecto.Query
 
@@ -80,6 +87,23 @@ defmodule MediaWatch.Catalog.Item do
         )
         |> repo.one()
       end
+
+      @impl true
+      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
+
+      @impl true
+      defdelegate parse(source), to: MediaWatch.Snapshots.Snapshot
+
+      @impl true
+      defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
+
+      @impl true
+      defdelegate describe(slice), to: MediaWatch.Parsing.Slice
+
+      @impl true
+      defdelegate format_occurrence(slice), to: MediaWatch.Parsing.Slice
+
+      defoverridable make_snapshot: 1, parse: 1, slice: 1, describe: 1, format_occurrence: 1
 
       defp get_channels(repo) do
         import Ecto.Query

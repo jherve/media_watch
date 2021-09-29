@@ -6,9 +6,4 @@ defmodule MediaWatch.Catalog.Item.InviteDesMatins do
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_13983.xml"}}],
     channel_names: ["France Culture"]
-
-  use MediaWatch.Catalog.Source
-  use MediaWatch.Snapshots.Snapshot
-  use MediaWatch.Parsing.ParsedSnapshot
-  use MediaWatch.Parsing.Slice
 end

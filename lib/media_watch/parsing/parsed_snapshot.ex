@@ -74,15 +74,4 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
              "image" => image
            }
          })
-
-  defmacro __using__(_opts) do
-    quote do
-      use MediaWatch.Parsing.Sliceable
-
-      @impl true
-      defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
-
-      defoverridable slice: 1
-    end
-  end
 end

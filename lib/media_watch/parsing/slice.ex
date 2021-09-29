@@ -159,19 +159,4 @@ defmodule MediaWatch.Parsing.Slice do
         else: cs
     end
   end
-
-  defmacro __using__(_opts) do
-    quote do
-      use MediaWatch.Analysis.Describable
-      use MediaWatch.Analysis.Recurrent
-
-      @impl true
-      defdelegate describe(slice), to: MediaWatch.Parsing.Slice
-
-      @impl true
-      defdelegate format_occurrence(slice), to: MediaWatch.Parsing.Slice
-
-      defoverridable describe: 1, format_occurrence: 1
-    end
-  end
 end

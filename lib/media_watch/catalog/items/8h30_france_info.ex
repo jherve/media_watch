@@ -6,9 +6,4 @@ defmodule MediaWatch.Catalog.Item.Le8h30FranceInfo do
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16370.xml"}}],
     channel_names: ["France Info"]
-
-  use MediaWatch.Catalog.Source
-  use MediaWatch.Snapshots.Snapshot
-  use MediaWatch.Parsing.ParsedSnapshot
-  use MediaWatch.Parsing.Slice
 end

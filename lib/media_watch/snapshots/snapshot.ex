@@ -44,15 +44,4 @@ defmodule MediaWatch.Snapshots.Snapshot do
       {_, %Xml{}} -> cs |> put_change(:type, :xml)
     end
   end
-
-  defmacro __using__(_opts) do
-    quote do
-      use MediaWatch.Parsing.Parsable
-
-      @impl true
-      defdelegate parse(source), to: MediaWatch.Snapshots.Snapshot
-
-      defoverridable parse: 1
-    end
-  end
 end
