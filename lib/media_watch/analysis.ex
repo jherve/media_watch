@@ -2,7 +2,7 @@ defmodule MediaWatch.Analysis do
   import Ecto.Query
   alias MediaWatch.{Repo, PubSub}
   alias MediaWatch.Catalog.{Item, Show}
-  alias MediaWatch.Analysis.ShowOccurrence
+  alias MediaWatch.Analysis.{ShowOccurrence, Description}
 
   def subscribe(item_id) do
     PubSub.subscribe("description:#{item_id}")
@@ -49,4 +49,9 @@ defmodule MediaWatch.Analysis do
     )
     |> Repo.all()
   end
+
+  def get_description(item_id), do: Description |> Repo.get_by(item_id: item_id)
+
+  def get_occurrences(show_id),
+    do: from(s in ShowOccurrence, where: s.show_id == ^show_id) |> Repo.all()
 end
