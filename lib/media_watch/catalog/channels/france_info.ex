@@ -1,8 +1,3 @@
 defmodule MediaWatch.Catalog.Channel.FranceInfo do
-  use MediaWatch.Catalog.Channel
-
-  @impl true
-  def get_name(), do: "France Info"
-  @impl true
-  def get_url(), do: "https://www.francetvinfo.fr"
+  use MediaWatch.Catalog.Channel, name: "France Info", url: "https://www.francetvinfo.fr"
 end

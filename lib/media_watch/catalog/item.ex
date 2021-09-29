@@ -5,10 +5,6 @@ defmodule MediaWatch.Catalog.Item do
           id: integer() | nil,
           module: atom()
         }
-  @callback get_module() :: atom()
-  @callback get_item_args() :: map()
-  @callback get_sources() :: list(map())
-  @callback get_channel_names() :: list(binary())
 
   use Ecto.Schema
   import Ecto.Changeset
@@ -53,18 +49,23 @@ defmodule MediaWatch.Catalog.Item do
     end
   end
 
-  defmacro __using__(_opts) do
-    quote do
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
       use MediaWatch.Catalog.Catalogable
-      @behaviour MediaWatch.Catalog.Item
 
-      def get_module(), do: __MODULE__
+      @show opts[:show]
+      @item_args (cond do
+                    not is_nil(@show) -> %{show: @show}
+                    true -> raise("At least one of [`show`] should be set")
+                  end)
+      @sources opts[:sources] || raise("`sources` should be set")
+      @channel_names opts[:channel_names] || raise("`channel_names` should be set")
 
       def insert(repo) do
         channels = get_channels(repo)
 
-        %{module: get_module(), sources: get_sources()}
-        |> Map.merge(get_item_args())
+        %{module: __MODULE__, sources: @sources}
+        |> Map.merge(@item_args)
         |> Item.changeset()
         |> change(channel_items: channels |> Enum.map(&%ChannelItem{channel: &1}))
         |> MediaWatch.Repo.insert_and_retry(repo)
@@ -72,10 +73,9 @@ defmodule MediaWatch.Catalog.Item do
 
       def get(repo) do
         import Ecto.Query
-        module = get_module()
 
         from(i in Item,
-          where: i.module == ^module,
+          where: i.module == ^__MODULE__,
           preload: [:channels, :show, sources: [:rss_feed]]
         )
         |> repo.one()
@@ -84,9 +84,8 @@ defmodule MediaWatch.Catalog.Item do
       defp get_channels(repo) do
         import Ecto.Query
         alias MediaWatch.Catalog.Channel
-        channel_names = get_channel_names()
 
-        from(c in Channel, where: c.name in ^channel_names)
+        from(c in Channel, where: c.name in ^@channel_names)
         |> repo.all()
       end
     end

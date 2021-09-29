@@ -1,8 +1,4 @@
 defmodule MediaWatch.Catalog.Channel do
-  @callback get_module() :: atom()
-  @callback get_name() :: binary()
-  @callback get_url() :: binary()
-
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: Channel
@@ -26,16 +22,16 @@ defmodule MediaWatch.Catalog.Channel do
     |> unique_constraint(:module)
   end
 
-  defmacro __using__(_opts) do
-    quote do
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
       use MediaWatch.Catalog.Catalogable
-      @behaviour Channel
 
-      def get_module(), do: __MODULE__
+      @name opts[:name] || raise("`name` should be set")
+      @url opts[:url] || raise("`url` should be set")
 
       @impl true
       def insert(repo) do
-        %{module: get_module(), name: get_name(), url: get_url()}
+        %{module: __MODULE__, name: @name, url: @url}
         |> Channel.changeset()
         |> MediaWatch.Repo.insert_and_retry(repo)
       end
@@ -43,9 +39,8 @@ defmodule MediaWatch.Catalog.Channel do
       @impl true
       def get(repo) do
         import Ecto.Query
-        module = get_module()
 
-        from(c in Channel, where: c.module == ^module)
+        from(c in Channel, where: c.module == ^__MODULE__)
         |> repo.one()
       end
     end
