@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.LaGrandeTableIdees do
-  use MediaWatch.Catalog.Item,
+  use MediaWatch.Catalog.ItemWorker,
     show: %{
       name: "La Grande Table idées",
       url: "https://www.franceculture.fr/emissions/la-grande-table-2eme-partie"

@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.Le8h30FranceInfo do
-  use MediaWatch.Catalog.Item,
+  use MediaWatch.Catalog.ItemWorker,
     show: %{
       name: "8h30 franceinfo",
       url: "https://www.francetvinfo.fr/replay-radio/8h30-fauvelle-dely/"
