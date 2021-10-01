@@ -10,6 +10,7 @@ defmodule MediaWatch.Parsing.Sliceable do
     quote do
       @behaviour MediaWatch.Parsing.Sliceable
 
+      @impl true
       def slice_and_insert(snap, repo) do
         with cs_list when is_list(cs_list) <- slice(snap), do: cs_list |> insert_all_slices(repo)
       end

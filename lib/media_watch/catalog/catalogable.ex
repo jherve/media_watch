@@ -8,6 +8,7 @@ defmodule MediaWatch.Catalog.Catalogable do
       @behaviour MediaWatch.Catalog.Catalogable
       @repo opts[:repo] || raise("`repo` should be set")
 
+      @impl true
       def get_repo(), do: @repo
     end
   end

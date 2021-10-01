@@ -6,6 +6,7 @@ defmodule MediaWatch.Analysis.Recurrent do
     quote do
       @behaviour MediaWatch.Analysis.Recurrent
 
+      @impl true
       def format_occurrence_and_insert(slice, repo),
         do: slice |> format_occurrence() |> MediaWatch.Repo.insert_and_retry(repo)
 
