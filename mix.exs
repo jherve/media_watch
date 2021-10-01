@@ -38,6 +38,7 @@ defmodule MediaWatch.MixProject do
       {:ecto_sql, "~> 3.4"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_live_view, "~> 0.16.4"},
+      {:mint, "~> 1.4.0"},
       {:floki, ">= 0.30.0"},
       {:phoenix_html, "~> 3.0.4"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
