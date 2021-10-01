@@ -16,9 +16,9 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   @impl true
   def init(module) when is_atom(module) do
-    case module.get(Repo) do
+    case module.get() do
       nil ->
-        case module.insert(Repo) do
+        case module.insert() do
           {:ok, item} ->
             item |> init()
 

@@ -51,7 +51,7 @@ defmodule MediaWatch.Catalog.Item do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      use MediaWatch.Catalog.Catalogable
+      use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
       use MediaWatch.Snapshots.Snapshotable
       use MediaWatch.Parsing.Parsable
       use MediaWatch.Parsing.Sliceable
@@ -67,7 +67,8 @@ defmodule MediaWatch.Catalog.Item do
       @channel_names opts[:channel_names] || raise("`channel_names` should be set")
 
       @impl true
-      def insert(repo) do
+      def insert() do
+        repo = get_repo()
         channels = get_channels(repo)
 
         %{module: __MODULE__, sources: @sources}
@@ -78,8 +79,9 @@ defmodule MediaWatch.Catalog.Item do
       end
 
       @impl true
-      def get(repo) do
+      def get() do
         import Ecto.Query
+        repo = get_repo()
 
         from(i in Item,
           where: i.module == ^__MODULE__,

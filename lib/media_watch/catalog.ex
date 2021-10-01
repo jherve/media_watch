@@ -31,7 +31,7 @@ defmodule MediaWatch.Catalog do
   end
 
   def try_to_insert_all_channels(),
-    do: all_channel_modules() |> Enum.each(& &1.insert(Repo))
+    do: all_channel_modules() |> Enum.each(& &1.insert())
 
   def all_channel_modules(),
     do: [

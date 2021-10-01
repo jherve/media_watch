@@ -1,10 +1,14 @@
 defmodule MediaWatch.Catalog.Catalogable do
-  @callback insert(Ecto.Repo.t()) :: {:ok, MediaWatch.Catalog.Item.t()} | {:error, any()}
-  @callback get(Ecto.Repo.t()) :: MediaWatch.Catalog.Item.t() | nil
+  @callback get_repo() :: Ecto.Repo.t()
+  @callback insert() :: {:ok, MediaWatch.Catalog.Item.t()} | {:error, any()}
+  @callback get() :: MediaWatch.Catalog.Item.t() | nil
 
-  defmacro __using__(_opts) do
-    quote do
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
       @behaviour MediaWatch.Catalog.Catalogable
+      @repo opts[:repo] || raise("`repo` should be set")
+
+      def get_repo(), do: @repo
     end
   end
 end

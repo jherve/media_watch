@@ -24,21 +24,24 @@ defmodule MediaWatch.Catalog.Channel do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      use MediaWatch.Catalog.Catalogable
+      use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
 
       @name opts[:name] || raise("`name` should be set")
       @url opts[:url] || raise("`url` should be set")
 
       @impl true
-      def insert(repo) do
+      def insert() do
+        repo = get_repo()
+
         %{module: __MODULE__, name: @name, url: @url}
         |> Channel.changeset()
         |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
       @impl true
-      def get(repo) do
+      def get() do
         import Ecto.Query
+        repo = get_repo()
 
         from(c in Channel, where: c.module == ^__MODULE__)
         |> repo.one()
