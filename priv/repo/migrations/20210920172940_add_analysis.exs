@@ -10,7 +10,8 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
       add :link, :string
       add :image, :map
 
-      add :slice_ids, {:array, :id}
+      add :slices_used, {:array, :id}, null: false
+      add :slices_discarded, {:array, :id}, default: []
     end
 
     create table(:show_occurrences) do
@@ -21,7 +22,8 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
       add :link, :string
       add :date_start, :utc_datetime, null: false
 
-      add :slice_ids, {:array, :id}
+      add :slices_used, {:array, :id}, null: false
+      add :slices_discarded, {:array, :id}, default: []
     end
 
     create unique_index(:show_occurrences, [:show_id, :date_start])

@@ -5,7 +5,7 @@ defmodule MediaWatch.Catalog.Item.Layout.RTL do
       import Ecto.Changeset
 
       @impl true
-      def describe(slice),
+      def create_description(slice),
         do:
           super(slice)
           |> update_change(:description, &remove_html/1)

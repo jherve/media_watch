@@ -37,15 +37,20 @@ defmodule MediaWatch.Parsing.Slice do
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
 
-  def describe(slice = %Slice{}) do
+  def create_description(slice = %Slice{}) do
     item_id = Catalog.get_item_id(slice.source_id)
     Description.from(slice, item_id)
   end
 
-  def format_occurrence(slice = %Slice{}) do
+  def create_occurrence(slice = %Slice{}) do
     show_id = Catalog.get_show_id(slice.source_id)
     ShowOccurrence.from(slice, show_id)
   end
+
+  def update_occurrence(occ, slice),
+    do:
+      occ
+      |> ShowOccurrence.changeset(%{slices_discarded: occ.slices_discarded ++ [slice.id]})
 
   def get_error_reason({:ok, _obj}), do: :ok
 

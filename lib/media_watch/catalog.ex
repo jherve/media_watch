@@ -53,4 +53,9 @@ defmodule MediaWatch.Catalog do
       Item.InviteRTLSoir,
       Item.LaGrandeTableIdees
     ]
+
+  def module_from_show_id(show_id),
+    do:
+      from(s in Show, join: i in Item, on: i.id == s.id, where: s.id == ^show_id, select: i.module)
+      |> Repo.one()
 end

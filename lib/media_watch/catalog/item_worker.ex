@@ -126,16 +126,24 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
       @impl true
       def handle_slice(slice = %Slice{type: :rss_channel_description}, state) do
-        res = slice |> describe_and_insert(get_repo()) |> tap(&publish_result(&1, state.id))
+        res =
+          slice |> create_description_and_store(get_repo()) |> tap(&publish_result(&1, state.id))
 
         {res, state |> update_state(res)}
       end
 
       def handle_slice(slice = %Slice{type: :rss_entry}, state) do
         res =
-          slice
-          |> format_occurrence_and_insert(get_repo())
-          |> tap(&publish_result(&1, state.id))
+          case slice |> create_occurrence_and_store(get_repo()) do
+            ok = {:ok, _} ->
+              ok |> tap(&publish_result(&1, state.id))
+
+            {:error, {:same_time_slot, occ}} ->
+              update_occurrence_and_store(occ, slice, get_repo())
+
+            e = {:error, _} ->
+              e
+          end
 
         {res, state |> update_state(res)}
       end

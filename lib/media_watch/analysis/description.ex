@@ -5,8 +5,8 @@ defmodule MediaWatch.Analysis.Description do
   alias MediaWatch.Catalog.Item
   alias __MODULE__, as: Description
   @primary_key false
-  @all_fields [:item_id, :title, :description, :link, :image, :slice_ids]
-  @required_fields [:item_id, :title, :description]
+  @all_fields [:item_id, :title, :description, :link, :image, :slices_used]
+  @required_fields [:item_id, :title, :description, :slices_used]
 
   schema "descriptions" do
     belongs_to :item, Item
@@ -16,7 +16,8 @@ defmodule MediaWatch.Analysis.Description do
     field :link, :string
     field :image, :map
 
-    field :slice_ids, {:array, :id}
+    field :slices_used, {:array, :id}
+    field :slices_discarded, {:array, :id}, default: []
   end
 
   @doc false
@@ -24,7 +25,7 @@ defmodule MediaWatch.Analysis.Description do
     desc
     |> cast(attrs, @all_fields)
     |> validate_required(@required_fields)
-    |> validate_length(:slice_ids, min: 1)
+    |> validate_length(:slices_used, min: 1)
   end
 
   def from(%Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}, item_id) do
@@ -34,7 +35,7 @@ defmodule MediaWatch.Analysis.Description do
       description: desc.description,
       link: desc.link,
       image: desc.image,
-      slice_ids: [id]
+      slices_used: [id]
     })
   end
 end

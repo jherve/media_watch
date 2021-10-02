@@ -1,16 +1,16 @@
 defmodule MediaWatch.Analysis.Describable do
-  @callback describe(any()) :: any()
-  @callback describe_and_insert(any(), Ecto.Repo.t()) :: any()
+  @callback create_description(any()) :: any()
+  @callback create_description_and_store(any(), Ecto.Repo.t()) :: any()
 
   defmacro __using__(_opts) do
     quote do
       @behaviour MediaWatch.Analysis.Describable
 
       @impl true
-      def describe_and_insert(slice, repo),
-        do: slice |> describe() |> MediaWatch.Repo.insert_and_retry(repo)
+      def create_description_and_store(slice, repo),
+        do: slice |> create_description() |> MediaWatch.Repo.insert_and_retry(repo)
 
-      defoverridable describe_and_insert: 2
+      defoverridable create_description_and_store: 2
     end
   end
 end

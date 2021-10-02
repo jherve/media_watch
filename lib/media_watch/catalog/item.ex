@@ -57,6 +57,7 @@ defmodule MediaWatch.Catalog.Item do
       use MediaWatch.Parsing.Sliceable
       use MediaWatch.Analysis.Describable
       use MediaWatch.Analysis.Recurrent
+      import Ecto.Query
 
       @show opts[:show]
       @item_args (cond do
@@ -65,6 +66,9 @@ defmodule MediaWatch.Catalog.Item do
                   end)
       @sources opts[:sources] || raise("`sources` should be set")
       @channel_names opts[:channel_names] || raise("`channel_names` should be set")
+
+      @impl true
+      def query(), do: from(i in Item, as: :item, where: i.module == ^__MODULE__)
 
       @impl true
       def insert() do
@@ -83,10 +87,7 @@ defmodule MediaWatch.Catalog.Item do
         import Ecto.Query
         repo = get_repo()
 
-        from(i in Item,
-          where: i.module == ^__MODULE__,
-          preload: [:channels, :show, sources: [:rss_feed]]
-        )
+        from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
         |> repo.one()
       end
 
@@ -100,12 +101,34 @@ defmodule MediaWatch.Catalog.Item do
       defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
 
       @impl true
-      defdelegate describe(slice), to: MediaWatch.Parsing.Slice
+      defdelegate create_description(slice), to: MediaWatch.Parsing.Slice
 
       @impl true
-      defdelegate format_occurrence(slice), to: MediaWatch.Parsing.Slice
+      defdelegate create_occurrence(slice), to: MediaWatch.Parsing.Slice
+      @impl true
+      defdelegate update_occurrence(occ, slice), to: MediaWatch.Parsing.Slice
 
-      defoverridable make_snapshot: 1, parse: 1, slice: 1, describe: 1, format_occurrence: 1
+      @impl true
+      def get_occurrences_within_time_slot(datetime) do
+        repo = get_repo()
+        query = from(i in query(), select: i.id)
+
+        with {slot_start, slot_end} <- get_time_slot(datetime) do
+          from(o in MediaWatch.Analysis.ShowOccurrence,
+            where:
+              o.show_id in subquery(query) and o.date_start >= ^slot_start and
+                o.date_start < ^slot_end
+          )
+          |> repo.all
+        end
+      end
+
+      defoverridable make_snapshot: 1,
+                     parse: 1,
+                     slice: 1,
+                     create_description: 1,
+                     create_occurrence: 1,
+                     update_occurrence: 2
 
       defp get_channels(repo) do
         import Ecto.Query
