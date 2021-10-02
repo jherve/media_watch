@@ -3,13 +3,13 @@ defmodule MediaWatch.Repo.Migrations.AddSnapshots do
 
   def change do
     create table(:snapshots) do
-      add :source_id, references(:sources, column: :id)
+      add :source_id, references(:sources, column: :id, on_delete: :delete_all)
       add :type, :string, null: false
       timestamps(type: :utc_datetime)
     end
 
     create table(:snapshots_xml, primary_key: false) do
-      add :id, references(:snapshots, column: :id), primary_key: true
+      add :id, references(:snapshots, column: :id, on_delete: :delete_all), primary_key: true
       add :content, :string, null: false
     end
 
