@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Snapshots, Analysis}
-  alias MediaWatchWeb.Component.{Item, Description, ShowOccurrence}
+  alias MediaWatchWeb.Component.{Item, ShowOccurrence}
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do

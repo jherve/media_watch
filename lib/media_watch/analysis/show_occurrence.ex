@@ -27,7 +27,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> validate_required(@required_fields)
     |> validate_length(:slices_used, min: 1)
     |> unique_constraint([:show_id, :date_start])
-    |> unsafe_unique_time_slot(MediaWatch.Repo)
+    |> unsafe_unique_time_slot()
   end
 
   def from(%Slice{id: id, type: :rss_entry, rss_entry: entry}, show_id) do
@@ -41,7 +41,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     })
   end
 
-  def unsafe_unique_time_slot(cs, repo) do
+  def unsafe_unique_time_slot(cs) do
     # If the changeset contains a non-null ID, it means that we are doing an
     # update operation on an existing entry, which makes this check undesirable.
     with {_, nil} <- cs |> fetch_field(:id),
