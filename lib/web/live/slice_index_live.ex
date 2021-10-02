@@ -3,6 +3,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
   alias MediaWatch.Analysis
   alias MediaWatchWeb.Component.{Item, ShowOccurrence, List, Card}
   @one_day Timex.Duration.from_days(1)
+  @truncated_length 100
 
   @impl true
   def mount(_params, _session, socket) do
@@ -19,6 +20,17 @@ defmodule MediaWatchWeb.SliceIndexLive do
   def handle_params(_params, _, socket),
     do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_items()}
 
+  def handle_event("toggle_truncate", %{"occurrence" => id}, socket) do
+    id = String.to_integer(id)
+
+    fun =
+      if MapSet.member?(socket.assigns.non_truncated_descriptions, id),
+        do: &(&1 |> MapSet.delete(id)),
+        else: &(&1 |> MapSet.put(id))
+
+    {:noreply, socket |> update(:non_truncated_descriptions, fun)}
+  end
+
   @impl true
   def render(assigns),
     do: ~H"""
@@ -32,7 +44,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
             <% :header -> %><%= occurrence.title %>
             <% :content -> %>
               <h1><Item.detail_link item={item}><Item.title item={item}/></Item.detail_link></h1>
-              <p><%= occurrence.description %></p>
+              <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
             <% :image -> %><img src={(item.description || %{image: %{}}).image["url"]}>
             <% _ -> %>
           <% end %>
@@ -62,5 +74,19 @@ defmodule MediaWatchWeb.SliceIndexLive do
   defp set_items(socket = %{assigns: %{day: day, next_day: next_day}}),
     do:
       socket
-      |> assign(items: Analysis.get_analyzed_item_by_date(day, next_day))
+      |> assign(
+        items: Analysis.get_analyzed_item_by_date(day, next_day),
+        non_truncated_descriptions: MapSet.new()
+      )
+
+  defp maybe_truncate_description(assigns, occurrence) do
+    if MapSet.member?(assigns.non_truncated_descriptions, occurrence.id),
+      do: ~H"<%= occurrence.description %>",
+      else: ~H"<%= occurrence.description |> truncate() %>"
+  end
+
+  defp truncate(string, max \\ @truncated_length) do
+    length = string |> String.length()
+    if length > max, do: "#{string |> String.slice(0..100)}...", else: string
+  end
 end
