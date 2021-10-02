@@ -2,8 +2,9 @@ defmodule MediaWatch.Parsing.Slice.RssEntry do
   use Ecto.Schema
   import Ecto.Changeset
   alias __MODULE__, as: RssEntry
-  @all_fields [:guid, :title, :description, :link, :pub_date]
   @required_fields [:guid, :title, :description, :pub_date]
+  @optional_fields [:link]
+  @all_fields @required_fields ++ @optional_fields
 
   schema "rss_entries" do
     field :guid, :string

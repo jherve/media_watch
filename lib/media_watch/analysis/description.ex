@@ -5,8 +5,9 @@ defmodule MediaWatch.Analysis.Description do
   alias MediaWatch.Catalog.Item
   alias __MODULE__, as: Description
   @primary_key false
-  @all_fields [:item_id, :title, :description, :link, :image, :slices_used]
   @required_fields [:item_id, :title, :description, :slices_used]
+  @optional_fields [:link, :image]
+  @all_fields @required_fields ++ @optional_fields
 
   schema "descriptions" do
     belongs_to :item, Item

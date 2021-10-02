@@ -5,17 +5,9 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ShowOccurrence
-
-  @all_fields [
-    :title,
-    :description,
-    :link,
-    :date_start,
-    :show_id,
-    :slices_used,
-    :slices_discarded
-  ]
   @required_fields [:title, :description, :date_start, :slices_used]
+  @optional_fields [:link, :show_id, :slices_discarded]
+  @all_fields @required_fields ++ @optional_fields
 
   schema "show_occurrences" do
     belongs_to :show, Show
