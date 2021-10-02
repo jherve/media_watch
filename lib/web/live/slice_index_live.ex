@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
-  alias MediaWatchWeb.Component.{Item, ShowOccurrence, List}
+  alias MediaWatchWeb.Component.{Item, ShowOccurrence, List, Card}
   @one_day Timex.Duration.from_days(1)
 
   @impl true
@@ -26,8 +26,17 @@ defmodule MediaWatchWeb.SliceIndexLive do
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
       <List.ul let={item} list={@items}>
-        <Item.clickable_link item={item}/>
-        <ShowOccurrence.list occurrences={item.show.occurrences} />
+        <% [occurrence] = item.show.occurrences %>
+        <Card.with_image let={block} class="show-occurrence">
+          <%= case block do %>
+            <% :header -> %><%= occurrence.title %>
+            <% :content -> %>
+              <h1><Item.detail_link item={item}><Item.title item={item}/></Item.detail_link></h1>
+              <p><%= occurrence.description %></p>
+            <% :image -> %><img src={(item.description || %{image: %{}}).image["url"]}>
+            <% _ -> %>
+          <% end %>
+        </Card.with_image>
       </List.ul>
     """
 
