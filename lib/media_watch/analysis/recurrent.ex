@@ -27,7 +27,7 @@ defmodule MediaWatch.Analysis.Recurrent do
         do:
           occ
           |> update_occurrence(slice)
-          |> repo.update()
+          |> MediaWatch.Repo.update_and_retry(repo)
 
       defp annotate_if_same_time_slot(
              {:error,
