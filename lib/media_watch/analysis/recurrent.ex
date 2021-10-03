@@ -26,6 +26,7 @@ defmodule MediaWatch.Analysis.Recurrent do
       def update_occurrence_and_store(occ, slice, repo),
         do:
           occ
+          |> repo.preload(:show)
           |> update_occurrence(slice)
           |> MediaWatch.Repo.update_and_retry(repo)
 

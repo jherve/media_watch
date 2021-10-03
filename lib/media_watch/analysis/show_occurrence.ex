@@ -10,7 +10,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   @all_fields @required_fields ++ @optional_fields
 
   schema "show_occurrences" do
-    belongs_to :show, Show
+    belongs_to :show, Show, on_replace: :mark_as_invalid
     field :title, :string
     field :description, :string
     field :link, :string
