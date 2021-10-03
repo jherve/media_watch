@@ -37,9 +37,9 @@ defmodule MediaWatchWeb.SliceIndexLive do
       <h1>Liste des diffusions le <%= @day %></h1>
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
-      <List.ul let={item} list={@items}>
+      <List.ul let={item} list={@items} class="card occurrence">
         <% [occurrence] = item.show.occurrences %>
-        <Card.with_image let={block} class="show-occurrence">
+        <Card.with_image let={block} class="occurrence">
           <%= case block do %>
             <% :header -> %><%= occurrence.title %>
             <% :content -> %>

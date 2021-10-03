@@ -20,3 +20,11 @@
 .item.banner > img {
   grid-area: image;
 }
+
+li.item {
+  background: #eee;
+}
+
+li.item:hover {
+  background: #ddd;
+}

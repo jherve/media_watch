@@ -1,3 +1,7 @@
 article.card.occurrence .footer {
   justify-self: end;
 }
+
+li.occurrence {
+  background: #eee;
+}
