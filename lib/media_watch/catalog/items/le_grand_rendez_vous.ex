@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.LeGrandRendezVous do
       duration_minutes: 45
     },
     sources: [%{rss_feed: %{url: "https://www.europe1.fr/rss/podcasts/le-grand-rendez-vous.xml"}}],
-    channel_names: ["Europe 1"]
+    channels: [MediaWatch.Catalog.Channel.Europe1]
 end

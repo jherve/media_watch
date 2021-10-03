@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.QuestionsPolitiques do
       duration_minutes: 55
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16170.xml"}}],
-    channel_names: ["France Inter"]
+    channels: [MediaWatch.Catalog.Channel.FranceInter]
 end

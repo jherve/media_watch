@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.InviteRTLSoir do
       duration_minutes: 10
     },
     sources: [%{rss_feed: %{url: "https://www.rtl.fr/podcast/l-invite-de-rtl-soir.xml"}}],
-    channel_names: ["RTL"]
+    channels: [MediaWatch.Catalog.Channel.RTL]
 end

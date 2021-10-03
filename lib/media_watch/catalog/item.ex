@@ -65,7 +65,7 @@ defmodule MediaWatch.Catalog.Item do
                     true -> raise("At least one of [`show`] should be set")
                   end)
       @sources opts[:sources] || raise("`sources` should be set")
-      @channel_names opts[:channel_names] || raise("`channel_names` should be set")
+      @channels opts[:channels] || raise("`channels` should be set")
 
       @impl true
       def query(), do: from(i in Item, as: :item, where: i.module == ^__MODULE__)
@@ -73,7 +73,7 @@ defmodule MediaWatch.Catalog.Item do
       @impl true
       def insert() do
         repo = get_repo()
-        channels = get_channels(repo)
+        channels = @channels |> Enum.map(& &1.get())
 
         %{module: __MODULE__, sources: @sources}
         |> Map.merge(@item_args)
@@ -129,14 +129,6 @@ defmodule MediaWatch.Catalog.Item do
                      create_description: 1,
                      create_occurrence: 1,
                      update_occurrence: 2
-
-      defp get_channels(repo) do
-        import Ecto.Query
-        alias MediaWatch.Catalog.Channel
-
-        from(c in Channel, where: c.name in ^@channel_names)
-        |> repo.all()
-      end
     end
   end
 end

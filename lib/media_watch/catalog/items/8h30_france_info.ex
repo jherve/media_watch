@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.Le8h30FranceInfo do
       duration_minutes: 25
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16370.xml"}}],
-    channel_names: ["France Info"]
+    channels: [MediaWatch.Catalog.Channel.FranceInfo]
 end

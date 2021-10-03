@@ -7,7 +7,7 @@ defmodule MediaWatch.Catalog.Item.InviteDesMatins do
       duration_minutes: 45
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_13983.xml"}}],
-    channel_names: ["France Culture"]
+    channels: [MediaWatch.Catalog.Channel.FranceCulture]
 
   import Ecto.Changeset
   alias MediaWatch.Parsing.Slice

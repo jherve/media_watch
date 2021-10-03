@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.Invite7h50 do
       duration_minutes: 10
     },
     sources: [%{rss_feed: %{url: "http://radiofrance-podcast.net/podcast09/rss_11710.xml"}}],
-    channel_names: ["France Inter"]
+    channels: [MediaWatch.Catalog.Channel.FranceInter]
 end

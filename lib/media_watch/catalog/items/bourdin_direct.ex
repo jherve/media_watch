@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.BourdinDirect do
       duration_minutes: 25
     },
     sources: [%{rss_feed: %{url: "https://podcast.rmc.fr/channel30/RMCInfochannel30.xml"}}],
-    channel_names: ["RMC"]
+    channels: [MediaWatch.Catalog.Channel.RMC]
 end

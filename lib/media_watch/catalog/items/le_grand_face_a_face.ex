@@ -7,5 +7,5 @@ defmodule MediaWatch.Catalog.Item.LeGrandFaceAFace do
       duration_minutes: 55
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_18558.xml"}}],
-    channel_names: ["France Inter"]
+    channels: [MediaWatch.Catalog.Channel.FranceInter]
 end
