@@ -8,21 +8,6 @@ defmodule MediaWatchWeb.Component.Description do
             when has_description(assigns) and not is_nil(assigns.description) and
                    not is_struct(assigns.description, Ecto.Association.NotLoaded)
 
-  def description(assigns) when has_not_nil_description(assigns),
-    do: ~H"""
-    <dl>
-      <dt>URL</dt>
-      <dd><%= link @description.link, to: @description.link %></dd>
-      <dt>Description</dt>
-      <dd><%= @description.description %></dd>
-      <dt>Image</dt>
-      <dd><img src={@description.image["url"]}/></dd>
-    </dl>
-    """
-
-  def description(assigns) when has_description(assigns),
-    do: ~H"<dl>Pas de description disponible</dl>"
-
   def short(assigns) when has_not_nil_description(assigns),
     do: ~H"<%= @description.description %>"
 

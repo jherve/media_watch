@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Snapshots, Analysis}
-  alias MediaWatchWeb.Component.{Item, ShowOccurrence}
+  alias MediaWatchWeb.Component.{Item, List, ShowOccurrence}
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
@@ -38,6 +38,16 @@ defmodule MediaWatchWeb.ItemLive do
 
       <h2>Emissions</h2>
 
-      <ShowOccurrence.list occurrences={@occurrences} />
+      <%= render_occurrences(assigns) %>
+    """
+
+  defp render_occurrences(assigns = %{occurrences: []}),
+    do: ~H"<p>Pas d'émission disponible</p>"
+
+  defp render_occurrences(assigns),
+    do: ~H"""
+      <List.ul let={occ} list={@occurrences} class="occurrence card">
+        <ShowOccurrence.as_card occurrence={occ} />
+      </List.ul>
     """
 end

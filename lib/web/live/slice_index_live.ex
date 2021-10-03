@@ -43,7 +43,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
           <%= case block do %>
             <% :header -> %><%= occurrence.title %>
             <% :content -> %>
-              <h1><Item.detail_link item={item}><Item.title item={item}/></Item.detail_link></h1>
+              <h1><%= link to: Item.detail_link(item) do %><%= Item.title(item) %><% end %></h1>
               <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
             <% :image -> %><img src={(item.description || %{image: %{}}).image["url"]}>
             <% _ -> %>
