@@ -54,7 +54,8 @@ defmodule MediaWatch.MixProject do
       {:timex, "~> 3.7.5"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev}
+      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
+      {:crontab, "~> 1.1.0"}
     ]
   end
 
