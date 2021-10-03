@@ -28,6 +28,8 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :id, references(:watched_items, column: :id, on_delete: :delete_all), primary_key: true
       add :name, :string, null: false
       add :url, :string, null: false
+      add :airing_schedule, :map, null: false
+      add :duration_minutes, :integer, null: false
     end
 
     create unique_index(:watched_shows, [:name, :url])

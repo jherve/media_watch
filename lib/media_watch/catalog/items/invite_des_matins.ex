@@ -2,7 +2,9 @@ defmodule MediaWatch.Catalog.Item.InviteDesMatins do
   use MediaWatch.Catalog.ItemWorker,
     show: %{
       name: "L'Invité(e) des Matins",
-      url: "https://www.franceculture.fr/emissions/linvite-des-matins"
+      url: "https://www.franceculture.fr/emissions/linvite-des-matins",
+      airing_schedule: "40 7 * * MON-FRI",
+      duration_minutes: 45
     },
     sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_13983.xml"}}],
     channel_names: ["France Culture"]
