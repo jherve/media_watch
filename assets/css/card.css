@@ -15,9 +15,9 @@ li.card > a {
 
 article.card {
   display: grid;
-  grid-template-areas: "header header"
+  grid-template-areas: "image header"
   "image content"
-  "footer footer";
+  "image footer";
 }
 article.card.card-text {
   grid-template-areas: "header header"
@@ -36,6 +36,7 @@ article.card .content {
 article.card img {
   grid-area: image;
   max-width: 20vw;
+  align-self: center;
 }
 article.card .footer {
   grid-area: footer;
