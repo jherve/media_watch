@@ -39,7 +39,8 @@ defmodule MediaWatch.Catalog do
       Channel.FranceCulture,
       Channel.FranceInfo,
       Channel.RTL,
-      Channel.RMC
+      Channel.RMC,
+      Channel.Europe1
     ]
 
   def all(),
@@ -51,7 +52,11 @@ defmodule MediaWatch.Catalog do
       Item.InviteDesMatins,
       Item.InviteRTL,
       Item.InviteRTLSoir,
-      Item.LaGrandeTableIdees
+      Item.LaGrandeTableIdees,
+      Item.LeGrandFaceAFace,
+      Item.LeGrandRendezVous,
+      Item.LInterviewPolitique,
+      Item.QuestionsPolitiques
     ]
 
   def module_from_show_id(show_id),
