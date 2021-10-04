@@ -10,13 +10,18 @@ defmodule MediaWatch.Catalog.Item.LaGrandeTableIdees do
     channels: [MediaWatch.Catalog.Channel.FranceCulture]
 
   import Ecto.Changeset
-  alias MediaWatch.Parsing.Slice
+  alias MediaWatch.Parsing.Slice.RssEntry
 
   @impl true
-  def create_occurrence(slice = %Slice{}),
-    # Les 'entries' dans ce feed mélangent des émissions différentes,
-    # et celle que l'on recherche doit avoir ce lien.
+  def slice(snap),
     do:
-      super(slice)
+      super(snap)
+      |> Enum.map(fn cs -> cs |> cast_assoc(:rss_entry, with: &rss_entry_extra_check/2) end)
+
+  defp rss_entry_extra_check(entry, attrs),
+    do:
+      RssEntry.changeset(entry, attrs)
+      # Les 'entries' dans ce feed mélangent des émissions différentes,
+      # et celle que l'on recherche doit avoir ce lien.
       |> validate_format(:link, ~r|^https://www.franceculture.fr/emissions/la-grande-table-idees|)
 end
