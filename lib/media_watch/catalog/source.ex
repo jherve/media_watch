@@ -21,6 +21,17 @@ defmodule MediaWatch.Catalog.Source do
     belongs_to :item, Item, foreign_key: :item_id
   end
 
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Snapshots.Snapshotable
+
+      @impl true
+      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
+
+      defoverridable make_snapshot: 1
+    end
+  end
+
   @doc false
   def changeset(strategy \\ %Source{}, attrs) do
     strategy

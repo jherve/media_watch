@@ -20,6 +20,17 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
+  defmacro __using__(_opts) do
+    quote do
+      use MediaWatch.Parsing.Sliceable
+
+      @impl true
+      defdelegate slice(source), to: MediaWatch.Parsing.ParsedSnapshot
+
+      defoverridable slice: 1
+    end
+  end
+
   @doc false
   def changeset(parsed \\ %ParsedSnapshot{}, attrs) do
     parsed

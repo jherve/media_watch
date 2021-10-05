@@ -52,11 +52,10 @@ defmodule MediaWatch.Catalog.Item do
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
-      use MediaWatch.Snapshots.Snapshotable
-      use MediaWatch.Parsing.Parsable
-      use MediaWatch.Parsing.Sliceable
-      use MediaWatch.Analysis.Describable
-      use MediaWatch.Analysis.Recurrent
+      use MediaWatch.Catalog.Source
+      use MediaWatch.Snapshots.Snapshot
+      use MediaWatch.Parsing.ParsedSnapshot
+      use MediaWatch.Parsing.Slice
       import Ecto.Query
 
       @show opts[:show]
@@ -90,45 +89,6 @@ defmodule MediaWatch.Catalog.Item do
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
         |> repo.one()
       end
-
-      @impl true
-      defdelegate make_snapshot(source), to: MediaWatch.Catalog.Source
-
-      @impl true
-      defdelegate parse(source), to: MediaWatch.Snapshots.Snapshot
-
-      @impl true
-      defdelegate slice(parsed), to: MediaWatch.Parsing.ParsedSnapshot
-
-      @impl true
-      defdelegate create_description(slice), to: MediaWatch.Parsing.Slice
-
-      @impl true
-      defdelegate create_occurrence(slice), to: MediaWatch.Parsing.Slice
-      @impl true
-      defdelegate update_occurrence(occ, slice), to: MediaWatch.Parsing.Slice
-
-      @impl true
-      def get_occurrences_within_time_slot(datetime) do
-        repo = get_repo()
-        query = from(i in query(), select: i.id)
-
-        with {slot_start, slot_end} <- get_time_slot(datetime) do
-          from(o in MediaWatch.Analysis.ShowOccurrence,
-            where:
-              o.show_id in subquery(query) and o.date_start >= ^slot_start and
-                o.date_start < ^slot_end
-          )
-          |> repo.all
-        end
-      end
-
-      defoverridable make_snapshot: 1,
-                     parse: 1,
-                     slice: 1,
-                     create_description: 1,
-                     create_occurrence: 1,
-                     update_occurrence: 2
     end
   end
 end
