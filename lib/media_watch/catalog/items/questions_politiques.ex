@@ -13,10 +13,8 @@ defmodule MediaWatch.Catalog.Item.QuestionsPolitiques do
   alias MediaWatch.Parsing.Slice.RssEntry
 
   @impl true
-  def slice(snap),
-    do:
-      super(snap)
-      |> Enum.map(fn cs -> cs |> cast_assoc(:rss_entry, with: &rss_entry_extra_check/2) end)
+  def into_slice_cs(attrs, parsed),
+    do: super(attrs, parsed) |> cast_assoc(:rss_entry, with: &rss_entry_extra_check/2)
 
   defp rss_entry_extra_check(entry, attrs),
     do:

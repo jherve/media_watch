@@ -23,11 +23,30 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   defmacro __using__(_opts) do
     quote do
       use MediaWatch.Parsing.Sliceable
+      alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
 
       @impl true
-      defdelegate slice(source), to: MediaWatch.Parsing.ParsedSnapshot
+      def slice(parsed) do
+        entries =
+          ParsedSnapshot.get_entries(parsed)
+          |> Enum.map(&into_slice_cs(%{rss_entry: &1}, parsed))
 
-      defoverridable slice: 1
+        description =
+          %{
+            rss_channel_description: ParsedSnapshot.get_channel_description(parsed)
+          }
+          |> into_slice_cs(parsed)
+
+        entries ++ [description]
+      end
+
+      @impl true
+      def into_slice_cs(attrs, parsed = %ParsedSnapshot{snapshot: %{source: source}})
+          when not is_nil(source) do
+        Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
+      end
+
+      defoverridable slice: 1, into_slice_cs: 2
     end
   end
 
@@ -40,49 +59,33 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> unique_constraint(:id)
   end
 
-  def slice(parsed), do: get_entries(parsed) ++ [get_channel_description(parsed)]
+  def slice(parsed),
+    do: %{
+      rss_entry: get_entries(parsed),
+      rss_channel_description: get_channel_description(parsed)
+    }
 
-  defp get_entries(parsed = %ParsedSnapshot{data: data, snapshot: %{source: source, xml: xml}})
-       when not is_nil(source) and not is_nil(xml),
-       do:
-         data
-         |> Map.get("entries")
-         |> Enum.map(fn %{
-                          "title" => title,
-                          "description" => description,
-                          "rss2:guid" => guid,
-                          "rss2:link" => link,
-                          "rss2:pubDate" => pub_date
-                        } ->
-           Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-             rss_entry: %{
-               guid: guid,
-               link: link,
-               pub_date: pub_date,
-               title: title,
-               description: description
-             }
-           })
-         end)
+  def get_entries(%ParsedSnapshot{data: data, snapshot: %{type: :xml}}),
+    do:
+      data
+      |> Map.get("entries")
+      |> Enum.map(fn %{
+                       "title" => title,
+                       "description" => description,
+                       "rss2:guid" => guid,
+                       "rss2:link" => link,
+                       "rss2:pubDate" => pub_date
+                     } ->
+        %{guid: guid, link: link, pub_date: pub_date, title: title, description: description}
+      end)
 
-  defp get_channel_description(
-         parsed = %ParsedSnapshot{
-           data: %{
-             "description" => desc,
-             "title" => title,
-             "url" => url,
-             "image" => image
-           },
-           snapshot: %{source: source}
-         }
-       ),
-       do:
-         Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, %{
-           rss_channel_description: %{
-             "description" => desc,
-             "title" => title,
-             "link" => url,
-             "image" => image
-           }
-         })
+  def get_channel_description(%ParsedSnapshot{
+        data: %{"description" => desc, "title" => title, "url" => url, "image" => image}
+      }),
+      do: %{
+        "description" => desc,
+        "title" => title,
+        "link" => url,
+        "image" => image
+      }
 end
