@@ -50,6 +50,13 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     })
   end
 
+  def query_slices_from_occurrence(occ = %ShowOccurrence{}),
+    do:
+      Ecto.Query.from(s in Slice,
+        where: s.id in ^(occ.slices_used ++ occ.slices_discarded),
+        preload: ^Slice.preloads()
+      )
+
   # Errors in date conversion are simply propagated as-is
   defp into_utc(e = {:error, _}), do: e
   defp into_utc(date), do: date |> Timex.Timezone.convert("UTC")

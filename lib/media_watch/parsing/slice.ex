@@ -11,6 +11,7 @@ defmodule MediaWatch.Parsing.Slice do
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description]
   @required_fields [:type]
+  @preloads [:rss_entry, :rss_channel_description]
 
   schema "slices" do
     field :type, Ecto.Enum, values: @valid_types
@@ -37,7 +38,7 @@ defmodule MediaWatch.Parsing.Slice do
         do: MediaWatch.Parsing.Slice.create_occurrence(slice, __MODULE__)
 
       @impl true
-      defdelegate update_occurrence(occ, slice), to: MediaWatch.Parsing.Slice
+      defdelegate update_occurrence(occ, used, discarded, new), to: MediaWatch.Parsing.Slice
 
       @impl true
       def get_occurrence_at(datetime) do
@@ -50,7 +51,12 @@ defmodule MediaWatch.Parsing.Slice do
         |> repo.one!
       end
 
-      defoverridable create_description: 1, create_occurrence: 1, update_occurrence: 2
+      @impl true
+      def get_slices_from_occurrence(occ),
+        do:
+          MediaWatch.Analysis.ShowOccurrence.query_slices_from_occurrence(occ) |> get_repo().all()
+
+      defoverridable create_description: 1, create_occurrence: 1, update_occurrence: 4
     end
   end
 
@@ -68,6 +74,8 @@ defmodule MediaWatch.Parsing.Slice do
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
 
+  def preloads(), do: @preloads
+
   def create_description(slice = %Slice{}) do
     item_id = Catalog.get_item_id(slice.source_id)
     Description.from(slice, item_id)
@@ -78,10 +86,14 @@ defmodule MediaWatch.Parsing.Slice do
     ShowOccurrence.from(slice, module, show_id)
   end
 
-  def update_occurrence(occ, slice),
-    do:
-      occ
-      |> ShowOccurrence.changeset(%{slices_discarded: occ.slices_discarded ++ [slice.id]})
+  def update_occurrence(occ, used, discarded, new)
+      when is_list(used) and is_list(discarded) and is_list(new),
+      do:
+        occ
+        |> ShowOccurrence.changeset(%{
+          slices_used: used |> Enum.map(& &1.id),
+          slices_discarded: (discarded ++ new) |> Enum.map(& &1.id)
+        })
 
   def get_error_reason({:ok, _obj}), do: :ok
 

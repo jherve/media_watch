@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.LInterviewPolitique do
-  use MediaWatch.Catalog.ItemWorker,
+  use MediaWatch.Catalog.Item.Layout.Europe1,
     show: %{
       name: "L'interview politique",
       url: "https://www.europe1.fr/emissions/linterview-politique-de-8h20",

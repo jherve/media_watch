@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.LeGrandRendezVous do
-  use MediaWatch.Catalog.ItemWorker,
+  use MediaWatch.Catalog.Item.Layout.Europe1,
     show: %{
       name: "Le grand rendez-vous",
       url: "https://www.europe1.fr/emissions/Le-grand-rendez-vous",
