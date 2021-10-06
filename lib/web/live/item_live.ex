@@ -18,8 +18,14 @@ defmodule MediaWatchWeb.ItemLive do
     do: {:noreply, socket |> assign(description: desc)}
 
   def handle_info(occ, socket) when is_struct(occ, MediaWatch.Analysis.ShowOccurrence) do
+    # Occurrence updates are sent using the same message format, hence the need for
+    # the call to `Enum.uniq_by/2`. This function only keeps the first value in case
+    # of duplicates, so the new occurrence is always prepended to the list of
+    # existing ones to ensure that it replaces the out-dated one.
     occurrences =
-      (socket.assigns.occurrences ++ [occ]) |> Enum.sort_by(& &1.airing_time, {:desc, DateTime})
+      ([occ] ++ socket.assigns.occurrences)
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.sort_by(& &1.airing_time, {:desc, DateTime})
 
     {:noreply, socket |> assign(occurrences: occurrences)}
   end

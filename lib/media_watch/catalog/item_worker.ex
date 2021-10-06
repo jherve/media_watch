@@ -140,6 +140,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
             {:error, {:unique_airing_time, occ}} ->
               update_occurrence_and_store(occ, slice, get_repo())
+              |> tap(&publish_result(&1, state.id))
 
             e = {:error, reason} ->
               Logger.warning(
