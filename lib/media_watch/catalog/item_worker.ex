@@ -272,10 +272,10 @@ defmodule MediaWatch.Catalog.ItemWorker do
     do: PubSub.broadcast("slicing:#{item_id}", slice)
 
   def publish_result(desc = %Description{}, item_id),
-    do: PubSub.broadcast("description:#{item_id}", {:new_description, desc})
+    do: PubSub.broadcast("description:#{item_id}", desc)
 
   def publish_result(occ = %ShowOccurrence{}, item_id),
-    do: PubSub.broadcast("occurrence_formatting:#{item_id}", {:new_occurrence, occ})
+    do: PubSub.broadcast("occurrence_formatting:#{item_id}", occ)
 
   defp default_to_source_id_map([], source_ids), do: source_ids |> Map.new(&{&1, []})
   defp default_to_source_id_map(list, _source_ids) when is_list(list), do: list |> Map.new()
