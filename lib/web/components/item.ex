@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.Component.Item do
   use Phoenix.Component
   use Phoenix.HTML
-  alias MediaWatchWeb.Component.{Description, Card, List}
+  alias MediaWatchWeb.Component.{Description, Card}
 
   def title(item), do: item.show.name
 

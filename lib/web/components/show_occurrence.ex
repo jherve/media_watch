@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.Component.ShowOccurrence do
   use Phoenix.Component
   use Phoenix.HTML
-  alias MediaWatchWeb.Component.{List, Card}
+  alias MediaWatchWeb.Component.Card
 
   def link_(assigns),
     do: ~H"""

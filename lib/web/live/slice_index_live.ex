@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
-  alias MediaWatchWeb.Component.{Item, ShowOccurrence, List, Card}
+  alias MediaWatchWeb.Component.{Item, List, Card}
   @one_day Timex.Duration.from_days(1)
   @truncated_length 100
 
@@ -20,6 +20,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
   def handle_params(_params, _, socket),
     do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_items()}
 
+  @impl true
   def handle_event("toggle_truncate", %{"occurrence" => id}, socket) do
     id = String.to_integer(id)
 

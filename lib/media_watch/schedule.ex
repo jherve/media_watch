@@ -1,5 +1,4 @@
 defmodule MediaWatch.Schedule do
-  import Crontab.CronExpression
   alias Crontab.{CronExpression, Scheduler}
   alias Timex.{Timezone, TimezoneInfo}
 
@@ -11,7 +10,7 @@ defmodule MediaWatch.Schedule do
     dt |> to_day_time_slot
   end
 
-  def get_time_slot!(cron = %CronExpression{}, dt = %DateTime{}),
+  def get_time_slot!(cron = %CronExpression{}, %DateTime{}),
     do: raise("Can not figure out time slot from expression `#{inspect(cron)}`")
 
   def get_airing_time(cron = %CronExpression{}, dt = %DateTime{}) do
