@@ -19,7 +19,7 @@ defmodule MediaWatchWeb.ItemLive do
 
   def handle_info({:new_occurrence, occ}, socket) do
     occurrences =
-      (socket.assigns.occurrences ++ [occ]) |> Enum.sort_by(& &1.date_start, {:desc, DateTime})
+      (socket.assigns.occurrences ++ [occ]) |> Enum.sort_by(& &1.airing_time, {:desc, DateTime})
 
     {:noreply, socket |> assign(occurrences: occurrences)}
   end

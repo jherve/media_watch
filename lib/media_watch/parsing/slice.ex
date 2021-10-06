@@ -33,23 +33,21 @@ defmodule MediaWatch.Parsing.Slice do
       defdelegate create_description(slice), to: MediaWatch.Parsing.Slice
 
       @impl true
-      defdelegate create_occurrence(slice), to: MediaWatch.Parsing.Slice
+      def create_occurrence(slice),
+        do: MediaWatch.Parsing.Slice.create_occurrence(slice, __MODULE__)
+
       @impl true
       defdelegate update_occurrence(occ, slice), to: MediaWatch.Parsing.Slice
 
       @impl true
-      def get_occurrences_within_time_slot(datetime) do
+      def get_occurrence_at(datetime) do
         repo = get_repo()
         query = from(i in query(), select: i.id)
 
-        with {slot_start, slot_end} <- get_time_slot(datetime) do
-          from(o in MediaWatch.Analysis.ShowOccurrence,
-            where:
-              o.show_id in subquery(query) and o.date_start >= ^slot_start and
-                o.date_start < ^slot_end
-          )
-          |> repo.all
-        end
+        from(o in MediaWatch.Analysis.ShowOccurrence,
+          where: o.show_id in subquery(query) and o.airing_time == ^datetime
+        )
+        |> repo.one!
       end
 
       defoverridable create_description: 1, create_occurrence: 1, update_occurrence: 2
@@ -75,9 +73,9 @@ defmodule MediaWatch.Parsing.Slice do
     Description.from(slice, item_id)
   end
 
-  def create_occurrence(slice = %Slice{}) do
+  def create_occurrence(slice = %Slice{}, module) do
     show_id = Catalog.get_show_id(slice.source_id)
-    ShowOccurrence.from(slice, show_id)
+    ShowOccurrence.from(slice, module, show_id)
   end
 
   def update_occurrence(occ, slice),

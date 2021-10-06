@@ -16,7 +16,7 @@ defmodule MediaWatchWeb.Component.ShowOccurrence do
           <% :content -> %>
             <div class="description"><%= @occurrence.description %></div>
             <.link_ {assigns} />
-          <% :footer -> %><%= @occurrence.date_start |> Timex.to_date %>
+          <% :footer -> %><%= @occurrence.airing_time |> Timex.to_date %>
         <% end %>
       </Card.only_text>
     """

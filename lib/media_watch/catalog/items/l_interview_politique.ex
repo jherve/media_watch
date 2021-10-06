@@ -3,7 +3,7 @@ defmodule MediaWatch.Catalog.Item.LInterviewPolitique do
     show: %{
       name: "L'interview politique",
       url: "https://www.europe1.fr/emissions/linterview-politique-de-8h20",
-      airing_schedule: "14 8 * * MON-THU",
+      airing_schedule: "14 8 * * MON-FRI",
       duration_minutes: 15
     },
     sources: [%{rss_feed: %{url: "https://www.europe1.fr/rss/podcasts/interview-8h20.xml"}}],

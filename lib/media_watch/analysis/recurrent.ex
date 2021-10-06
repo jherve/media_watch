@@ -1,6 +1,9 @@
 defmodule MediaWatch.Analysis.Recurrent do
+  @callback get_airing_schedule() :: Crontab.CronExpression.t()
+  @callback get_time_zone() :: Timex.TimezoneInfo.t()
   @callback get_time_slot(DateTime.t()) :: {slot_start :: DateTime.t(), slot_end :: DateTime.t()}
-  @callback get_occurrences_within_time_slot(DateTime.t()) :: [any()]
+  @callback get_airing_time(DateTime.t()) :: DateTime.t() | {:error, atom()}
+  @callback get_occurrence_at(DateTime.t()) :: any()
   @callback create_occurrence(any()) :: any()
   @callback create_occurrence_and_store(any(), Ecto.Repo.t()) :: any()
   @callback update_occurrence(any(), any()) :: any()
@@ -12,7 +15,14 @@ defmodule MediaWatch.Analysis.Recurrent do
 
       @impl true
       def get_time_slot(dt),
-        do: {MediaWatch.DateTime.get_start_of_day(dt), MediaWatch.DateTime.get_end_of_day(dt)}
+        do: get_airing_schedule() |> MediaWatch.Schedule.get_time_slot!(dt |> to_time_zone)
+
+      @impl true
+      def get_time_zone(), do: "Europe/Paris" |> Timex.Timezone.get()
+
+      @impl true
+      def get_airing_time(dt),
+        do: get_airing_schedule() |> MediaWatch.Schedule.get_airing_time(dt |> to_time_zone)
 
       @impl true
       def create_occurrence_and_store(slice, repo),
@@ -20,7 +30,7 @@ defmodule MediaWatch.Analysis.Recurrent do
           slice
           |> create_occurrence()
           |> MediaWatch.Repo.insert_and_retry(repo)
-          |> annotate_if_same_time_slot()
+          |> explain_error()
 
       @impl true
       def update_occurrence_and_store(occ, slice, repo),
@@ -30,17 +40,36 @@ defmodule MediaWatch.Analysis.Recurrent do
           |> update_occurrence(slice)
           |> MediaWatch.Repo.update_and_retry(repo)
 
-      defp annotate_if_same_time_slot(
+      defp to_time_zone(dt), do: dt |> Timex.Timezone.convert(get_time_zone())
+
+      defp explain_error(
              {:error,
               cs = %{
                 errors: [
-                  date_start: {_, [validation: :unsafe_unique_time_slot, occurrences: [occ]]}
+                  show_id:
+                    {_,
+                     [
+                       constraint: :unique,
+                       constraint_name: "show_occurrences_show_id_airing_time_index"
+                     ]}
                 ]
               }}
-           ),
-           do: {:error, {:same_time_slot, occ}}
+           ) do
+        with {_, airing_time} <- cs |> Ecto.Changeset.fetch_field(:airing_time),
+             occ <- airing_time |> get_occurrence_at() do
+          {:error, {:unique_airing_time, occ}}
+        else
+          _ -> {:error, :unique_airing_time}
+        end
+      end
 
-      defp annotate_if_same_time_slot(res), do: res
+      defp explain_error(
+             {:error,
+              cs = %{errors: [airing_time: {_, [type: :utc_datetime, validation: :cast]}]}}
+           ),
+           do: {:error, :no_airing_time_within_slot}
+
+      defp explain_error(res), do: res
 
       defoverridable create_occurrence_and_store: 2
     end

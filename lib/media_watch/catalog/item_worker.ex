@@ -138,10 +138,14 @@ defmodule MediaWatch.Catalog.ItemWorker do
             ok = {:ok, _} ->
               ok |> tap(&publish_result(&1, state.id))
 
-            {:error, {:same_time_slot, occ}} ->
+            {:error, {:unique_airing_time, occ}} ->
               update_occurrence_and_store(occ, slice, get_repo())
 
-            e = {:error, _} ->
+            e = {:error, reason} ->
+              Logger.warning(
+                "#{__MODULE__} could not handle slice #{slice.id} because : #{inspect(reason)}"
+              )
+
               e
           end
 

@@ -17,7 +17,7 @@ defmodule MediaWatch.Analysis do
         left_join: so in ShowOccurrence,
         on: so.show_id == s.id,
         preload: [:channels, :description, show: {s, occurrences: so}],
-        order_by: [desc: so.date_start]
+        order_by: [desc: so.airing_time]
       )
       |> Repo.all()
 
@@ -30,7 +30,7 @@ defmodule MediaWatch.Analysis do
         on: so.show_id == s.id,
         preload: [:channels, :description, show: {s, occurrences: so}],
         where: i.id == ^item_id,
-        order_by: [desc: so.date_start]
+        order_by: [desc: so.airing_time]
       )
       |> Repo.one()
 
@@ -44,8 +44,8 @@ defmodule MediaWatch.Analysis do
       left_join: so in ShowOccurrence,
       on: so.show_id == s.id,
       preload: [:channels, :description, show: {s, occurrences: so}],
-      where: so.date_start >= ^date_start and so.date_start <= ^date_end,
-      order_by: [i.id, desc: so.date_start]
+      where: so.airing_time >= ^date_start and so.airing_time <= ^date_end,
+      order_by: [i.id, desc: so.airing_time]
     )
     |> Repo.all()
   end

@@ -21,12 +21,14 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
       add :title, :string, null: false
       add :description, :string, null: false
       add :link, :string
-      add :date_start, :utc_datetime, null: false
+      add :airing_time, :utc_datetime, null: false
+      add :slot_start, :utc_datetime, null: false
+      add :slot_end, :utc_datetime, null: false
 
       add :slices_used, {:array, :id}, null: false
       add :slices_discarded, {:array, :id}, default: []
     end
 
-    create unique_index(:show_occurrences, [:show_id, :date_start])
+    create unique_index(:show_occurrences, [:show_id, :airing_time])
   end
 end

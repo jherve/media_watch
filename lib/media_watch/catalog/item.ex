@@ -63,6 +63,7 @@ defmodule MediaWatch.Catalog.Item do
                     not is_nil(@show) -> %{show: @show}
                     true -> raise("At least one of [`show`] should be set")
                   end)
+      @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
       @sources opts[:sources] || raise("`sources` should be set")
       @channels opts[:channels] || raise("`channels` should be set")
 
@@ -89,6 +90,9 @@ defmodule MediaWatch.Catalog.Item do
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
         |> repo.one()
       end
+
+      @impl true
+      def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
     end
   end
 end
