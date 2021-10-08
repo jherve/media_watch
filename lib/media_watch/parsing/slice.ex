@@ -95,11 +95,11 @@ defmodule MediaWatch.Parsing.Slice do
           slices_discarded: (discarded ++ new) |> Enum.map(& &1.id)
         })
 
-  def get_error_reason({:ok, _obj}), do: :ok
+  def get_error_reason(ok = {:ok, _obj}), do: ok
 
   def get_error_reason(
         {:error,
-         %{
+         e = %{
            errors: [
              source_id:
                {_,
@@ -110,11 +110,11 @@ defmodule MediaWatch.Parsing.Slice do
            ]
          }}
       ),
-      do: :unique
+      do: {:unique, e}
 
   def get_error_reason(
         {:error,
-         %{
+         e = %{
            errors: [],
            changes: %{
              rss_entry: %{
@@ -125,19 +125,19 @@ defmodule MediaWatch.Parsing.Slice do
            }
          }}
       ),
-      do: :unique
+      do: {:unique, e}
 
   def get_error_reason(
-        {:error, %{errors: [source_id: {_, [validation: :unsafe_unique_description]}]}}
+        {:error, e = %{errors: [source_id: {_, [validation: :unsafe_unique_description]}]}}
       ),
-      do: :unique
+      do: {:unique, e}
 
   def get_error_reason(
-        {:error, %{errors: [rss_entry: {_, [validation: :unsafe_unique_entry_pub_date]}]}}
+        {:error, e = %{errors: [rss_entry: {_, [validation: :unsafe_unique_entry_pub_date]}]}}
       ),
-      do: :unique
+      do: {:unique, e}
 
-  def get_error_reason({:error, _cs}), do: :error
+  def get_error_reason(e = {:error, _cs}), do: e
 
   defp set_type(cs) do
     case get_type(cs) do
