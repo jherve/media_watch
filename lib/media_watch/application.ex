@@ -6,19 +6,19 @@ defmodule MediaWatch.Application do
   use Application
 
   def start(_type, _args) do
-    children = [
-      # Start the Ecto repository
-      MediaWatch.Repo,
-      # Start the Telemetry supervisor
-      MediaWatchWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: MediaWatch.PubSub},
-      # Start the Endpoint (http/https)
-      MediaWatchWeb.Endpoint,
-      {Finch, name: MediaWatch.Finch},
-      {Task.Supervisor, name: MediaWatch.TaskSupervisor},
-      MediaWatch.Catalog.ItemSupervisor
-    ]
+    children =
+      [
+        # Start the Ecto repository
+        MediaWatch.Repo,
+        # Start the Telemetry supervisor
+        MediaWatchWeb.Telemetry,
+        # Start the PubSub system
+        {Phoenix.PubSub, name: MediaWatch.PubSub},
+        # Start the Endpoint (http/https)
+        MediaWatchWeb.Endpoint,
+        {Finch, name: MediaWatch.Finch},
+        {Task.Supervisor, name: MediaWatch.TaskSupervisor}
+      ] ++ additional_children()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -31,5 +31,14 @@ defmodule MediaWatch.Application do
   def config_change(changed, _new, removed) do
     MediaWatchWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp additional_children() do
+    # A dirty fix to ensure Item supervision tree is not started in testing mode
+    if Application.get_env(:media_watch, MediaWatch.Repo)[:pool] == Ecto.Adapters.SQL.Sandbox do
+      []
+    else
+      [MediaWatch.Catalog.ItemSupervisor]
+    end
   end
 end
