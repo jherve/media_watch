@@ -279,5 +279,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     do: PubSub.broadcast("occurrence_formatting:#{item_id}", occ)
 
   defp default_to_source_id_map([], source_ids), do: source_ids |> Map.new(&{&1, []})
-  defp default_to_source_id_map(list, _source_ids) when is_list(list), do: list |> Map.new()
+
+  defp default_to_source_id_map(list, _source_ids) when is_list(list),
+    do: list |> Enum.group_by(&elem(&1, 0), &elem(&1, 1)) |> Map.new()
 end
