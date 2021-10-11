@@ -10,6 +10,9 @@ defmodule MediaWatch.Catalog.ItemWorker do
   @callback handle_slice(MediaWatch.Parsing.Slice.t(), map()) ::
               {MediaWatch.Analysis.Description.t() | MediaWatch.Analysis.ShowOccurrence.t(),
                map()}
+  @callback handle_occurrence(MediaWatch.Analysis.ShowOccurrence.t(), map()) ::
+              {MediaWatch.Analysis.Description.t() | MediaWatch.Analysis.ShowOccurrence.t(),
+               map()}
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
@@ -23,6 +26,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
       alias MediaWatch.Catalog.Item
       alias MediaWatch.Snapshots.Snapshot
       alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
+      alias MediaWatch.Analysis.ShowOccurrence
       @max_snapshot_retries 3
 
       def start_link([]) do
@@ -53,6 +57,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
         PubSub.subscribe("snapshots:#{id}")
         PubSub.subscribe("parsing:#{id}")
         PubSub.subscribe("slicing:#{id}")
+        PubSub.subscribe("occurrence_formatting:#{id}")
         sources = item.sources
 
         {:ok,
@@ -88,6 +93,11 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
       def handle_info(slice = %Slice{}, state) do
         {res, state} = handle_slice(slice, state)
+        {:noreply, state}
+      end
+
+      def handle_info(occ = %ShowOccurrence{}, state) do
+        {res, state} = handle_occurrence(occ, state)
         {:noreply, state}
       end
 
@@ -153,7 +163,17 @@ defmodule MediaWatch.Catalog.ItemWorker do
         {res, state |> update_state(res)}
       end
 
-      defoverridable handle_snapshot: 2, handle_parsed_snapshot: 2, handle_slice: 2
+      @impl true
+      def handle_occurrence(occ = %ShowOccurrence{}, state) do
+        res = occ |> insert_guests_from(get_repo()) |> tap(&publish_result(&1, state.id))
+
+        {res, state |> update_state(res)}
+      end
+
+      defoverridable handle_snapshot: 2,
+                     handle_parsed_snapshot: 2,
+                     handle_slice: 2,
+                     handle_occurrence: 2
 
       defp do_snapshot(source, nb_retries \\ 0)
 
@@ -187,7 +207,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.{PubSub, Parsing, Snapshots, Analysis}
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
-  alias MediaWatch.Analysis.{Description, ShowOccurrence}
+  alias MediaWatch.Analysis.{Description, ShowOccurrence, Invitation}
 
   def init_state(state, key = :description),
     do:
@@ -228,10 +248,17 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def update_state(state, {:ok, res}), do: state |> update_state(res)
   def update_state(state, {:error, _}), do: state
 
+  def update_state(state, list) when is_list(list),
+    do:
+      list
+      |> Enum.reduce(state, fn obj, state -> state |> update_state(obj) end)
+
   def update_state(state, desc = %Description{}), do: %{state | description: desc}
 
   def update_state(state, occ = %ShowOccurrence{}),
     do: update_in(state.occurrences, &append(&1, occ))
+
+  def update_state(state, %Invitation{}), do: state
 
   def update_state(state, map) when is_map(map) and not is_struct(map),
     do:
@@ -277,6 +304,9 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   def publish_result(occ = %ShowOccurrence{}, item_id),
     do: PubSub.broadcast("occurrence_formatting:#{item_id}", occ)
+
+  def publish_result(invitation = %Invitation{}, item_id),
+    do: PubSub.broadcast("invitation:#{item_id}", invitation)
 
   defp default_to_source_id_map([], source_ids), do: source_ids |> Map.new(&{&1, []})
 

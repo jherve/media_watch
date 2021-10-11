@@ -4,6 +4,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   require Ecto.Query
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Parsing.Slice
+  alias MediaWatch.Analysis.Invitation
   alias __MODULE__, as: ShowOccurrence
   @required_fields [:title, :description, :airing_time, :slot_start, :slot_end, :slices_used]
   @optional_fields [:link, :show_id, :slices_discarded]
@@ -20,6 +21,9 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
 
     field :slices_used, {:array, :id}
     field :slices_discarded, {:array, :id}, default: []
+
+    has_many :invitations, Invitation
+    has_many :guests, through: [:invitations, :person]
   end
 
   @doc false

@@ -56,6 +56,7 @@ defmodule MediaWatch.Catalog.Item do
       use MediaWatch.Snapshots.Snapshot
       use MediaWatch.Parsing.ParsedSnapshot
       use MediaWatch.Parsing.Slice
+      use MediaWatch.Analysis.Recognisable
       import Ecto.Query
 
       @show opts[:show]
@@ -93,6 +94,11 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl true
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
+
+      @impl MediaWatch.Analysis.Recognisable
+      defdelegate get_guests_cs(occ, list_of_attrs), to: MediaWatch.Analysis.Invitation
+      @impl MediaWatch.Analysis.Recognisable
+      defdelegate insert_guests(cs_list, repo), to: MediaWatch.Analysis.Invitation
     end
   end
 end
