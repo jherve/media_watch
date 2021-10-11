@@ -7,6 +7,9 @@ defmodule MediaWatch.Http do
       {:ok, %{headers: headers, status: 301}} ->
         headers |> Map.new() |> Map.get("location") |> get_body
 
+      {:ok, e = %{status: status}} when status >= 400 ->
+        {:error, e}
+
       e = {:error, _} ->
         e
     end
