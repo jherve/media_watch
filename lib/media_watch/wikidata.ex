@@ -38,6 +38,7 @@ defmodule MediaWatch.Wikidata do
     do: """
       SELECT ?person ?personLabel ?personDescription
       WHERE {
+        ?person wdt:P31 wd:Q5 .
         ?person rdfs:label "#{name}"@#{language} .
 
         SERVICE wikibase:label { bd:serviceParam wikibase:language "#{language}". }
