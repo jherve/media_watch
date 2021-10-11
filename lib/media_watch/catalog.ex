@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog do
   import Ecto.Query
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.{Item, Source, Show, Channel}
+  alias MediaWatch.Catalog.{Item, Source, Show}
   @source_preloads [:rss_feed]
   @preloads [:channels, :show, sources: @source_preloads]
   @config Application.compile_env(:media_watch, __MODULE__)

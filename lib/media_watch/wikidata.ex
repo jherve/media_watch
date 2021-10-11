@@ -14,8 +14,8 @@ defmodule MediaWatch.Wikidata do
     end
   end
 
-  defp extract(data = %{"results" => %{"bindings" => []}}, _key), do: {:error, :no_match}
-  defp extract(data = %{"results" => %{"bindings" => [binding]}}, key), do: extract(binding, key)
+  defp extract(%{"results" => %{"bindings" => []}}, _key), do: {:error, :no_match}
+  defp extract(%{"results" => %{"bindings" => [binding]}}, key), do: extract(binding, key)
 
   defp extract(%{"person" => %{"type" => "uri", "value" => uri}}, :qid) do
     with %URI{path: path} <- uri |> URI.parse(),
