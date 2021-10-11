@@ -4,6 +4,7 @@ defmodule MediaWatch.Catalog do
   alias MediaWatch.Catalog.{Item, Source, Show, Channel}
   @source_preloads [:rss_feed]
   @preloads [:channels, :show, sources: @source_preloads]
+  @config Application.compile_env(:media_watch, __MODULE__)
 
   def select_all_sources(),
     do: from(s in Source, preload: ^@source_preloads)
@@ -33,31 +34,9 @@ defmodule MediaWatch.Catalog do
   def try_to_insert_all_channels(),
     do: all_channel_modules() |> Enum.each(& &1.insert())
 
-  def all_channel_modules(),
-    do: [
-      Channel.FranceInter,
-      Channel.FranceCulture,
-      Channel.FranceInfo,
-      Channel.RTL,
-      Channel.RMC,
-      Channel.Europe1
-    ]
+  def all_channel_modules(), do: @config[:channels]
 
-  def all(),
-    do: [
-      Item.Le8h30FranceInfo,
-      Item.BourdinDirect,
-      Item.Invite7h50,
-      Item.Invite8h20,
-      Item.InviteDesMatins,
-      Item.InviteRTL,
-      Item.InviteRTLSoir,
-      Item.LaGrandeTableIdees,
-      Item.LeGrandFaceAFace,
-      Item.LeGrandRendezVous,
-      Item.LInterviewPolitique,
-      Item.QuestionsPolitiques
-    ]
+  def all(), do: @config[:items]
 
   def module_from_show_id(show_id),
     do:
