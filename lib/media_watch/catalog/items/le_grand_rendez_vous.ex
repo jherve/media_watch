@@ -1,11 +1,3 @@
 defmodule MediaWatch.Catalog.Item.LeGrandRendezVous do
-  use MediaWatch.Catalog.Item.Layout.Europe1,
-    show: %{
-      name: "Le grand rendez-vous",
-      url: "https://www.europe1.fr/emissions/Le-grand-rendez-vous",
-      airing_schedule: "0 10 * * SUN",
-      duration_minutes: 45
-    },
-    sources: [%{rss_feed: %{url: "https://www.europe1.fr/rss/podcasts/le-grand-rendez-vous.xml"}}],
-    channels: [MediaWatch.Catalog.Channel.Europe1]
+  use MediaWatch.Catalog.Item.Layout.Europe1
 end

@@ -1,11 +1,3 @@
 defmodule MediaWatch.Catalog.Item.Invite7h50 do
-  use MediaWatch.Catalog.ItemWorker,
-    show: %{
-      name: "L'invité de 7h50",
-      url: "https://www.franceinter.fr/emissions/invite-de-7h50",
-      airing_schedule: "50 7 * * MON-FRI",
-      duration_minutes: 10
-    },
-    sources: [%{rss_feed: %{url: "http://radiofrance-podcast.net/podcast09/rss_11710.xml"}}],
-    channels: [MediaWatch.Catalog.Channel.FranceInter]
+  use MediaWatch.Catalog.ItemWorker
 end

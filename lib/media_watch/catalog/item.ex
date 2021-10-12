@@ -49,8 +49,8 @@ defmodule MediaWatch.Catalog.Item do
     end
   end
 
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
+  defmacro __using__(_opts) do
+    quote do
       use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
       use MediaWatch.Catalog.Source
       use MediaWatch.Snapshots.Snapshot
@@ -59,14 +59,17 @@ defmodule MediaWatch.Catalog.Item do
       use MediaWatch.Analysis.Recognisable
       import Ecto.Query
 
-      @show opts[:show]
+      @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:items][__MODULE__] ||
+                raise("Config for #{__MODULE__} should be set")
+
+      @show @config[:show]
       @item_args (cond do
                     not is_nil(@show) -> %{show: @show}
                     true -> raise("At least one of [`show`] should be set")
                   end)
       @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
-      @sources opts[:sources] || raise("`sources` should be set")
-      @channels opts[:channels] || raise("`channels` should be set")
+      @sources @config[:sources] || raise("`sources` should be set")
+      @channels @config[:channels] || raise("`channels` should be set")
 
       @impl true
       def query(), do: from(i in Item, as: :item, where: i.module == ^__MODULE__)

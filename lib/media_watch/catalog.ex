@@ -34,9 +34,9 @@ defmodule MediaWatch.Catalog do
   def try_to_insert_all_channels(),
     do: all_channel_modules() |> Enum.each(& &1.insert())
 
-  def all_channel_modules(), do: @config[:channels]
+  def all_channel_modules(), do: @config[:channels] |> Keyword.keys()
 
-  def all(), do: @config[:items]
+  def all(), do: @config[:items] |> Keyword.keys()
 
   def module_from_show_id(show_id),
     do:

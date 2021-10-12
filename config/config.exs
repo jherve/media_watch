@@ -18,30 +18,6 @@ config :media_watch, MediaWatchWeb.Endpoint,
   pubsub_server: MediaWatch.PubSub,
   live_view: [signing_salt: "3h6ftnMH"]
 
-config :media_watch, MediaWatch.Catalog,
-  items: [
-    MediaWatch.Catalog.Item.Le8h30FranceInfo,
-    MediaWatch.Catalog.Item.BourdinDirect,
-    MediaWatch.Catalog.Item.Invite7h50,
-    MediaWatch.Catalog.Item.Invite8h20,
-    MediaWatch.Catalog.Item.InviteDesMatins,
-    MediaWatch.Catalog.Item.InviteRTL,
-    MediaWatch.Catalog.Item.InviteRTLSoir,
-    MediaWatch.Catalog.Item.LaGrandeTableIdees,
-    MediaWatch.Catalog.Item.LeGrandFaceAFace,
-    MediaWatch.Catalog.Item.LeGrandRendezVous,
-    MediaWatch.Catalog.Item.LInterviewPolitique,
-    MediaWatch.Catalog.Item.QuestionsPolitiques
-  ],
-  channels: [
-    MediaWatch.Catalog.Channel.FranceInter,
-    MediaWatch.Catalog.Channel.FranceCulture,
-    MediaWatch.Catalog.Channel.FranceInfo,
-    MediaWatch.Catalog.Channel.RTL,
-    MediaWatch.Catalog.Channel.RMC,
-    MediaWatch.Catalog.Channel.Europe1
-  ]
-
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
@@ -57,6 +33,8 @@ config :esbuild,
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
+
+import_config "catalog.exs"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

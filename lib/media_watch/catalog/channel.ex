@@ -22,13 +22,16 @@ defmodule MediaWatch.Catalog.Channel do
     |> unique_constraint(:module)
   end
 
-  defmacro __using__(opts) do
-    quote bind_quoted: [opts: opts] do
+  defmacro __using__(_opts) do
+    quote do
       use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
       import Ecto.Query
 
-      @name opts[:name] || raise("`name` should be set")
-      @url opts[:url] || raise("`url` should be set")
+      @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:channels][__MODULE__] ||
+                raise("Config for #{__MODULE__} should be set")
+
+      @name @config[:name] || raise("`name` should be set")
+      @url @config[:url] || raise("`url` should be set")
 
       @impl true
       def query(), do: from(c in Channel, as: :item, where: c.module == ^__MODULE__)
