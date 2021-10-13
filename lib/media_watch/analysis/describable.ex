@@ -8,7 +8,11 @@ defmodule MediaWatch.Analysis.Describable do
 
       @impl true
       def create_description_and_store(slice, repo),
-        do: slice |> create_description() |> MediaWatch.Repo.insert_and_retry(repo)
+        do:
+          slice
+          |> repo.preload(:rss_channel_description)
+          |> create_description()
+          |> MediaWatch.Repo.insert_and_retry(repo)
 
       defoverridable create_description_and_store: 2
     end

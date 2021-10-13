@@ -32,13 +32,14 @@ defmodule MediaWatch.Analysis.Recurrent do
       def create_occurrence_and_store(slice, repo),
         do:
           slice
+          |> repo.preload(:rss_entry)
           |> create_occurrence()
           |> MediaWatch.Repo.insert_and_retry(repo)
           |> explain_error()
 
       @impl true
       def update_occurrence_and_store(occ, slice, repo) do
-        all_slices = get_slices_from_occurrence(occ) ++ [slice]
+        all_slices = (get_slices_from_occurrence(occ) |> repo.preload(:rss_entry)) ++ [slice]
         grouped = group_slices(occ, all_slices)
 
         occ

@@ -66,7 +66,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
          |> init_state(:parsed_snapshots)
          |> init_state(:slices)
          |> init_state(:description)
-         |> init_state(:occurrences)}
+         |> init_state(:occurrences), {:continue, :do_catchup}}
+      end
+
+      @impl true
+      def handle_continue(:do_catchup, state) do
+        {:noreply, state |> attempt_catchup()}
       end
 
       @impl true
@@ -103,6 +108,10 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
       @impl true
       defdelegate init_state(state, key), to: MediaWatch.Catalog.ItemWorker
+
+      def attempt_catchup(state),
+        do: MediaWatch.Catalog.ItemWorker.attempt_catchup(state, __MODULE__)
+
       @impl true
       defdelegate update_state(state, key), to: MediaWatch.Catalog.ItemWorker
       @impl true
@@ -112,7 +121,14 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
       @impl true
       def handle_snapshot(snap, state) do
-        res = snap |> parse_and_insert(get_repo()) |> tap(&publish_result(&1, state.id))
+        repo = get_repo()
+
+        res =
+          snap
+          |> repo.preload([:xml])
+          |> parse_and_insert(get_repo())
+          |> tap(&publish_result(&1, state.id))
+
         {res, state |> update_state(res, snap.source_id)}
       end
 
@@ -204,6 +220,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
+  require Logger
   alias MediaWatch.{PubSub, Parsing, Snapshots, Analysis}
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
@@ -244,6 +261,13 @@ defmodule MediaWatch.Catalog.ItemWorker do
         key,
         source_ids |> Parsing.get_slices() |> default_to_source_id_map(source_ids)
       )
+
+  def attempt_catchup(state, module),
+    do:
+      state
+      |> tap(&attempt_catchup(&1, module, :snapshots))
+      |> tap(&attempt_catchup(&1, module, :parsed_snapshots))
+      |> tap(&attempt_catchup(&1, module, :slices))
 
   def update_state(state, {:ok, res}), do: state |> update_state(res)
   def update_state(state, {:error, _}), do: state
@@ -307,6 +331,66 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   def publish_result(invitation = %Invitation{}, item_id),
     do: PubSub.broadcast("invitation:#{item_id}", invitation)
+
+  defp attempt_catchup(state, module, :snapshots) do
+    snap_ids = state.parsed_snapshots |> flatten_map(& &1.id)
+
+    state.snapshots
+    |> flatten_map()
+    |> Enum.reject(&(&1.id in snap_ids))
+    |> tap(&do_catchup(&1, state, module))
+  end
+
+  defp attempt_catchup(state, module, :parsed_snapshots) do
+    slices_ids = state.slices |> flatten_map(& &1.parsed_snapshot_id)
+
+    state.parsed_snapshots
+    |> flatten_map()
+    |> Enum.reject(&(&1.id in slices_ids))
+    |> tap(&do_catchup(&1, state, module))
+  end
+
+  defp attempt_catchup(state, module, :slices) do
+    description = state.description || %{slices_used: [], slices_discarded: []}
+
+    slices_seen =
+      description.slices_used ++
+        description.slices_discarded ++
+        (state.occurrences |> Enum.flat_map(&(&1.slices_used ++ &1.slices_discarded)))
+
+    state.slices
+    |> flatten_map()
+    |> Enum.reject(&(&1.id in slices_seen))
+    |> tap(&do_catchup(&1, state, module))
+  end
+
+  defp do_catchup(list, state, module) when is_list(list),
+    do:
+      list
+      |> tap(&log_catching_up/1)
+      |> Enum.map(&do_catchup(&1, state, module))
+
+  defp do_catchup(obj, state, module) do
+    catchup(obj, state, module)
+  rescue
+    e -> {:error, e}
+  end
+
+  defp catchup(snap = %Snapshot{}, state, module), do: module.handle_snapshot(snap, state)
+
+  defp catchup(parsed = %ParsedSnapshot{}, state, module),
+    do: module.handle_parsed_snapshot(parsed, state)
+
+  defp catchup(slice = %Slice{}, state, module), do: module.handle_slice(slice, state)
+
+  defp log_catching_up([]), do: nil
+
+  defp log_catching_up(list = [%obj_type{} | _]) when is_list(list),
+    do:
+      Logger.info("Catching up on #{obj_type} [#{list |> Enum.map(& &1.id) |> Enum.join(", ")}]")
+
+  defp flatten_map(map, fun \\ & &1) when is_map(map) and is_function(fun, 1),
+    do: map |> Enum.flat_map(fn {_, list} when is_list(list) -> list |> Enum.map(fun) end)
 
   defp default_to_source_id_map([], source_ids), do: source_ids |> Map.new(&{&1, []})
 
