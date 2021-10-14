@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.Le8h30FranceInfo do
-  use MediaWatch.Catalog.ItemWorker
+  use MediaWatch.Catalog.Item
 
   @scan_title ~r/^.*\"8h30 franceinfo\" (de |d'|avec )(?P<guests>.*)$/
   @split_words ["et", "avec", "face à"] |> Enum.map(&" #{&1} ")

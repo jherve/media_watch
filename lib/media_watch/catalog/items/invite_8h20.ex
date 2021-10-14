@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.Invite8h20 do
-  use MediaWatch.Catalog.ItemWorker
+  use MediaWatch.Catalog.Item
 
   @scan_title ~r/^(?P<guests>.*) : ".*"$/
   @split_words ["et", "avec", "face à"] |> Enum.map(&" #{&1} ")

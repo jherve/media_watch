@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.Item.Layout.Europe1 do
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      use MediaWatch.Catalog.ItemWorker, opts
+      use MediaWatch.Catalog.Item, opts
       alias MediaWatch.Analysis.ShowOccurrence
 
       @impl true

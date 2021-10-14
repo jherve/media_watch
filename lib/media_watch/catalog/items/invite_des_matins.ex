@@ -1,5 +1,5 @@
 defmodule MediaWatch.Catalog.Item.InviteDesMatins do
-  use MediaWatch.Catalog.ItemWorker
+  use MediaWatch.Catalog.Item
 
   import Ecto.Changeset
   alias MediaWatch.Parsing.Slice.RssEntry

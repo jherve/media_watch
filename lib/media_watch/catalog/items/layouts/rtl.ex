@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.Item.Layout.RTL do
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      use MediaWatch.Catalog.ItemWorker, opts
+      use MediaWatch.Catalog.Item, opts
       import Ecto.Changeset
 
       @impl true
