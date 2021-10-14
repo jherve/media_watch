@@ -20,6 +20,16 @@ defmodule MediaWatch.Analysis.Invitation do
     |> unique_constraint([:person_id, :show_occurrence_id])
   end
 
+  def insert_guests_from(occ, repo, recognisable) do
+    if function_exported?(recognisable, :get_guests_attrs, 1) do
+      apply(recognisable, :get_guests_attrs, [occ])
+      |> then(&get_guests_cs(occ, &1))
+      |> then(&insert_guests(&1, repo))
+    else
+      []
+    end
+  end
+
   def get_guests_cs(occ, list_of_attrs) when is_list(list_of_attrs),
     do: list_of_attrs |> Enum.map(&changeset(%Invitation{show_occurrence: occ}, &1))
 

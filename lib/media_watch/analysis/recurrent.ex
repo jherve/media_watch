@@ -8,10 +8,8 @@ defmodule MediaWatch.Analysis.Recurrent do
   @callback get_occurrence_at(DateTime.t()) :: any()
   @callback get_slices_from_occurrence(MediaWatch.Analysis.ShowOccurrence.t()) :: [any()]
   @callback create_occurrence(any()) :: any()
-  @callback create_occurrence_and_store(any(), Ecto.Repo.t()) :: any()
   @callback update_occurrence(any(), used :: [any()], discarded :: [any()], new :: [any()]) ::
               any()
-  @callback update_occurrence_and_store(any(), any(), Ecto.Repo.t()) :: any()
 
   defmacro __using__(_opts) do
     quote do

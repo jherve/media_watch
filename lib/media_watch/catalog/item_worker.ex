@@ -2,7 +2,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
   alias MediaWatch.{PubSub, Parsing, Snapshots, Analysis}
-  alias MediaWatch.Catalog.Item
+  alias MediaWatch.Catalog.{Item, Source}
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   alias MediaWatch.Analysis.{ShowOccurrence, Description, Invitation}
@@ -71,7 +71,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     res =
       snap
       |> repo.preload([:xml])
-      |> module.parse_and_insert(repo)
+      |> Snapshot.parse_and_insert(repo, module)
       |> tap(&publish_result(&1, state.id))
 
     {:noreply, state |> update_state(res, snap.source_id)}
@@ -79,7 +79,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   def handle_info(snap = %ParsedSnapshot{}, state = %{module: module}) do
     ok_res =
-      case Parsing.get(snap.id) |> module.slice_and_insert(module.get_repo()) do
+      case Parsing.get(snap.id) |> ParsedSnapshot.slice_and_insert(module.get_repo(), module) do
         {:ok, ok, _} ->
           ok
 
@@ -97,7 +97,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def handle_info(slice = %Slice{type: :rss_channel_description}, state = %{module: module}) do
     res =
       slice
-      |> module.create_description_and_store(module.get_repo())
+      |> Description.create_description_and_store(module.get_repo(), module)
       |> tap(&publish_result(&1, state.id))
 
     {:noreply, state |> update_state(res)}
@@ -107,12 +107,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
     repo = module.get_repo()
 
     res =
-      case slice |> module.create_occurrence_and_store(repo) do
+      case slice |> ShowOccurrence.create_occurrence_and_store(repo, module) do
         ok = {:ok, _} ->
           ok |> tap(&publish_result(&1, state.id))
 
         {:error, {:unique_airing_time, occ}} ->
-          module.update_occurrence_and_store(occ, slice, repo)
+          ShowOccurrence.update_occurrence_and_store(occ, slice, repo, module)
           |> tap(&publish_result(&1, state.id))
 
         e = {:error, reason} ->
@@ -129,7 +129,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def handle_info(occ = %ShowOccurrence{}, state = %{module: module}) do
     res =
       occ
-      |> module.insert_guests_from(module.get_repo())
+      |> Invitation.insert_guests_from(module.get_repo(), module)
       |> tap(&publish_result(&1, state.id))
 
     {:noreply, state |> update_state(res)}
@@ -249,7 +249,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp do_snapshot(module, source, nb_retries) do
-    case module.make_snapshot_and_insert(source, module.get_repo()) do
+    case Source.make_snapshot_and_insert(source, module.get_repo(), module) do
       ok = {:ok, _} ->
         ok
 

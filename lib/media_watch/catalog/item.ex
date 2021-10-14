@@ -56,7 +56,8 @@ defmodule MediaWatch.Catalog.Item do
       @behaviour MediaWatch.Parsing.Parsable
       @behaviour MediaWatch.Parsing.Sliceable
       @behaviour MediaWatch.Analysis.Describable
-      use MediaWatch.Analysis.{Recurrent, Recognisable}
+      @behaviour MediaWatch.Analysis.Recognisable
+      use MediaWatch.Analysis.Recurrent
       import Ecto.Query
       alias MediaWatch.Catalog.Source
       alias MediaWatch.Snapshots.Snapshot
@@ -101,22 +102,11 @@ defmodule MediaWatch.Catalog.Item do
       @impl MediaWatch.Snapshots.Snapshotable
       defdelegate make_snapshot(source), to: Source
 
-      @impl MediaWatch.Snapshots.Snapshotable
-      def make_snapshot_and_insert(source, repo),
-        do: Source.make_snapshot_and_insert(source, repo, __MODULE__)
-
       @impl MediaWatch.Parsing.Parsable
       defdelegate parse(source), to: Snapshot
 
-      @impl MediaWatch.Parsing.Parsable
-      def parse_and_insert(snap, repo), do: Snapshot.parse_and_insert(snap, repo, __MODULE__)
-
       @impl MediaWatch.Parsing.Sliceable
       def slice(parsed), do: ParsedSnapshot.slice(parsed, __MODULE__)
-
-      @impl MediaWatch.Parsing.Sliceable
-      def slice_and_insert(parsed, repo),
-        do: ParsedSnapshot.slice_and_insert(parsed, repo, __MODULE__)
 
       @impl MediaWatch.Parsing.Sliceable
       defdelegate into_slice_cs(attrs, parsed), to: ParsedSnapshot
@@ -124,23 +114,11 @@ defmodule MediaWatch.Catalog.Item do
       @impl MediaWatch.Analysis.Describable
       defdelegate create_description(slice), to: Description
 
-      @impl MediaWatch.Analysis.Describable
-      def create_description_and_store(slice, repo),
-        do: Description.create_description_and_store(slice, repo, __MODULE__)
-
       @impl MediaWatch.Analysis.Recurrent
       def create_occurrence(slice), do: ShowOccurrence.create_occurrence(slice, __MODULE__)
 
       @impl MediaWatch.Analysis.Recurrent
       defdelegate update_occurrence(occ, used, discarded, new), to: ShowOccurrence
-
-      @impl MediaWatch.Analysis.Recurrent
-      def create_occurrence_and_store(slice, repo),
-        do: ShowOccurrence.create_occurrence_and_store(slice, repo, __MODULE__)
-
-      @impl MediaWatch.Analysis.Recurrent
-      def update_occurrence_and_store(occ, slice, repo),
-        do: ShowOccurrence.update_occurrence_and_store(occ, slice, repo, __MODULE__)
 
       @impl MediaWatch.Analysis.Recurrent
       def get_occurrence_at(datetime), do: ShowOccurrence.get_occurrence_at(datetime, __MODULE__)
@@ -151,11 +129,6 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
-
-      @impl MediaWatch.Analysis.Recognisable
-      defdelegate get_guests_cs(occ, list_of_attrs), to: Invitation
-      @impl MediaWatch.Analysis.Recognisable
-      defdelegate insert_guests(cs_list, repo), to: Invitation
 
       defoverridable into_slice_cs: 2,
                      create_description: 1,
