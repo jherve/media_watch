@@ -77,7 +77,6 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
     res =
       snap
-      |> repo.preload([:xml])
       |> Snapshot.parse_and_insert(repo, module)
       |> tap(&publish_result(&1, state.id))
 
