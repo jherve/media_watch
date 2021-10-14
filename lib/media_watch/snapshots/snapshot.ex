@@ -45,6 +45,10 @@ defmodule MediaWatch.Snapshots.Snapshot do
     end
   end
 
+  def parse_and_insert(snap, repo, parsable) do
+    with {:ok, cs} <- parsable.parse(snap), do: cs |> Repo.insert_and_retry(repo)
+  end
+
   defp set_type(cs) do
     case cs |> fetch_field(:xml) do
       {_, %Xml{}} -> cs |> put_change(:type, :xml)

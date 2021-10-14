@@ -1,6 +1,7 @@
 defmodule MediaWatch.Analysis.Description do
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Catalog
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Catalog.Item
   alias __MODULE__, as: Description
@@ -29,6 +30,11 @@ defmodule MediaWatch.Analysis.Description do
     |> validate_length(:slices_used, min: 1)
   end
 
+  def create_description(slice = %Slice{}) do
+    item_id = Catalog.get_item_id(slice.source_id)
+    from(slice, item_id)
+  end
+
   def from(%Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}, item_id) do
     changeset(%{
       item_id: item_id,
@@ -39,4 +45,11 @@ defmodule MediaWatch.Analysis.Description do
       slices_used: [id]
     })
   end
+
+  def create_description_and_store(slice, repo, describable),
+    do:
+      slice
+      |> repo.preload(:rss_channel_description)
+      |> describable.create_description()
+      |> MediaWatch.Repo.insert_and_retry(repo)
 end

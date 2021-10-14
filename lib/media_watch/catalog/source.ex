@@ -35,6 +35,11 @@ defmodule MediaWatch.Catalog.Source do
     end
   end
 
+  def make_snapshot_and_insert(source, repo, snapshotable) do
+    with {:ok, cs} <- snapshotable.make_snapshot(source),
+         do: cs |> MediaWatch.Repo.insert_and_retry(repo)
+  end
+
   defp set_type(cs) do
     if has_field?(cs, :rss_feed), do: cs |> put_change(:type, :rss_feed), else: cs
   end
