@@ -9,6 +9,7 @@ defmodule MediaWatch.Snapshots.Snapshot do
 
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Repo
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot.Xml
   alias MediaWatch.Parsing.ParsedSnapshot
@@ -45,8 +46,13 @@ defmodule MediaWatch.Snapshots.Snapshot do
   end
 
   def parse(snap = %Snapshot{type: :xml, xml: xml}) when not is_nil(xml) do
+    snap = snap |> Repo.preload(:source)
+
     with {:ok, data} <- xml |> Xml.into_parsed_snapshot_data() do
-      {:ok, ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap}, %{data: data})}
+      {:ok,
+       ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap, source: snap.source}, %{
+         data: data
+       })}
     end
   end
 

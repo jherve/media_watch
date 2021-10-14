@@ -8,6 +8,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
 
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ParsedSnapshot
@@ -15,6 +16,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
 
   schema "parsed_snapshots" do
     belongs_to :snapshot, Snapshot, foreign_key: :id, primary_key: true
+    belongs_to :source, Source
     field :data, :map
 
     Ecto.Schema.timestamps(type: :utc_datetime)
@@ -56,6 +58,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> cast(attrs, [:id, :data])
     |> validate_required([:data])
     |> cast_assoc(:snapshot, required: true)
+    |> cast_assoc(:source, required: true)
     |> unique_constraint(:id)
   end
 
