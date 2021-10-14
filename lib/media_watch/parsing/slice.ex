@@ -24,42 +24,6 @@ defmodule MediaWatch.Parsing.Slice do
     Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
-  defmacro __using__(_opts) do
-    quote do
-      use MediaWatch.Analysis.Describable
-      use MediaWatch.Analysis.Recurrent
-      import Ecto.Query
-
-      @impl true
-      defdelegate create_description(slice), to: MediaWatch.Parsing.Slice
-
-      @impl true
-      def create_occurrence(slice),
-        do: MediaWatch.Parsing.Slice.create_occurrence(slice, __MODULE__)
-
-      @impl true
-      defdelegate update_occurrence(occ, used, discarded, new), to: MediaWatch.Parsing.Slice
-
-      @impl true
-      def get_occurrence_at(datetime) do
-        repo = get_repo()
-        query = from(i in query(), select: i.id)
-
-        from(o in MediaWatch.Analysis.ShowOccurrence,
-          where: o.show_id in subquery(query) and o.airing_time == ^datetime
-        )
-        |> repo.one!
-      end
-
-      @impl true
-      def get_slices_from_occurrence(occ),
-        do:
-          MediaWatch.Analysis.ShowOccurrence.query_slices_from_occurrence(occ) |> get_repo().all()
-
-      defoverridable create_description: 1, create_occurrence: 1, update_occurrence: 4
-    end
-  end
-
   @doc false
   def changeset(slice \\ %Slice{}, attrs) do
     slice

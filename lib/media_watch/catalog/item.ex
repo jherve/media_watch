@@ -52,12 +52,14 @@ defmodule MediaWatch.Catalog.Item do
   defmacro __using__(_opts) do
     quote do
       use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
-      use MediaWatch.Catalog.Source
-      use MediaWatch.Snapshots.Snapshot
-      use MediaWatch.Parsing.ParsedSnapshot
-      use MediaWatch.Parsing.Slice
-      use MediaWatch.Analysis.Recognisable
+      use MediaWatch.Snapshots.Snapshotable
+      use MediaWatch.Parsing.{Parsable, Sliceable}
+      use MediaWatch.Analysis.{Describable, Recurrent, Recognisable}
       import Ecto.Query
+      alias MediaWatch.Catalog.Source
+      alias MediaWatch.Snapshots.Snapshot
+      alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
+      alias MediaWatch.Analysis.{ShowOccurrence, Invitation}
 
       @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:items][__MODULE__] ||
                 raise("Config for #{__MODULE__} should be set")
@@ -71,10 +73,10 @@ defmodule MediaWatch.Catalog.Item do
       @sources @config[:sources] || raise("`sources` should be set")
       @channels @config[:channels] || raise("`channels` should be set")
 
-      @impl true
+      @impl MediaWatch.Catalog.Catalogable
       def query(), do: from(i in Item, as: :item, where: i.module == ^__MODULE__)
 
-      @impl true
+      @impl MediaWatch.Catalog.Catalogable
       def insert() do
         repo = get_repo()
         channels = @channels |> Enum.map(& &1.get())
@@ -86,22 +88,54 @@ defmodule MediaWatch.Catalog.Item do
         |> MediaWatch.Repo.insert_and_retry(repo)
       end
 
-      @impl true
+      @impl MediaWatch.Catalog.Catalogable
       def get() do
-        import Ecto.Query
         repo = get_repo()
 
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
         |> repo.one()
       end
 
-      @impl true
+      @impl MediaWatch.Snapshots.Snapshotable
+      defdelegate make_snapshot(source), to: Source
+
+      @impl MediaWatch.Parsing.Parsable
+      defdelegate parse(source), to: Snapshot
+
+      @impl MediaWatch.Parsing.Sliceable
+      def slice(parsed), do: ParsedSnapshot.slice(parsed, __MODULE__)
+
+      @impl MediaWatch.Parsing.Sliceable
+      defdelegate into_slice_cs(attrs, parsed), to: ParsedSnapshot
+
+      @impl MediaWatch.Analysis.Describable
+      defdelegate create_description(slice), to: Slice
+
+      @impl MediaWatch.Analysis.Recurrent
+      def create_occurrence(slice), do: Slice.create_occurrence(slice, __MODULE__)
+
+      @impl MediaWatch.Analysis.Recurrent
+      defdelegate update_occurrence(occ, used, discarded, new), to: Slice
+
+      @impl MediaWatch.Analysis.Recurrent
+      def get_occurrence_at(datetime), do: ShowOccurrence.get_occurrence_at(datetime, __MODULE__)
+
+      @impl MediaWatch.Analysis.Recurrent
+      def get_slices_from_occurrence(occ),
+        do: ShowOccurrence.get_slices_from_occurrence(occ, get_repo())
+
+      @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
 
       @impl MediaWatch.Analysis.Recognisable
-      defdelegate get_guests_cs(occ, list_of_attrs), to: MediaWatch.Analysis.Invitation
+      defdelegate get_guests_cs(occ, list_of_attrs), to: Invitation
       @impl MediaWatch.Analysis.Recognisable
-      defdelegate insert_guests(cs_list, repo), to: MediaWatch.Analysis.Invitation
+      defdelegate insert_guests(cs_list, repo), to: Invitation
+
+      defoverridable into_slice_cs: 2,
+                     create_description: 1,
+                     create_occurrence: 1,
+                     update_occurrence: 4
     end
   end
 end

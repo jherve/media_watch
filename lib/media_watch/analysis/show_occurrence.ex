@@ -54,7 +54,19 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     })
   end
 
-  def query_slices_from_occurrence(occ = %ShowOccurrence{}),
+  def get_slices_from_occurrence(occ, repo), do: query_slices_from_occurrence(occ) |> repo.all()
+
+  def get_occurrence_at(datetime, module) do
+    repo = module.get_repo()
+    query = Ecto.Query.from(i in module.query(), select: i.id)
+
+    Ecto.Query.from(o in ShowOccurrence,
+      where: o.show_id in subquery(query) and o.airing_time == ^datetime
+    )
+    |> repo.one!
+  end
+
+  defp query_slices_from_occurrence(occ = %ShowOccurrence{}),
     do:
       Ecto.Query.from(s in Slice,
         where: s.id in ^(occ.slices_used ++ occ.slices_discarded),
