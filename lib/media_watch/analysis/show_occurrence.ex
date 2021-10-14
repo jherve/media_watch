@@ -149,7 +149,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   end
 
   defp explain_error(
-         {:error, cs = %{errors: [airing_time: {_, [type: :utc_datetime, validation: :cast]}]}},
+         {:error, %{errors: [airing_time: {_, [type: :utc_datetime, validation: :cast]}]}},
          _
        ),
        do: {:error, :no_airing_time_within_slot}

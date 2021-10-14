@@ -2,11 +2,9 @@ defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias MediaWatch.Catalog
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
-  alias MediaWatch.Analysis.{Description, ShowOccurrence}
 
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description]
@@ -49,7 +47,7 @@ defmodule MediaWatch.Parsing.Slice do
   """
   def insert_all(cs_map, repo, failures_so_far \\ %{})
 
-  def insert_all(cs_map, repo, failures_so_far) when cs_map == %{},
+  def insert_all(cs_map, _repo, failures_so_far) when cs_map == %{},
     do: {:error, [], [], failures_so_far |> Map.values()}
 
   def insert_all(cs_map, repo, failures_so_far) when is_map(cs_map) do
@@ -89,7 +87,7 @@ defmodule MediaWatch.Parsing.Slice do
         # All the operations within the transaction are assumed to be 'successful'
         # whatever their actual result, so that the whole transaction can complete.
         case MediaWatch.Repo.insert_and_retry(cs, repo) |> get_error_reason() do
-          u = {:unique, val} -> {:ok, u}
+          u = {:unique, _val} -> {:ok, u}
           e = {:error, _} -> {:ok, e}
           ok = {:ok, _} -> ok
         end
@@ -98,14 +96,14 @@ defmodule MediaWatch.Parsing.Slice do
     |> Multi.run(:control_stage, &fail_if_any_failure/2)
   end
 
-  defp fail_if_any_failure(repo, changes) do
+  defp fail_if_any_failure(_repo, changes) do
     # If there is any actual error within the transaction's operations, the
     # final stage enforces a rollback.
     failures = changes |> Enum.filter(&match?({_, {:error, _}}, &1)) |> Map.new()
     if not (failures |> Enum.empty?()), do: {:error, nil}, else: {:ok, nil}
   end
 
-  defp group_multi_results(res = {:error, :control_stage, nil, changes}) do
+  defp group_multi_results({:error, :control_stage, nil, changes}) do
     res =
       changes
       |> Enum.group_by(&categorize_errors/1)
@@ -114,7 +112,7 @@ defmodule MediaWatch.Parsing.Slice do
     {:error, res |> Map.get(:ok, %{}), res |> Map.get(:unique, %{}), res |> Map.get(:error, %{})}
   end
 
-  defp group_multi_results(res = {:ok, changes}) do
+  defp group_multi_results({:ok, changes}) do
     res =
       changes
       |> Map.drop([:control_stage])
