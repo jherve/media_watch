@@ -6,9 +6,7 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :type, :string, null: false
 
       add :source_id, references(:sources, column: :id, on_delete: :delete_all), null: false
-
-      add :parsed_snapshot_id, references(:parsed_snapshots, column: :id, on_delete: :delete_all),
-        null: false
+      add :parsed_snapshot_id, references(:parsed_snapshots, column: :id, on_delete: :nilify_all)
 
       timestamps(type: :utc_datetime)
     end
