@@ -38,14 +38,21 @@ defmodule MediaWatch.Catalog.ItemWorker do
     PubSub.subscribe("slicing:#{id}")
     PubSub.subscribe("occurrence_formatting:#{id}")
     sources = item.sources
+    source_ids = sources |> Enum.map(& &1.id)
 
     {:ok,
-     %{id: id, module: module, item: item, sources: sources}
-     |> init_state(:snapshots)
-     |> init_state(:parsed_snapshots)
-     |> init_state(:slices)
-     |> init_state(:description)
-     |> init_state(:occurrences), {:continue, :do_catchup}}
+     %{
+       id: id,
+       module: module,
+       item: item,
+       sources: sources,
+       description: id |> Analysis.get_description(),
+       occurrences: item.show.id |> Analysis.get_occurrences(),
+       snapshots: source_ids |> Snapshots.get_snapshots() |> default_to_source_id_map(source_ids),
+       parsed_snapshots:
+         source_ids |> Parsing.get_parsed() |> default_to_source_id_map(source_ids),
+       slices: source_ids |> Parsing.get_slices() |> default_to_source_id_map(source_ids)
+     }, {:continue, :do_catchup}}
   end
 
   @impl true
@@ -135,42 +142,6 @@ defmodule MediaWatch.Catalog.ItemWorker do
     {:noreply, state |> update_state(res)}
   end
 
-  defp init_state(state, key = :description),
-    do:
-      state
-      |> Map.put(key, state.id |> Analysis.get_description())
-
-  defp init_state(state, key = :occurrences),
-    do:
-      state
-      |> Map.put(key, state.item.show.id |> Analysis.get_occurrences())
-
-  defp init_state(state, key), do: init_state(state, key, state.sources |> Enum.map(& &1.id))
-
-  defp init_state(state, key = :snapshots, source_ids),
-    do:
-      state
-      |> Map.put(
-        key,
-        source_ids |> Snapshots.get_snapshots() |> default_to_source_id_map(source_ids)
-      )
-
-  defp init_state(state, key = :parsed_snapshots, source_ids),
-    do:
-      state
-      |> Map.put(
-        key,
-        source_ids |> Parsing.get_parsed() |> default_to_source_id_map(source_ids)
-      )
-
-  defp init_state(state, key = :slices, source_ids),
-    do:
-      state
-      |> Map.put(
-        key,
-        source_ids |> Parsing.get_slices() |> default_to_source_id_map(source_ids)
-      )
-
   defp attempt_catchup(state, module),
     do:
       state
@@ -223,23 +194,15 @@ defmodule MediaWatch.Catalog.ItemWorker do
   defp publish_result(res_map, item_id) when is_map(res_map) and not is_struct(res_map),
     do: res_map |> Map.values() |> Enum.each(&publish_result(&1, item_id))
 
-  defp publish_result(snap = %Snapshot{}, item_id),
-    do: PubSub.broadcast("snapshots:#{item_id}", snap)
+  defp publish_result(obj = %struct{}, item_id),
+    do: PubSub.broadcast("#{to_chan_root(struct)}:#{item_id}", obj)
 
-  defp publish_result(parsed = %ParsedSnapshot{}, item_id),
-    do: PubSub.broadcast("parsing:#{item_id}", parsed)
-
-  defp publish_result(slice = %Slice{}, item_id),
-    do: PubSub.broadcast("slicing:#{item_id}", slice)
-
-  defp publish_result(desc = %Description{}, item_id),
-    do: PubSub.broadcast("description:#{item_id}", desc)
-
-  defp publish_result(occ = %ShowOccurrence{}, item_id),
-    do: PubSub.broadcast("occurrence_formatting:#{item_id}", occ)
-
-  defp publish_result(invitation = %Invitation{}, item_id),
-    do: PubSub.broadcast("invitation:#{item_id}", invitation)
+  defp to_chan_root(Snapshot), do: "snapshots"
+  defp to_chan_root(ParsedSnapshot), do: "parsing"
+  defp to_chan_root(Slice), do: "slicing"
+  defp to_chan_root(Description), do: "description"
+  defp to_chan_root(ShowOccurrence), do: "occurrence_formatting"
+  defp to_chan_root(Invitation), do: "invitation"
 
   defp do_snapshot(module, source, nb_retries \\ 0)
 
