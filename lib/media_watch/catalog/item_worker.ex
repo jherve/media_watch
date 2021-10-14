@@ -333,7 +333,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     do: PubSub.broadcast("invitation:#{item_id}", invitation)
 
   defp attempt_catchup(state, module, :snapshots) do
-    snap_ids = state.parsed_snapshots |> flatten_map(& &1.id)
+    snap_ids = state.parsed_snapshots |> flatten_map(& &1.snapshot_id)
 
     state.snapshots
     |> flatten_map()

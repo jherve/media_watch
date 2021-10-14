@@ -9,7 +9,7 @@ defmodule MediaWatch.Parsing do
     do:
       from(p in ParsedSnapshot,
         join: s in Snapshot,
-        on: s.id == p.id,
+        on: s.id == p.snapshot_id,
         where: s.source_id in ^source_ids,
         select: {s.source_id, p}
       )

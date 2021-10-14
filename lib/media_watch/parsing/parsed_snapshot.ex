@@ -3,6 +3,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
           __meta__: Ecto.Schema.Metadata.t(),
           id: integer() | nil,
           snapshot: MediaWatch.Snapshots.Snapshot.t() | nil,
+          source: MediaWatch.Catalog.Source.t() | nil,
           data: map()
         }
 
@@ -12,10 +13,9 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ParsedSnapshot
-  @primary_key false
 
   schema "parsed_snapshots" do
-    belongs_to :snapshot, Snapshot, foreign_key: :id, primary_key: true
+    belongs_to :snapshot, Snapshot
     belongs_to :source, Source
     field :data, :map
 
@@ -59,7 +59,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> validate_required([:data])
     |> cast_assoc(:snapshot, required: true)
     |> cast_assoc(:source, required: true)
-    |> unique_constraint(:id)
+    |> unique_constraint(:snapshot_id)
   end
 
   def slice(parsed),
