@@ -4,13 +4,9 @@ defmodule MediaWatch.Snapshots do
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.ItemWorker
 
-  def get_snapshots(source_ids),
+  def get_snapshots(source_id),
     do:
-      from(s in Snapshot,
-        where: s.source_id in ^source_ids,
-        preload: [:xml],
-        select: {s.source_id, s}
-      )
+      from(s in Snapshot, where: s.source_id == ^source_id, preload: [:xml])
       |> Repo.all()
 
   def do_all_snapshots(), do: Catalog.all() |> Enum.each(&do_snapshots/1)

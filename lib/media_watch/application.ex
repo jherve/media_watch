@@ -38,7 +38,7 @@ defmodule MediaWatch.Application do
     if Application.get_env(:media_watch, MediaWatch.Repo)[:pool] == Ecto.Adapters.SQL.Sandbox do
       []
     else
-      [MediaWatch.Catalog.ItemSupervisor]
+      [MediaWatch.Catalog.CatalogSupervisor]
     end
   end
 end
