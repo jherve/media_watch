@@ -51,7 +51,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   @impl true
   def handle_continue(:do_catchup, state) do
-    attempt_catchup(state, state.module, :slices)
+    attempt_catchup(state, :slices)
     {:noreply, state}
   end
 
@@ -62,7 +62,10 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_info(slice = %Slice{type: :rss_channel_description}, state = %{module: module}) do
+  def handle_info(slice = %Slice{}, state), do: handle_slice(slice, state)
+  def handle_info(occ = %ShowOccurrence{}, state), do: handle_show_occurrence(occ, state)
+
+  defp handle_slice(slice = %Slice{type: :rss_channel_description}, state = %{module: module}) do
     case slice |> Description.create_description_and_store(module.get_repo(), module) do
       {:ok, desc} ->
         PubSub.broadcast("description:#{state.id}", desc)
@@ -73,7 +76,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
-  def handle_info(slice = %Slice{type: :rss_entry}, state = %{module: module}) do
+  defp handle_slice(slice = %Slice{type: :rss_entry}, state = %{module: module}) do
     repo = module.get_repo()
 
     case slice |> ShowOccurrence.create_occurrence_and_store(repo, module) do
@@ -100,7 +103,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
-  def handle_info(occ = %ShowOccurrence{}, state = %{module: module}) do
+  defp handle_show_occurrence(occ = %ShowOccurrence{}, state = %{module: module}) do
     ok_res =
       occ
       |> Invitation.insert_guests_from(module.get_repo(), module)
@@ -117,7 +120,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
          do: list |> List.replace_at(current_idx, elem)
   end
 
-  defp attempt_catchup(state, module, :slices) do
+  defp attempt_catchup(state, :slices) do
     description = state.description || %{slices_used: [], slices_discarded: []}
 
     slices_seen =
@@ -127,22 +130,22 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
     state.slices
     |> Enum.reject(&(&1.id in slices_seen))
-    |> tap(&do_catchup(&1, state, module))
+    |> tap(&do_catchup(&1, state))
   end
 
-  defp do_catchup(list, state, module) when is_list(list),
+  defp do_catchup(list, state) when is_list(list),
     do:
       list
       |> tap(&log_catching_up/1)
-      |> Enum.map(&do_catchup(&1, state, module))
+      |> Enum.map(&do_catchup(&1, state))
 
-  defp do_catchup(obj, state, module) do
-    catchup(obj, state, module)
+  defp do_catchup(obj, state) do
+    catchup(obj, state)
   rescue
     e -> {:error, e}
   end
 
-  defp catchup(slice = %Slice{}, state, module), do: module.handle_slice(slice, state)
+  defp catchup(slice = %Slice{}, state), do: handle_slice(slice, state)
 
   defp log_catching_up([]), do: nil
 

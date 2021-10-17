@@ -33,8 +33,8 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def handle_continue(:do_catchup, state) do
-    attempt_catchup(state, state.module, :snapshots)
-    attempt_catchup(state, state.module, :parsed_snapshots)
+    attempt_catchup(state, :snapshots)
+    attempt_catchup(state, :parsed_snapshots)
 
     {:noreply, state}
   end
@@ -52,7 +52,11 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   @impl true
-  def handle_info(snap = %Snapshot{}, state = %{module: module}) do
+  def handle_info(snap = %Snapshot{}, state), do: handle_snapshot(snap, state)
+  def handle_info(snap = %ParsedSnapshot{}, state), do: handle_parsed_snapshot(snap, state)
+  def handle_info(slice = %Slice{}, state), do: handle_slice(slice, state)
+
+  defp handle_snapshot(snap = %Snapshot{}, state = %{module: module}) do
     repo = module.get_repo()
 
     case snap |> Snapshot.parse_and_insert(repo, module) do
@@ -65,7 +69,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
     end
   end
 
-  def handle_info(snap = %ParsedSnapshot{}, state = %{module: module}) do
+  defp handle_parsed_snapshot(snap = %ParsedSnapshot{}, state = %{module: module}) do
     new_slices =
       case Parsing.get(snap.id) |> ParsedSnapshot.slice_and_insert(module.get_repo(), module) do
         {:ok, ok, _} ->
@@ -81,7 +85,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
     {:noreply, update_in(state.slices, &append(&1, new_slices))}
   end
 
-  def handle_info(slice = %Slice{}, state = %{module: module}) do
+  defp handle_slice(slice = %Slice{}, state = %{module: module}) do
     ok_res =
       slice
       |> EntityRecognized.insert_entities_from(module.get_repo(), module)
@@ -91,38 +95,37 @@ defmodule MediaWatch.Catalog.SourceWorker do
     {:noreply, state}
   end
 
-  defp attempt_catchup(state, module, :snapshots) do
+  defp attempt_catchup(state, :snapshots) do
     snap_ids = state.parsed_snapshots |> Enum.map(& &1.snapshot_id)
 
     state.snapshots
     |> Enum.reject(&(&1.id in snap_ids))
-    |> tap(&do_catchup(&1, state, module))
+    |> tap(&do_catchup(&1, state))
   end
 
-  defp attempt_catchup(state, module, :parsed_snapshots) do
+  defp attempt_catchup(state, :parsed_snapshots) do
     slices_ids = state.slices |> Enum.map(& &1.parsed_snapshot_id)
 
     state.parsed_snapshots
     |> Enum.reject(&(&1.id in slices_ids))
-    |> tap(&do_catchup(&1, state, module))
+    |> tap(&do_catchup(&1, state))
   end
 
-  defp do_catchup(list, state, module) when is_list(list),
+  defp do_catchup(list, state) when is_list(list),
     do:
       list
       |> tap(&log_catching_up/1)
-      |> Enum.map(&do_catchup(&1, state, module))
+      |> Enum.map(&do_catchup(&1, state))
 
-  defp do_catchup(obj, state, module) do
-    catchup(obj, state, module)
+  defp do_catchup(obj, state) do
+    catchup(obj, state)
   rescue
     e -> {:error, e}
   end
 
-  defp catchup(snap = %Snapshot{}, state, module), do: module.handle_snapshot(snap, state)
+  defp catchup(snap = %Snapshot{}, state), do: handle_snapshot(snap, state)
 
-  defp catchup(parsed = %ParsedSnapshot{}, state, module),
-    do: module.handle_parsed_snapshot(parsed, state)
+  defp catchup(parsed = %ParsedSnapshot{}, state), do: handle_parsed_snapshot(parsed, state)
 
   defp log_catching_up([]), do: nil
 
