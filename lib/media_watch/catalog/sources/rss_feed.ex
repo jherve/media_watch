@@ -10,7 +10,7 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
   alias MediaWatch.Http
   alias __MODULE__, as: RssFeed
 
-  schema "rss_feeds" do
+  schema "catalog_rss_feeds" do
     field :url, :string
   end
 

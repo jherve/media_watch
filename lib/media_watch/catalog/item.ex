@@ -14,7 +14,7 @@ defmodule MediaWatch.Catalog.Item do
   alias MediaWatch.Catalog.ChannelItem
   alias MediaWatch.Analysis.Description
 
-  schema "watched_items" do
+  schema "catalog_items" do
     field :module, Ecto.Enum, values: MediaWatch.Catalog.all()
     has_one :show, Show, foreign_key: :id
     has_many :sources, Source, foreign_key: :item_id

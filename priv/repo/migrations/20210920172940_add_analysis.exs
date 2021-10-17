@@ -3,7 +3,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
 
   def change do
     create table(:descriptions, primary_key: false) do
-      add :item_id, references(:watched_items, column: :id, on_delete: :delete_all),
+      add :item_id, references(:catalog_items, column: :id, on_delete: :delete_all),
         primary_key: true
 
       add :title, :string, null: false
@@ -16,7 +16,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
     end
 
     create table(:show_occurrences) do
-      add :show_id, references(:watched_shows, column: :id, on_delete: :delete_all), null: false
+      add :show_id, references(:catalog_shows, column: :id, on_delete: :delete_all), null: false
 
       add :title, :string, null: false
       add :description, :string, null: false

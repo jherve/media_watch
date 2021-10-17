@@ -5,7 +5,8 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
     create table(:slices) do
       add :type, :string, null: false
 
-      add :source_id, references(:sources, column: :id, on_delete: :delete_all), null: false
+      add :source_id, references(:catalog_sources, column: :id, on_delete: :delete_all),
+        null: false
 
       add :parsed_snapshot_id, references(:parsed_snapshots, column: :id, on_delete: :nilify_all)
 

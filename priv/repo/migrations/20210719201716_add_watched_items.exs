@@ -2,30 +2,30 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
   use Ecto.Migration
 
   def change do
-    create table(:channels) do
+    create table(:catalog_channels) do
       add :module, :string, null: false
       add :name, :string, null: false
       add :url, :string, null: false
     end
 
-    create unique_index(:channels, [:module])
+    create unique_index(:catalog_channels, [:module])
 
-    create table(:watched_items) do
+    create table(:catalog_items) do
       add :module, :string
     end
 
-    create unique_index(:watched_items, [:module])
+    create unique_index(:catalog_items, [:module])
 
     create table(:channel_items, primary_key: false) do
-      add :channel_id, references(:channels, column: :id, on_delete: :delete_all),
+      add :channel_id, references(:catalog_channels, column: :id, on_delete: :delete_all),
         primary_key: true
 
-      add :item_id, references(:watched_items, column: :id, on_delete: :delete_all),
+      add :item_id, references(:catalog_items, column: :id, on_delete: :delete_all),
         primary_key: true
     end
 
-    create table(:watched_shows, primary_key: false) do
-      add :id, references(:watched_items, column: :id, on_delete: :delete_all), primary_key: true
+    create table(:catalog_shows, primary_key: false) do
+      add :id, references(:catalog_items, column: :id, on_delete: :delete_all), primary_key: true
       add :name, :string, null: false
       add :url, :string, null: false
       add :airing_schedule, :map, null: false
@@ -34,6 +34,6 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :alternate_hosts, {:array, :string}, default: []
     end
 
-    create unique_index(:watched_shows, [:name, :url])
+    create unique_index(:catalog_shows, [:name, :url])
   end
 end

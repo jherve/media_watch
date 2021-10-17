@@ -14,7 +14,7 @@ defmodule MediaWatch.Catalog.Source do
   alias MediaWatch.Snapshots.Snapshot
   alias __MODULE__, as: Source
 
-  schema "sources" do
+  schema "catalog_sources" do
     field :type, Ecto.Enum, values: [:rss_feed]
 
     has_one :rss_feed, RssFeed, foreign_key: :id

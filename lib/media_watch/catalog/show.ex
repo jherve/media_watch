@@ -8,7 +8,7 @@ defmodule MediaWatch.Catalog.Show do
   @optional_fields [:alternate_hosts]
   @all_fields @required_fields ++ @optional_fields
 
-  schema "watched_shows" do
+  schema "catalog_shows" do
     field :name, :string
     field :url, :string
     field :airing_schedule, Crontab.CronExpression.Ecto.Type

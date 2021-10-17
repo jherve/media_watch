@@ -5,7 +5,7 @@ defmodule MediaWatch.Catalog.Channel do
   alias MediaWatch.Catalog
   alias MediaWatch.Catalog.ChannelItem
 
-  schema "channels" do
+  schema "catalog_channels" do
     field :module, Ecto.Enum, values: Catalog.all_channel_modules()
     field :name, :string
     field :url, :string
