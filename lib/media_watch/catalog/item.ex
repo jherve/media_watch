@@ -62,7 +62,7 @@ defmodule MediaWatch.Catalog.Item do
       alias MediaWatch.Catalog.Source
       alias MediaWatch.Snapshots.Snapshot
       alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
-      alias MediaWatch.Analysis.{ShowOccurrence, Invitation}
+      alias MediaWatch.Analysis.{ShowOccurrence, Invitation, EntityRecognized}
 
       @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:items][__MODULE__] ||
                 raise("Config for #{__MODULE__} should be set")
@@ -129,6 +129,9 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
+
+      @impl MediaWatch.Analysis.Recognisable
+      defdelegate get_entities_cs(occ), to: EntityRecognized
 
       defoverridable into_slice_cs: 2,
                      create_description: 1,

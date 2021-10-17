@@ -4,7 +4,8 @@ defmodule MediaWatch.Catalog.SourceWorker do
   alias MediaWatch.{Catalog, Snapshots, Parsing, PubSub}
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Parsing.ParsedSnapshot
+  alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
+  alias MediaWatch.Analysis.EntityRecognized
   @max_snapshot_retries 3
 
   def start_link(source_id) do
@@ -17,6 +18,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   def init(id) do
     PubSub.subscribe("snapshots:#{id}")
     PubSub.subscribe("parsing:#{id}")
+    PubSub.subscribe("slicing:#{id}")
 
     {:ok,
      %{
@@ -77,6 +79,16 @@ defmodule MediaWatch.Catalog.SourceWorker do
     new_slices |> Enum.map(&PubSub.broadcast("slicing:#{state.id}", &1))
 
     {:noreply, update_in(state.slices, &append(&1, new_slices))}
+  end
+
+  def handle_info(slice = %Slice{}, state = %{module: module}) do
+    ok_res =
+      slice
+      |> EntityRecognized.insert_entities_from(module.get_repo(), module)
+      |> Enum.filter(&match?({:ok, _}, &1))
+
+    ok_res |> Enum.each(&PubSub.broadcast("entity_recognized:#{state.id}", &1))
+    {:noreply, state}
   end
 
   defp attempt_catchup(state, module, :snapshots) do

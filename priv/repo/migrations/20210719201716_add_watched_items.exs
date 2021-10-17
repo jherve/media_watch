@@ -30,6 +30,8 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :url, :string, null: false
       add :airing_schedule, :map, null: false
       add :duration_minutes, :integer, null: false
+      add :host_names, {:array, :string}, null: false
+      add :alternate_hosts, {:array, :string}, default: []
     end
 
     create unique_index(:watched_shows, [:name, :url])

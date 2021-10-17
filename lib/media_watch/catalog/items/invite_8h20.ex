@@ -18,6 +18,9 @@ defmodule MediaWatch.Catalog.Item.Invite8h20 do
     end
   end
 
+  @impl MediaWatch.Analysis.Recognisable
+  def in_entities_blacklist?(label), do: label in ["Grand", "Grand Entretien"]
+
   defp guests_from_description(desc) do
     split = desc |> String.split(" - ") |> Enum.map(&String.trim/1)
 

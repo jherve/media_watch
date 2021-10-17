@@ -14,4 +14,13 @@ defmodule MediaWatch.Http do
         e
     end
   end
+
+  def post_json(url, body_params, headers \\ [])
+      when is_binary(url) and is_list(headers) and is_map(body_params) do
+    with {:ok, body} <- body_params |> Jason.encode(body_params) do
+      case Finch.build(:post, url, headers, body) |> Finch.request(MediaWatch.Finch) do
+        {:ok, %{body: body, status: 200}} -> body |> Jason.decode()
+      end
+    end
+  end
 end
