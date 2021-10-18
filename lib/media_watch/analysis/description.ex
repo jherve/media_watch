@@ -31,12 +31,11 @@ defmodule MediaWatch.Analysis.Description do
     |> validate_required(@required_fields)
   end
 
-  def create_description(slice = %Slice{}) do
+  def create_description(
+        slice = %Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}
+      ) do
     item_id = Catalog.get_item_id(slice.source_id)
-    from(slice, item_id)
-  end
 
-  def from(%Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}, item_id) do
     changeset(%{
       item_id: item_id,
       title: desc.title,

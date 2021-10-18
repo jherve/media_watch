@@ -1,7 +1,7 @@
 defmodule MediaWatch.Analysis.ShowOccurrence do
   use Ecto.Schema
   import Ecto.Changeset
-  require Ecto.Query
+  import Ecto.Query
   alias MediaWatch.Catalog
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Parsing.Slice
@@ -36,9 +36,23 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> unique_constraint([:show_id, :airing_time])
   end
 
-  def create_occurrence(slice = %Slice{}, module) do
+  def create_occurrence(
+        slice = %Slice{id: id, type: :rss_entry, rss_entry: entry = %{pub_date: pub_date}},
+        module
+      ) do
     show_id = Catalog.get_show_id(slice.source_id)
-    from(slice, module, show_id)
+    {start, end_} = module.get_time_slot(pub_date)
+
+    changeset(%{
+      show_id: show_id,
+      title: entry.title,
+      description: entry.description,
+      link: entry.link,
+      airing_time: pub_date |> module.get_airing_time() |> into_utc(),
+      slot_start: start |> into_utc,
+      slot_end: end_ |> into_utc,
+      slice_usages: [%{slice_id: id, used: true}]
+    })
   end
 
   def update_occurrence(occ = %{slice_usages: existing}, used, discarded, new)
@@ -58,34 +72,13 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> put_assoc(:slice_usages, to_update ++ new)
   end
 
-  def from(
-        %Slice{id: id, type: :rss_entry, rss_entry: entry = %{pub_date: pub_date}},
-        module,
-        show_id
-      ) do
-    {start, end_} = module.get_time_slot(pub_date)
-
-    changeset(%{
-      show_id: show_id,
-      title: entry.title,
-      description: entry.description,
-      link: entry.link,
-      airing_time: pub_date |> module.get_airing_time() |> into_utc(),
-      slot_start: start |> into_utc,
-      slot_end: end_ |> into_utc,
-      slice_usages: [%{slice_id: id, used: true}]
-    })
-  end
-
   def get_slices_from_occurrence(occ, repo), do: query_slices_from_occurrence(occ) |> repo.all()
 
   def get_occurrence_at(datetime, module) do
     repo = module.get_repo()
-    query = Ecto.Query.from(i in module.query(), select: i.id)
+    query = from(i in module.query(), select: i.id)
 
-    Ecto.Query.from(o in ShowOccurrence,
-      where: o.show_id in subquery(query) and o.airing_time == ^datetime
-    )
+    from(o in ShowOccurrence, where: o.show_id in subquery(query) and o.airing_time == ^datetime)
     |> repo.one!
   end
 
@@ -116,7 +109,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
 
   defp query_slices_from_occurrence(occ = %ShowOccurrence{}),
     do:
-      Ecto.Query.from(s in Slice,
+      from(s in Slice,
         where: s.id in ^(occ.slices |> Enum.map(& &1.id)),
         preload: ^Slice.preloads()
       )
