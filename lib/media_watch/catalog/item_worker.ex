@@ -121,15 +121,15 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp attempt_catchup(state, :slices) do
-    description = state.description || %{slices_used: [], slices_discarded: []}
+    description_as_list = if desc = state.description, do: [desc], else: []
 
-    slices_seen =
-      description.slices_used ++
-        description.slices_discarded ++
-        (state.occurrences |> Enum.flat_map(&(&1.slices_used ++ &1.slices_discarded)))
+    slices_seen_ids =
+      (description_as_list ++ state.occurrences)
+      |> Enum.flat_map(& &1.slices)
+      |> Enum.map(& &1.id)
 
     state.slices
-    |> Enum.reject(&(&1.id in slices_seen))
+    |> Enum.reject(&(&1.id in slices_seen_ids))
     |> tap(&do_catchup(&1, state))
   end
 

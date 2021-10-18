@@ -50,8 +50,9 @@ defmodule MediaWatch.Analysis do
     |> Repo.all()
   end
 
-  def get_description(item_id), do: Description |> Repo.get_by(item_id: item_id)
+  def get_description(item_id),
+    do: Description |> Repo.get_by(item_id: item_id) |> Repo.preload([:slices])
 
   def get_occurrences(show_id),
-    do: from(s in ShowOccurrence, where: s.show_id == ^show_id) |> Repo.all()
+    do: from(s in ShowOccurrence, where: s.show_id == ^show_id, preload: [:slices]) |> Repo.all()
 end

@@ -5,10 +5,10 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   alias MediaWatch.Catalog
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.Invitation
+  alias MediaWatch.Analysis.{Invitation, SliceUsage}
   alias __MODULE__, as: ShowOccurrence
-  @required_fields [:title, :description, :airing_time, :slot_start, :slot_end, :slices_used]
-  @optional_fields [:link, :show_id, :slices_discarded]
+  @required_fields [:title, :description, :airing_time, :slot_start, :slot_end]
+  @optional_fields [:link, :show_id]
   @all_fields @required_fields ++ @optional_fields
 
   schema "show_occurrences" do
@@ -20,8 +20,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     field :slot_start, :utc_datetime
     field :slot_end, :utc_datetime
 
-    field :slices_used, {:array, :id}
-    field :slices_discarded, {:array, :id}, default: []
+    has_many :slice_usages, SliceUsage
+    has_many :slices, through: [:slice_usages, :slice]
 
     has_many :invitations, Invitation
     has_many :guests, through: [:invitations, :person]
@@ -31,8 +31,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   def changeset(occurrence \\ %ShowOccurrence{}, attrs) do
     occurrence
     |> cast(attrs, @all_fields)
+    |> cast_assoc(:slice_usages, required: true)
     |> validate_required(@required_fields)
-    |> validate_length(:slices_used, min: 1)
     |> unique_constraint([:show_id, :airing_time])
   end
 
@@ -41,14 +41,22 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     from(slice, module, show_id)
   end
 
-  def update_occurrence(occ, used, discarded, new)
-      when is_list(used) and is_list(discarded) and is_list(new),
-      do:
-        occ
-        |> changeset(%{
-          slices_used: used |> Enum.map(& &1.id),
-          slices_discarded: (discarded ++ new) |> Enum.map(& &1.id)
-        })
+  def update_occurrence(occ = %{slice_usages: existing}, used, discarded, new)
+      when is_list(used) and is_list(discarded) and is_list(new) do
+    used_ids = used |> Enum.map(& &1.id)
+
+    to_update =
+      existing
+      |> Enum.map(fn curr ->
+        curr |> SliceUsage.changeset(%{used: curr.slice_id in used_ids})
+      end)
+
+    new = new |> Enum.map(&SliceUsage.changeset(%{slice_id: &1.id, used: false}))
+
+    occ
+    |> change()
+    |> put_assoc(:slice_usages, to_update ++ new)
+  end
 
   def from(
         %Slice{id: id, type: :rss_entry, rss_entry: entry = %{pub_date: pub_date}},
@@ -65,7 +73,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
       airing_time: pub_date |> module.get_airing_time() |> into_utc(),
       slot_start: start |> into_utc,
       slot_end: end_ |> into_utc,
-      slices_used: [id]
+      slice_usages: [%{slice_id: id, used: true}]
     })
   end
 
@@ -84,19 +92,20 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   def create_occurrence_and_store(slice, repo, recurrent),
     do:
       slice
-      |> repo.preload(:rss_entry)
+      |> repo.preload(Slice.preloads())
       |> recurrent.create_occurrence()
       |> MediaWatch.Repo.insert_and_retry(repo)
       |> explain_error(recurrent)
 
   def update_occurrence_and_store(occ, slice, repo, recurrent) do
+    occ = occ |> repo.preload([:show, :slices])
+
     all_slices =
-      (recurrent.get_slices_from_occurrence(occ) |> repo.preload(:rss_entry)) ++ [slice]
+      (recurrent.get_slices_from_occurrence(occ) |> repo.preload(Slice.preloads())) ++ [slice]
 
     grouped = group_slices(occ, all_slices)
 
     occ
-    |> repo.preload(:show)
     |> recurrent.update_occurrence(
       grouped |> Map.get(:used, []),
       grouped |> Map.get(:discarded, []),
@@ -108,7 +117,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   defp query_slices_from_occurrence(occ = %ShowOccurrence{}),
     do:
       Ecto.Query.from(s in Slice,
-        where: s.id in ^(occ.slices_used ++ occ.slices_discarded),
+        where: s.id in ^(occ.slices |> Enum.map(& &1.id)),
         preload: ^Slice.preloads()
       )
 
@@ -118,12 +127,15 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
 
   defp group_slices(occ, slices) do
     slices
-    |> Enum.group_by(&{&1.id in occ.slices_used, &1.id in occ.slices_discarded})
-    |> Map.new(fn
-      {{true, false}, v} -> {:used, v}
-      {{false, true}, v} -> {:discarded, v}
-      {{false, false}, v} -> {:new, v}
-    end)
+    |> Enum.group_by(&get_status(&1, occ.slice_usages))
+  end
+
+  defp get_status(slice, all_slice_usages) do
+    case all_slice_usages |> Enum.find(&(&1.slice_id == slice.id)) do
+      nil -> :new
+      %{used: false} -> :discarded
+      %{used: true} -> :used
+    end
   end
 
   defp explain_error(

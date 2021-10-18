@@ -4,9 +4,10 @@ defmodule MediaWatch.Analysis.Description do
   alias MediaWatch.Catalog
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Catalog.Item
+  alias MediaWatch.Analysis.SliceUsage
   alias __MODULE__, as: Description
   @primary_key false
-  @required_fields [:item_id, :title, :description, :slices_used]
+  @required_fields [:item_id, :title, :description]
   @optional_fields [:link, :image]
   @all_fields @required_fields ++ @optional_fields
 
@@ -18,16 +19,16 @@ defmodule MediaWatch.Analysis.Description do
     field :link, :string
     field :image, :map
 
-    field :slices_used, {:array, :id}
-    field :slices_discarded, {:array, :id}, default: []
+    has_many :slice_usages, SliceUsage, references: :item_id, foreign_key: :description_id
+    has_many :slices, through: [:slice_usages, :slice]
   end
 
   @doc false
   def changeset(desc \\ %Description{}, attrs) do
     desc
     |> cast(attrs, @all_fields)
+    |> cast_assoc(:slice_usages, required: true)
     |> validate_required(@required_fields)
-    |> validate_length(:slices_used, min: 1)
   end
 
   def create_description(slice = %Slice{}) do
@@ -42,7 +43,7 @@ defmodule MediaWatch.Analysis.Description do
       description: desc.description,
       link: desc.link,
       image: desc.image,
-      slices_used: [id]
+      slice_usages: [%{slice_id: id, used: true}]
     })
   end
 
