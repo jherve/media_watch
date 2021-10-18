@@ -57,6 +57,7 @@ defmodule MediaWatch.Catalog.Item do
       @behaviour MediaWatch.Parsing.Sliceable
       @behaviour MediaWatch.Analysis.Describable
       @behaviour MediaWatch.Analysis.Recognisable
+      @behaviour MediaWatch.Analysis.Hosted
       use MediaWatch.Analysis.Recurrent
       import Ecto.Query
       alias MediaWatch.Catalog.Source
@@ -73,6 +74,8 @@ defmodule MediaWatch.Catalog.Item do
                     true -> raise("At least one of [`show`] should be set")
                   end)
       @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
+      @hosts @show[:host_names]
+      @alternate_hosts @show[:alternate_hosts]
       @sources @config[:sources] || raise("`sources` should be set")
       @channels @config[:channels] || raise("`channels` should be set")
 
@@ -128,6 +131,14 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Analysis.Recognisable
       defdelegate get_entities_cs(occ), to: EntityRecognized
+
+      @impl MediaWatch.Analysis.Hosted
+      def get_hosts(), do: @hosts
+
+      if @alternate_hosts do
+        @impl MediaWatch.Analysis.Hosted
+        def get_alternate_hosts(), do: @alternate_hosts
+      end
 
       defoverridable into_slice_cs: 2,
                      create_description: 1,
