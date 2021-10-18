@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.{PubSub, Parsing, Analysis}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.{ShowOccurrence, Description, Invitation}
+  alias MediaWatch.Analysis.ShowOccurrence
 
   def start_link(module) when is_atom(module) do
     GenServer.start_link(__MODULE__, module, name: module)
@@ -66,7 +66,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def handle_info(occ = %ShowOccurrence{}, state), do: handle_show_occurrence(occ, state)
 
   defp handle_slice(slice = %Slice{type: :rss_channel_description}, state = %{module: module}) do
-    case slice |> Description.create_description_and_store(module.get_repo(), module) do
+    case slice |> Analysis.create_description_and_store(module.get_repo(), module) do
       {:ok, desc} ->
         PubSub.broadcast("description:#{state.id}", desc)
         {:noreply, %{state | description: desc}}
@@ -79,13 +79,13 @@ defmodule MediaWatch.Catalog.ItemWorker do
   defp handle_slice(slice = %Slice{type: :rss_entry}, state = %{module: module}) do
     repo = module.get_repo()
 
-    case slice |> ShowOccurrence.create_occurrence_and_store(repo, module) do
+    case slice |> Analysis.create_occurrence_and_store(repo, module) do
       {:ok, new_occ} ->
         PubSub.broadcast("occurrence_formatting:#{state.id}", new_occ)
         {:noreply, update_in(state.occurrences, &append(&1, new_occ))}
 
       {:error, {:unique_airing_time, occ}} ->
-        case ShowOccurrence.update_occurrence_and_store(occ, slice, repo, module) do
+        case Analysis.update_occurrence_and_store(occ, slice, repo, module) do
           {:ok, updated} ->
             PubSub.broadcast("occurrence_formatting:#{state.id}", updated)
             {:noreply, update_in(state.occurrences, &refresh(&1, updated))}
@@ -106,7 +106,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   defp handle_show_occurrence(occ = %ShowOccurrence{}, state = %{module: module}) do
     ok_res =
       occ
-      |> Invitation.insert_guests_from(module.get_repo(), module)
+      |> Analysis.insert_guests_from(module.get_repo(), module)
       |> Enum.filter(&match?({:ok, _}, &1))
 
     ok_res |> Enum.each(&PubSub.broadcast("invitation:#{state.id}", &1))

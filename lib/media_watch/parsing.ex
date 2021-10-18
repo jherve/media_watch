@@ -15,4 +15,18 @@ defmodule MediaWatch.Parsing do
   def get(id), do: ParsedSnapshot |> Repo.get(id) |> Repo.preload(snapshot: @parsed_preloads)
 
   def get_all(), do: ParsedSnapshot |> Repo.all() |> Repo.preload(snapshot: @parsed_preloads)
+
+  def parse_and_insert(snap, repo, parsable) do
+    snap = snap |> repo.preload([:source, :xml])
+    with {:ok, cs} <- parsable.parse(snap), do: cs |> Repo.insert_and_retry(repo)
+  end
+
+  def slice_and_insert(snap, repo, sliceable) do
+    with cs_list when is_list(cs_list) <- sliceable.slice(snap),
+         do:
+           cs_list
+           |> Enum.with_index(fn cs, idx -> {idx, cs} end)
+           |> Map.new()
+           |> Slice.insert_all(repo)
+  end
 end

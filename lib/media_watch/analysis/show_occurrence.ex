@@ -80,44 +80,14 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> repo.one!
   end
 
-  def create_occurrence_and_store(slice, repo, recurrent),
-    do:
-      slice
-      |> repo.preload(Slice.preloads())
-      |> recurrent.get_occurrence_cs()
-      |> MediaWatch.Repo.insert_and_retry(repo)
-      |> explain_error(recurrent)
-
-  def update_occurrence_and_store(occ, slice, repo, recurrent) do
-    occ = occ |> repo.preload([:show, :slices])
-
-    all_slices =
-      (query_slices_from_occurrence(occ) |> repo.all() |> repo.preload(Slice.preloads())) ++
-        [slice]
-
-    grouped = group_slices(occ, all_slices)
-
-    occ
-    |> recurrent.get_occurrence_change_cs(
-      grouped |> Map.get(:used, []),
-      grouped |> Map.get(:discarded, []),
-      grouped |> Map.get(:new, [])
-    )
-    |> MediaWatch.Repo.update_and_retry(repo)
-  end
-
-  defp query_slices_from_occurrence(occ = %ShowOccurrence{}),
+  def query_slices_from_occurrence(occ = %ShowOccurrence{}),
     do:
       from(s in Slice,
         where: s.id in ^(occ.slices |> Enum.map(& &1.id)),
         preload: ^Slice.preloads()
       )
 
-  # Errors in date conversion are simply propagated as-is
-  defp into_utc(e = {:error, _}), do: e
-  defp into_utc(date), do: date |> Timex.Timezone.convert("UTC")
-
-  defp group_slices(occ, slices) do
+  def group_slices(occ, slices) do
     slices
     |> Enum.group_by(&get_status(&1, occ.slice_usages))
   end
@@ -130,20 +100,20 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     end
   end
 
-  defp explain_error(
-         {:error,
-          cs = %{
-            errors: [
-              show_id:
-                {_,
-                 [
-                   constraint: :unique,
-                   constraint_name: "show_occurrences_show_id_airing_time_index"
-                 ]}
-            ]
-          }},
-         recurrent
-       ) do
+  def explain_error(
+        {:error,
+         cs = %{
+           errors: [
+             show_id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name: "show_occurrences_show_id_airing_time_index"
+                ]}
+           ]
+         }},
+        recurrent
+      ) do
     with {_, airing_time} <- cs |> Ecto.Changeset.fetch_field(:airing_time),
          occ <- airing_time |> recurrent.get_occurrence_at() do
       {:error, {:unique_airing_time, occ}}
@@ -152,11 +122,15 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     end
   end
 
-  defp explain_error(
-         {:error, %{errors: [airing_time: {_, [type: :utc_datetime, validation: :cast]}]}},
-         _
-       ),
-       do: {:error, :no_airing_time_within_slot}
+  def explain_error(
+        {:error, %{errors: [airing_time: {_, [type: :utc_datetime, validation: :cast]}]}},
+        _
+      ),
+      do: {:error, :no_airing_time_within_slot}
 
-  defp explain_error(res, _), do: res
+  def explain_error(res, _), do: res
+
+  # Errors in date conversion are simply propagated as-is
+  defp into_utc(e = {:error, _}), do: e
+  defp into_utc(date), do: date |> Timex.Timezone.convert("UTC")
 end

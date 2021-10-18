@@ -52,12 +52,8 @@ defmodule MediaWatch.Analysis.EntityRecognized do
          do: res
   end
 
-  def insert_entities_from(slice, repo, recognisable),
-    do:
-      slice
-      |> recognisable.get_entities_cs()
-      |> maybe_filter(recognisable)
-      |> insert_entities(repo)
+  def maybe_filter(cs_list, recognisable) when is_list(cs_list),
+    do: cs_list |> Enum.reject(&maybe_blacklist(&1, recognisable))
 
   defp into_cs_list(name_list, slice, field) when is_list(name_list) do
     name_list
@@ -66,9 +62,6 @@ defmodule MediaWatch.Analysis.EntityRecognized do
       &changeset(%EntityRecognized{slice: slice}, %{type: "PER", label: &1, field: field})
     )
   end
-
-  defp maybe_filter(cs_list, recognisable) when is_list(cs_list),
-    do: cs_list |> Enum.reject(&maybe_blacklist(&1, recognisable))
 
   defp maybe_blacklist(cs, recognisable) do
     if function_exported?(recognisable, :in_entities_blacklist?, 1) do

@@ -46,15 +46,6 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     entries ++ [description]
   end
 
-  def slice_and_insert(snap, repo, sliceable) do
-    with cs_list when is_list(cs_list) <- sliceable.slice(snap),
-         do:
-           cs_list
-           |> Enum.with_index(fn cs, idx -> {idx, cs} end)
-           |> Map.new()
-           |> Slice.insert_all(repo)
-  end
-
   defp get_entries(%ParsedSnapshot{data: data, snapshot: %{type: :xml}}),
     do:
       data

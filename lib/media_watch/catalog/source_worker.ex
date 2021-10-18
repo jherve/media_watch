@@ -1,11 +1,10 @@
 defmodule MediaWatch.Catalog.SourceWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{Catalog, Snapshots, Parsing, PubSub}
+  alias MediaWatch.{Catalog, Snapshots, Parsing, Analysis, PubSub}
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
-  alias MediaWatch.Analysis.EntityRecognized
   @max_snapshot_retries 3
 
   def start_link(source_id) do
@@ -59,7 +58,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   defp handle_snapshot(snap = %Snapshot{}, state = %{module: module}) do
     repo = module.get_repo()
 
-    case snap |> Snapshot.parse_and_insert(repo, module) do
+    case snap |> Parsing.parse_and_insert(repo, module) do
       {:ok, parsed} ->
         PubSub.broadcast("parsing:#{state.id}", parsed)
         {:noreply, update_in(state.parsed_snapshots, &append(&1, parsed))}
@@ -71,7 +70,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   defp handle_parsed_snapshot(snap = %ParsedSnapshot{}, state = %{module: module}) do
     new_slices =
-      case Parsing.get(snap.id) |> ParsedSnapshot.slice_and_insert(module.get_repo(), module) do
+      case Parsing.get(snap.id) |> Parsing.slice_and_insert(module.get_repo(), module) do
         {:ok, ok, _} ->
           ok
 
@@ -88,7 +87,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   defp handle_slice(slice = %Slice{}, state = %{module: module}) do
     ok_res =
       slice
-      |> EntityRecognized.insert_entities_from(module.get_repo(), module)
+      |> Analysis.insert_entities_from(module.get_repo(), module)
       |> Enum.filter(&match?({:ok, _}, &1))
 
     ok_res |> Enum.each(&PubSub.broadcast("entity_recognized:#{state.id}", &1))

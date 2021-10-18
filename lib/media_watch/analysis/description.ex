@@ -45,11 +45,4 @@ defmodule MediaWatch.Analysis.Description do
       slice_usages: [%{slice_id: id, used: true}]
     })
   end
-
-  def create_description_and_store(slice, repo, describable),
-    do:
-      slice
-      |> repo.preload(:rss_channel_description)
-      |> describable.create_description()
-      |> MediaWatch.Repo.insert_and_retry(repo)
 end

@@ -9,7 +9,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
 
   use Ecto.Schema
   import Ecto.Changeset
-  alias MediaWatch.Repo
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot.Xml
   alias MediaWatch.Parsing.ParsedSnapshot
@@ -41,11 +40,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
          data: data
        })}
     end
-  end
-
-  def parse_and_insert(snap, repo, parsable) do
-    snap = snap |> repo.preload([:source, :xml])
-    with {:ok, cs} <- parsable.parse(snap), do: cs |> Repo.insert_and_retry(repo)
   end
 
   defp set_type(cs) do
