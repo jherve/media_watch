@@ -72,8 +72,6 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> put_assoc(:slice_usages, to_update ++ new)
   end
 
-  def get_slices_from_occurrence(occ, repo), do: query_slices_from_occurrence(occ) |> repo.all()
-
   def get_occurrence_at(datetime, module) do
     repo = module.get_repo()
     query = from(i in module.query(), select: i.id)
@@ -94,7 +92,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     occ = occ |> repo.preload([:show, :slices])
 
     all_slices =
-      (recurrent.get_slices_from_occurrence(occ) |> repo.preload(Slice.preloads())) ++ [slice]
+      (query_slices_from_occurrence(occ) |> repo.all() |> repo.preload(Slice.preloads())) ++
+        [slice]
 
     grouped = group_slices(occ, all_slices)
 

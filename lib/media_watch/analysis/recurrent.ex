@@ -6,7 +6,6 @@ defmodule MediaWatch.Analysis.Recurrent do
   @callback get_time_slot(DateTime.t()) :: time_slot()
   @callback get_airing_time(DateTime.t()) :: DateTime.t() | {:error, atom()}
   @callback get_occurrence_at(DateTime.t()) :: any()
-  @callback get_slices_from_occurrence(MediaWatch.Analysis.ShowOccurrence.t()) :: [any()]
   @callback create_occurrence(any()) :: any()
   @callback update_occurrence(any(), used :: [any()], discarded :: [any()], new :: [any()]) ::
               any()

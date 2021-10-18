@@ -124,10 +124,6 @@ defmodule MediaWatch.Catalog.Item do
       def get_occurrence_at(datetime), do: ShowOccurrence.get_occurrence_at(datetime, __MODULE__)
 
       @impl MediaWatch.Analysis.Recurrent
-      def get_slices_from_occurrence(occ),
-        do: ShowOccurrence.get_slices_from_occurrence(occ, get_repo())
-
-      @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
 
       @impl MediaWatch.Analysis.Recognisable
