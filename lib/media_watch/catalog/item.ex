@@ -115,10 +115,10 @@ defmodule MediaWatch.Catalog.Item do
       defdelegate create_description(slice), to: Description
 
       @impl MediaWatch.Analysis.Recurrent
-      def create_occurrence(slice), do: ShowOccurrence.create_occurrence(slice, __MODULE__)
+      def get_occurrence_cs(slice), do: ShowOccurrence.get_occurrence_cs(slice, __MODULE__)
 
       @impl MediaWatch.Analysis.Recurrent
-      defdelegate update_occurrence(occ, used, discarded, new), to: ShowOccurrence
+      defdelegate get_occurrence_change_cs(occ, used, discarded, new), to: ShowOccurrence
 
       @impl MediaWatch.Analysis.Recurrent
       def get_occurrence_at(datetime), do: ShowOccurrence.get_occurrence_at(datetime, __MODULE__)
@@ -131,8 +131,8 @@ defmodule MediaWatch.Catalog.Item do
 
       defoverridable into_slice_cs: 2,
                      create_description: 1,
-                     create_occurrence: 1,
-                     update_occurrence: 4
+                     get_occurrence_cs: 1,
+                     get_occurrence_change_cs: 4
     end
   end
 end

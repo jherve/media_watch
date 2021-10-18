@@ -36,7 +36,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     |> unique_constraint([:show_id, :airing_time])
   end
 
-  def create_occurrence(
+  def get_occurrence_cs(
         slice = %Slice{id: id, type: :rss_entry, rss_entry: entry = %{pub_date: pub_date}},
         module
       ) do
@@ -55,7 +55,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     })
   end
 
-  def update_occurrence(occ = %{slice_usages: existing}, used, discarded, new)
+  def get_occurrence_change_cs(occ = %{slice_usages: existing}, used, discarded, new)
       when is_list(used) and is_list(discarded) and is_list(new) do
     used_ids = used |> Enum.map(& &1.id)
 
@@ -84,7 +84,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     do:
       slice
       |> repo.preload(Slice.preloads())
-      |> recurrent.create_occurrence()
+      |> recurrent.get_occurrence_cs()
       |> MediaWatch.Repo.insert_and_retry(repo)
       |> explain_error(recurrent)
 
@@ -98,7 +98,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     grouped = group_slices(occ, all_slices)
 
     occ
-    |> recurrent.update_occurrence(
+    |> recurrent.get_occurrence_change_cs(
       grouped |> Map.get(:used, []),
       grouped |> Map.get(:discarded, []),
       grouped |> Map.get(:new, [])

@@ -5,7 +5,7 @@ defmodule MediaWatch.Catalog.Item.Layout.Europe1 do
       alias MediaWatch.Analysis.ShowOccurrence
 
       @impl true
-      def update_occurrence(occ, used, discarded, new) do
+      def get_occurrence_change_cs(occ, used, discarded, new) do
         # The RSS feed has a bad tendency of mixing extracts of the show with the
         # actual show. This function aims at finding a relevant entry from which to
         # read the occurrences' properties.
