@@ -25,7 +25,12 @@ config :media_watch, MediaWatch.Catalog,
        airing_schedule: "35 8 * * MON-FRI",
        duration_minutes: 25,
        host_names: ["Jean-Jacques Bourdin"],
-       alternate_hosts: ["Philippe Corbé", "Rémy Barret", "Apolline de Malherbe"]
+       alternate_hosts: [
+         "Philippe Corbé",
+         "Rémy Barret",
+         "Apolline de Malherbe",
+         "Matthieu Rouault"
+       ]
      },
      sources: [%{rss_feed: %{url: "https://podcast.rmc.fr/channel30/RMCInfochannel30.xml"}}],
      channels: [MediaWatch.Catalog.Channel.RMC]},
@@ -140,7 +145,13 @@ config :media_watch, MediaWatch.Catalog,
        url: "https://www.franceinter.fr/emissions/questions-politiques",
        airing_schedule: "0 12 * * SUN",
        duration_minutes: 55,
-       host_names: ["Thomas Snegaroff"]
+       host_names: ["Thomas Snegaroff"],
+       columnists: [
+         "Carine Bécard",
+         "Nathalie Saint-Cricq",
+         "Françoise Fressoz",
+         "Alexandra Bensaid"
+       ]
      },
      sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16170.xml"}}],
      channels: [MediaWatch.Catalog.Channel.FranceInter]}
