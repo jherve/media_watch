@@ -15,10 +15,6 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def init(id) do
-    PubSub.subscribe("snapshots:#{id}")
-    PubSub.subscribe("parsing:#{id}")
-    PubSub.subscribe("slicing:#{id}")
-
     {:ok,
      %{
        id: id,
@@ -32,6 +28,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def handle_continue(:do_catchup, state) do
+    # TODO: Publish slices on success
     attempt_catchup(state, :snapshots)
     attempt_catchup(state, :parsed_snapshots)
 
@@ -40,35 +37,35 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def handle_cast(:do_snapshots, state = %{source: source}) do
-    case do_snapshot(state.module, source) do
-      {:ok, snap} ->
-        PubSub.broadcast("snapshots:#{state.id}", snap)
-        {:noreply, update_in(state.snapshots, &append(&1, snap))}
-
+    with {:ok, snap} <- do_snapshot(state.module, source),
+         state <- update_in(state.snapshots, &append(&1, snap)),
+         {:ok, parsed, state} <- do_parsing(snap, state),
+         {:ok, new_slices, state} <- do_slicing(parsed, state),
+         {:ok, entities, state} when is_list(entities) <-
+           new_slices |> do_entity_recognition(state) do
+      PubSub.broadcast("snapshots:#{state.id}", snap)
+      PubSub.broadcast("parsing:#{state.id}", parsed)
+      new_slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
+      {:noreply, state}
+    else
       {:error, _} ->
+        {:noreply, state}
+
+      {:error, _, state} ->
         {:noreply, state}
     end
   end
 
-  @impl true
-  def handle_info(snap = %Snapshot{}, state), do: handle_snapshot(snap, state)
-  def handle_info(snap = %ParsedSnapshot{}, state), do: handle_parsed_snapshot(snap, state)
-  def handle_info(slice = %Slice{}, state), do: handle_slice(slice, state)
-
-  defp handle_snapshot(snap = %Snapshot{}, state = %{module: module}) do
+  defp do_parsing(snap = %Snapshot{}, state = %{module: module}) do
     repo = module.get_repo()
 
     case snap |> Parsing.parse_and_insert(repo, module) do
-      {:ok, parsed} ->
-        PubSub.broadcast("parsing:#{state.id}", parsed)
-        {:noreply, update_in(state.parsed_snapshots, &append(&1, parsed))}
-
-      {:error, _} ->
-        {:noreply, state}
+      {:ok, parsed} -> {:ok, parsed, update_in(state.parsed_snapshots, &append(&1, parsed))}
+      {:error, e} -> {:error, e, state}
     end
   end
 
-  defp handle_parsed_snapshot(snap = %ParsedSnapshot{}, state = %{module: module}) do
+  defp do_slicing(snap = %ParsedSnapshot{}, state = %{module: module}) do
     new_slices =
       case Parsing.get(snap.id) |> Parsing.slice_and_insert(module.get_repo(), module) do
         {:ok, ok, _} ->
@@ -79,19 +76,16 @@ defmodule MediaWatch.Catalog.SourceWorker do
           ok
       end
 
-    new_slices |> Enum.map(&PubSub.broadcast("slicing:#{state.id}", &1))
-
-    {:noreply, update_in(state.slices, &append(&1, new_slices))}
+    {:ok, new_slices, update_in(state.slices, &append(&1, new_slices))}
   end
 
-  defp handle_slice(slice = %Slice{}, state = %{module: module}) do
-    ok_res =
-      slice
-      |> Analysis.insert_entities_from(module.get_repo(), module)
-      |> Enum.filter(&match?({:ok, _}, &1))
+  defp do_entity_recognition(slices_list, state) when is_list(slices_list),
+    do: {:ok, slices_list |> Enum.flat_map(&do_entity_recognition(&1, state)), state}
 
-    ok_res |> Enum.each(&PubSub.broadcast("entity_recognized:#{state.id}", &1))
-    {:noreply, state}
+  defp do_entity_recognition(slice = %Slice{}, %{module: module}) do
+    slice
+    |> Analysis.insert_entities_from(module.get_repo(), module)
+    |> Enum.filter(&match?({:ok, _}, &1))
   end
 
   defp attempt_catchup(state, :snapshots) do
@@ -122,9 +116,9 @@ defmodule MediaWatch.Catalog.SourceWorker do
     e -> {:error, e}
   end
 
-  defp catchup(snap = %Snapshot{}, state), do: handle_snapshot(snap, state)
+  defp catchup(snap = %Snapshot{}, state), do: do_parsing(snap, state)
 
-  defp catchup(parsed = %ParsedSnapshot{}, state), do: handle_parsed_snapshot(parsed, state)
+  defp catchup(parsed = %ParsedSnapshot{}, state), do: do_slicing(parsed, state)
 
   defp log_catching_up([]), do: nil
 
