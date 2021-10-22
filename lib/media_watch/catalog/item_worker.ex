@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Parsing, Analysis}
+  alias MediaWatch.{Repo, PubSub, Parsing, Analysis}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrence, Description}
@@ -105,14 +105,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp do_occurrence_detection(slice, state) do
-    repo = state.module.get_repo()
-
     with {:ok, date} <- slice |> Analysis.extract_date(),
          time_slot <- date |> state.module.get_time_slot(),
          airing_time when is_struct(airing_time, DateTime) <- state.module.get_airing_time(date),
          {:ok, occ} <-
            Analysis.create_occurrence(state.item.show.id, airing_time, time_slot)
-           |> MediaWatch.Repo.insert_and_retry(repo)
+           |> Repo.insert_and_retry()
            |> Analysis.explain_create_occurrence_error() do
       {:ok, occ, update_in(state.occurrences, &append(&1, occ))}
     else
@@ -122,28 +120,22 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp mark_slice_usage(slice, %ShowOccurrence{id: id}, type, state) do
-    repo = state.module.get_repo()
-
     with {:ok, usage} <-
            Analysis.create_slice_usage(slice.id, id, type)
-           |> MediaWatch.Repo.insert_and_retry(repo),
+           |> Repo.insert_and_retry(),
          do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
   end
 
   defp mark_slice_usage(slice, %Description{item_id: id}, type, state) do
-    repo = state.module.get_repo()
-
     with {:ok, usage} <-
            Analysis.create_slice_usage(slice.id, id, type)
-           |> MediaWatch.Repo.insert_and_retry(repo),
+           |> Repo.insert_and_retry(),
          do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
   end
 
   defp add_details(occurrence, slice, state) do
-    repo = state.module.get_repo()
-
     case Analysis.create_occurrence_details(occurrence.id, slice)
-         |> MediaWatch.Repo.insert_and_retry(repo)
+         |> Repo.insert_and_retry()
          |> Analysis.explain_create_occurrence_detail_error() do
       {:ok, detail} ->
         {:ok, detail, update_in(state.details, &append(&1, detail))}
@@ -157,10 +149,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp add_details_via_update(occurrence, slice, state) do
-    repo = state.module.get_repo()
-
     case Analysis.update_occurrence_details(occurrence, slice)
-         |> MediaWatch.Repo.update_and_retry(repo) do
+         |> Repo.update_and_retry() do
       {:ok, updated} ->
         {:ok, updated, update_in(state.details, &refresh(&1, updated))}
 
@@ -171,16 +161,14 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   defp do_guest_detection(occ = %ShowOccurrence{}, %{module: module}) do
     occ
-    |> Analysis.insert_guests_from(module.get_repo(), module)
+    |> Analysis.insert_guests_from(module)
     |> Enum.filter(&match?({:ok, _}, &1))
   end
 
   defp do_description(slice, state) do
-    repo = state.module.get_repo()
-
     with {:ok, desc} <-
            Analysis.create_description(state.id, slice, state.module)
-           |> MediaWatch.Repo.insert_and_retry(repo),
+           |> Repo.insert_and_retry(),
          do: {:ok, desc, %{state | description: desc}}
   end
 

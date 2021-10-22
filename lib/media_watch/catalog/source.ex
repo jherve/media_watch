@@ -9,6 +9,7 @@ defmodule MediaWatch.Catalog.Source do
 
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Repo
   alias MediaWatch.Catalog.Item
   alias MediaWatch.Catalog.Source.RssFeed
   alias MediaWatch.Snapshots.Snapshot
@@ -35,9 +36,9 @@ defmodule MediaWatch.Catalog.Source do
     end
   end
 
-  def make_snapshot_and_insert(source, repo, snapshotable) do
+  def make_snapshot_and_insert(source, snapshotable) do
     with {:ok, cs} <- snapshotable.make_snapshot(source),
-         do: cs |> MediaWatch.Repo.insert_and_retry(repo)
+         do: cs |> Repo.insert_and_retry()
   end
 
   defp set_type(cs) do

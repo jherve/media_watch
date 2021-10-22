@@ -57,9 +57,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   defp do_parsing(snap = %Snapshot{}, state = %{module: module}) do
-    repo = module.get_repo()
-
-    case snap |> Parsing.parse_and_insert(repo, module) do
+    case snap |> Parsing.parse_and_insert(module) do
       {:ok, parsed} -> {:ok, parsed, update_in(state.parsed_snapshots, &append(&1, parsed))}
       {:error, e} -> {:error, e, state}
     end
@@ -67,7 +65,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   defp do_slicing(snap = %ParsedSnapshot{}, state = %{module: module}) do
     new_slices =
-      case Parsing.get(snap.id) |> Parsing.slice_and_insert(module.get_repo(), module) do
+      case Parsing.get(snap.id) |> Parsing.slice_and_insert(module) do
         {:ok, ok, _} ->
           ok
 
@@ -84,7 +82,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   defp do_entity_recognition(slice = %Slice{}, %{module: module}) do
     slice
-    |> Analysis.insert_entities_from(module.get_repo(), module)
+    |> Analysis.insert_entities_from(module)
     |> Enum.filter(&match?({:ok, _}, &1))
   end
 
@@ -137,7 +135,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   defp do_snapshot(module, source, nb_retries) do
-    case Source.make_snapshot_and_insert(source, module.get_repo(), module) do
+    case Source.make_snapshot_and_insert(source, module) do
       ok = {:ok, _} ->
         ok
 

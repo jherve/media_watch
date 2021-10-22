@@ -144,22 +144,22 @@ defmodule MediaWatch.Analysis do
   def create_description(item_id, slice, describable),
     do: describable.get_description_attrs(item_id, slice) |> Description.changeset()
 
-  def insert_guests_from(occ, repo, recognisable) do
+  def insert_guests_from(occ, recognisable) do
     if function_exported?(recognisable, :get_guests_attrs, 1) do
-      occ = occ |> repo.preload(:detail)
+      occ = occ |> Repo.preload(:detail)
 
       apply(recognisable, :get_guests_attrs, [occ])
       |> then(&Invitation.get_guests_cs(occ, &1))
-      |> then(&Invitation.insert_guests(&1, repo))
+      |> then(&Invitation.insert_guests(&1))
     else
       []
     end
   end
 
-  def insert_entities_from(slice, repo, recognisable),
+  def insert_entities_from(slice, recognisable),
     do:
       slice
       |> recognisable.get_entities_cs()
       |> EntityRecognized.maybe_filter(recognisable)
-      |> EntityRecognized.insert_entities(repo)
+      |> EntityRecognized.insert_entities()
 end

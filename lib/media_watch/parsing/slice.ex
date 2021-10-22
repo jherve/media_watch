@@ -2,6 +2,7 @@ defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
+  alias MediaWatch.Repo
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
@@ -48,13 +49,13 @@ defmodule MediaWatch.Parsing.Slice do
   all the valid slices either have been inserted or are already present in the
   database.
   """
-  def insert_all(cs_map, repo, failures_so_far \\ %{})
+  def insert_all(cs_map, failures_so_far \\ %{})
 
-  def insert_all(cs_map, _repo, failures_so_far) when cs_map == %{},
+  def insert_all(cs_map, failures_so_far) when cs_map == %{},
     do: {:error, [], [], failures_so_far |> Map.values()}
 
-  def insert_all(cs_map, repo, failures_so_far) when is_map(cs_map) do
-    case cs_map |> run_and_group_results(repo) do
+  def insert_all(cs_map, failures_so_far) when is_map(cs_map) do
+    case cs_map |> run_and_group_results() do
       {:error, _, _, failures} ->
         # In case of a rollback, the transaction is attempted again, with all
         # the steps that led to an error removed.
@@ -63,7 +64,7 @@ defmodule MediaWatch.Parsing.Slice do
         cs_map
         |> Enum.reject(fn {k, _} -> k in failed_steps end)
         |> Map.new()
-        |> insert_all(repo, failures_so_far |> Map.merge(failures))
+        |> insert_all(failures_so_far |> Map.merge(failures))
 
       {:ok, ok, unique} ->
         if failures_so_far |> Enum.empty?(),
@@ -73,11 +74,11 @@ defmodule MediaWatch.Parsing.Slice do
     end
   end
 
-  defp run_and_group_results(cs_map, repo),
+  defp run_and_group_results(cs_map),
     do:
       cs_map
       |> into_multi()
-      |> repo.transaction()
+      |> Repo.transaction()
       |> group_multi_results()
 
   defp into_multi(cs_map) do
@@ -86,10 +87,10 @@ defmodule MediaWatch.Parsing.Slice do
     cs_map
     |> Enum.reduce(Multi.new(), fn {name, cs}, multi ->
       multi
-      |> Multi.run(name, fn repo, _ ->
+      |> Multi.run(name, fn _repo, _ ->
         # All the operations within the transaction are assumed to be 'successful'
         # whatever their actual result, so that the whole transaction can complete.
-        case MediaWatch.Repo.insert_and_retry(cs, repo) |> get_error_reason() do
+        case Repo.insert_and_retry(cs) |> get_error_reason() do
           u = {:unique, _val} -> {:ok, u}
           e = {:error, _} -> {:ok, e}
           ok = {:ok, _} -> ok
@@ -212,7 +213,7 @@ defmodule MediaWatch.Parsing.Slice do
     with {_, %{id: id}} <- cs |> fetch_field(:source) do
       query = from(s in Slice, where: s.source_id == ^id)
 
-      if query |> MediaWatch.Repo.exists?(),
+      if query |> Repo.exists?(),
         do:
           cs
           |> add_error(:source_id, "has already been taken",
@@ -232,7 +233,7 @@ defmodule MediaWatch.Parsing.Slice do
           where: s.source_id == ^id and r.pub_date == ^pub_date
         )
 
-      if query |> MediaWatch.Repo.exists?(),
+      if query |> Repo.exists?(),
         do:
           cs
           |> add_error(:rss_entry, "has already been taken",

@@ -3,15 +3,17 @@ defmodule MediaWatch.Repo do
     otp_app: :media_watch,
     adapter: Ecto.Adapters.SQLite3
 
+  alias __MODULE__
+
   require Logger
 
   @wait_times [3, 7, 10, 20, 40]
 
-  def insert_and_retry(obj, repo),
-    do: retry_operation_and_log(fn -> obj |> repo.insert end, "insertion")
+  def insert_and_retry(obj),
+    do: retry_operation_and_log(fn -> obj |> Repo.insert() end, "insertion")
 
-  def update_and_retry(obj, repo),
-    do: retry_operation_and_log(fn -> obj |> repo.update end, "update")
+  def update_and_retry(obj),
+    do: retry_operation_and_log(fn -> obj |> Repo.update() end, "update")
 
   defp retry_operation_and_log(fun, operation_type) do
     case retry_operation(fun) do

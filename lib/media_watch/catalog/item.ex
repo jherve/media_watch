@@ -51,7 +51,7 @@ defmodule MediaWatch.Catalog.Item do
 
   defmacro __using__(_opts) do
     quote do
-      use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
+      @behaviour MediaWatch.Catalog.Catalogable
       @behaviour MediaWatch.Snapshots.Snapshotable
       @behaviour MediaWatch.Parsing.Parsable
       @behaviour MediaWatch.Parsing.Sliceable
@@ -61,6 +61,7 @@ defmodule MediaWatch.Catalog.Item do
       @behaviour MediaWatch.Analysis.Hosted
       use MediaWatch.Analysis.Recurrent
       import Ecto.Query
+      alias MediaWatch.Repo
       alias MediaWatch.Catalog.Source
       alias MediaWatch.Snapshots.Snapshot
       alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
@@ -91,22 +92,19 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Catalog.Catalogable
       def insert() do
-        repo = get_repo()
         channels = @channels |> Enum.map(& &1.get())
 
         %{module: __MODULE__, sources: @sources}
         |> Map.merge(@item_args)
         |> Item.changeset()
         |> change(channel_items: channels |> Enum.map(&%ChannelItem{channel: &1}))
-        |> MediaWatch.Repo.insert_and_retry(repo)
+        |> Repo.insert_and_retry()
       end
 
       @impl MediaWatch.Catalog.Catalogable
       def get() do
-        repo = get_repo()
-
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
-        |> repo.one()
+        |> Repo.one()
       end
 
       @impl MediaWatch.Snapshots.Snapshotable

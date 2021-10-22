@@ -24,8 +24,9 @@ defmodule MediaWatch.Catalog.Channel do
 
   defmacro __using__(_opts) do
     quote do
-      use MediaWatch.Catalog.Catalogable, repo: MediaWatch.Repo
+      @behaviour MediaWatch.Catalog.Catalogable
       import Ecto.Query
+      alias MediaWatch.Repo
 
       @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:channels][__MODULE__] ||
                 raise("Config for #{__MODULE__} should be set")
@@ -38,19 +39,14 @@ defmodule MediaWatch.Catalog.Channel do
 
       @impl true
       def insert() do
-        repo = get_repo()
-
         %{module: __MODULE__, name: @name, url: @url}
         |> Channel.changeset()
-        |> MediaWatch.Repo.insert_and_retry(repo)
+        |> Repo.insert_and_retry()
       end
 
       @impl true
       def get() do
-        import Ecto.Query
-        repo = get_repo()
-
-        from(c in query()) |> repo.one()
+        from(c in query()) |> Repo.one()
       end
     end
   end
