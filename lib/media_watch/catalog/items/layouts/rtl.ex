@@ -5,10 +5,10 @@ defmodule MediaWatch.Catalog.Item.Layout.RTL do
       import Ecto.Changeset
 
       @impl true
-      def create_description(slice),
+      def get_description_attrs(item_id, slice),
         do:
-          super(slice)
-          |> update_change(:description, &remove_html/1)
+          super(item_id, slice)
+          |> Map.update!(:description, &remove_html/1)
 
       defp remove_html(text) do
         with {:ok, parsed} <- Floki.parse_fragment(text), do: parsed |> Floki.text()

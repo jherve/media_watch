@@ -1,7 +1,6 @@
 defmodule MediaWatch.Analysis.Description do
   use Ecto.Schema
   import Ecto.Changeset
-  alias MediaWatch.Catalog
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Catalog.Item
   alias MediaWatch.Analysis.SliceUsage
@@ -27,22 +26,18 @@ defmodule MediaWatch.Analysis.Description do
   def changeset(desc \\ %Description{}, attrs) do
     desc
     |> cast(attrs, @all_fields)
-    |> cast_assoc(:slice_usages, required: true)
     |> validate_required(@required_fields)
   end
 
-  def create_description(
-        slice = %Slice{id: id, type: :rss_channel_description, rss_channel_description: desc}
-      ) do
-    item_id = Catalog.get_item_id(slice.source_id)
-
-    changeset(%{
-      item_id: item_id,
-      title: desc.title,
-      description: desc.description,
-      link: desc.link,
-      image: desc.image,
-      slice_usages: [%{slice_id: id, used: true}]
-    })
-  end
+  def get_description_attrs(item_id, %Slice{
+        type: :rss_channel_description,
+        rss_channel_description: desc
+      }),
+      do: %{
+        item_id: item_id,
+        title: desc.title,
+        description: desc.description,
+        link: desc.link,
+        image: desc.image
+      }
 end

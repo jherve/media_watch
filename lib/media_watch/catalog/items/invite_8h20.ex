@@ -5,7 +5,7 @@ defmodule MediaWatch.Catalog.Item.Invite8h20 do
   @split_words ["et", "avec", "face à"] |> Enum.map(&" #{&1} ")
 
   @impl MediaWatch.Analysis.Recognisable
-  def get_guests_attrs(%{title: title, description: desc}) do
+  def get_guests_attrs(%{detail: %{title: title, description: desc}}) do
     case guests_from_description(desc) do
       list when is_list(list) ->
         list |> Enum.map(&%{person: %{label: &1}})

@@ -36,6 +36,9 @@ defmodule MediaWatch.Parsing.Slice do
     |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
   end
 
+  def extract_date(%Slice{type: :rss_entry, rss_entry: %{pub_date: date}}), do: {:ok, date}
+  def extract_date(%Slice{}), do: :error
+
   def preloads(), do: @preloads
 
   @doc """

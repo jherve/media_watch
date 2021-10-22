@@ -5,14 +5,6 @@ defmodule MediaWatch.Analysis.Recurrent do
   @callback get_time_zone() :: Timex.TimezoneInfo.t()
   @callback get_time_slot(DateTime.t()) :: time_slot()
   @callback get_airing_time(DateTime.t()) :: DateTime.t() | {:error, atom()}
-  @callback get_occurrence_at(DateTime.t()) :: any()
-  @callback get_occurrence_cs(MediaWatch.Parsing.Slice.t()) :: Ecto.Changeset.t()
-  @callback get_occurrence_change_cs(
-              MediaWatch.Analysis.ShowOccurrence.t(),
-              used :: [MediaWatch.Parsing.Slice.t()],
-              discarded :: [MediaWatch.Parsing.Slice.t()],
-              new :: [MediaWatch.Parsing.Slice.t()]
-            ) :: Ecto.Changeset.t()
 
   defmacro __using__(_opts) do
     quote do

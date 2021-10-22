@@ -1,4 +1,4 @@
-defmodule MediaWatch.Analysis.Invitation do
+defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Person
@@ -6,7 +6,7 @@ defmodule MediaWatch.Analysis.Invitation do
   alias __MODULE__, as: Invitation
   @primary_key false
 
-  schema "invitations" do
+  schema "show_occurrences_invitations" do
     belongs_to :person, Person, primary_key: true
     belongs_to :show_occurrence, ShowOccurrence, primary_key: true
   end
@@ -54,7 +54,8 @@ defmodule MediaWatch.Analysis.Invitation do
                   {_,
                    [
                      constraint: :unique,
-                     constraint_name: "invitations_person_id_show_occurrence_id_index"
+                     constraint_name:
+                       "show_occurrences_invitations_person_id_show_occurrence_id_index"
                    ]}
               ]
             }},

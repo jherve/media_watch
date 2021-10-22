@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.{PubSub, Parsing, Analysis}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.ShowOccurrence
+  alias MediaWatch.Analysis.{ShowOccurrence, Description}
 
   def start_link(module) when is_atom(module) do
     GenServer.start_link(__MODULE__, module, name: module)
@@ -31,8 +31,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def init(item = %Item{id: id}, module) do
-    PubSub.subscribe("occurrence_formatting:#{id}")
     sources = item.sources
+    occurrences = item.show.id |> Analysis.get_occurrences()
     source_ids = sources |> Enum.map(& &1.id)
     source_ids |> Enum.each(&PubSub.subscribe("slicing:#{&1}"))
     source_ids |> Enum.each(&SourceSupervisor.start/1)
@@ -44,8 +44,10 @@ defmodule MediaWatch.Catalog.ItemWorker do
        item: item,
        sources: sources,
        description: id |> Analysis.get_description(),
-       occurrences: item.show.id |> Analysis.get_occurrences(),
-       slices: Parsing.get_slices(source_ids)
+       occurrences: occurrences,
+       slices: Parsing.get_slices(source_ids),
+       slice_usages: occurrences |> Enum.flat_map(& &1.slice_usages),
+       details: occurrences |> Enum.map(& &1.detail)
      }, {:continue, :do_catchup}}
   end
 
@@ -62,55 +64,124 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_info(slice = %Slice{}, state), do: handle_slice(slice, state)
-  def handle_info(occ = %ShowOccurrence{}, state), do: handle_show_occurrence(occ, state)
+  def handle_info(slice = %Slice{}, state),
+    do: handle_slice(slice, state, slice |> Analysis.classify(state.module))
 
-  defp handle_slice(slice = %Slice{type: :rss_channel_description}, state = %{module: module}) do
-    case slice |> Analysis.create_description_and_store(module.get_repo(), module) do
-      {:ok, desc} ->
-        PubSub.broadcast("description:#{state.id}", desc)
-        {:noreply, %{state | description: desc}}
-
-      {:error, _} ->
+  defp handle_slice(slice, state, type = :show_occurrence_description) do
+    # TODO: Publish results
+    with {:ok, occ, state} <- do_occurrence_detection(slice, state),
+         {:ok, _, state} <- mark_slice_usage(slice, occ, type, state),
+         {:ok, _, state} <- add_details(occ, slice, state),
+         guests when is_list(guests) <- do_guest_detection(occ, state) do
+      {:noreply, state}
+    else
+      e = {:error, _} ->
+        Logger.warning(inspect(e))
         {:noreply, state}
     end
   end
 
-  defp handle_slice(slice = %Slice{type: :rss_entry}, state = %{module: module}) do
-    repo = module.get_repo()
-
-    case slice |> Analysis.create_occurrence_and_store(repo, module) do
-      {:ok, new_occ} ->
-        PubSub.broadcast("occurrence_formatting:#{state.id}", new_occ)
-        {:noreply, update_in(state.occurrences, &append(&1, new_occ))}
-
-      {:error, {:unique_airing_time, occ}} ->
-        case Analysis.update_occurrence_and_store(occ, slice, repo, module) do
-          {:ok, updated} ->
-            PubSub.broadcast("occurrence_formatting:#{state.id}", updated)
-            {:noreply, update_in(state.occurrences, &refresh(&1, updated))}
-
-          {:error, _} ->
-            {:noreply, state}
-        end
-
-      {:error, reason} ->
-        Logger.warning(
-          "#{__MODULE__} could not handle slice #{slice.id} because : #{inspect(reason)}"
-        )
-
+  defp handle_slice(slice, state, type = :item_description) do
+    with {:ok, desc, state} <- do_description(slice, state),
+         {:ok, _, state} <- mark_slice_usage(slice, desc, type, state) do
+      {:noreply, state}
+    else
+      e = {:error, _} ->
+        Logger.warning(inspect(e))
         {:noreply, state}
     end
   end
 
-  defp handle_show_occurrence(occ = %ShowOccurrence{}, state = %{module: module}) do
-    ok_res =
-      occ
-      |> Analysis.insert_guests_from(module.get_repo(), module)
-      |> Enum.filter(&match?({:ok, _}, &1))
+  defp handle_slice(slice, state, type = :show_occurrence_excerpt) do
+    with {:ok, occ, state} <- do_occurrence_detection(slice, state),
+         {:ok, _, state} <- mark_slice_usage(slice, occ, type, state),
+         guests when is_list(guests) <- do_guest_detection(occ, state) do
+      {:noreply, state}
+    else
+      e = {:error, _} ->
+        Logger.warning(inspect(e))
+        {:noreply, state}
+    end
+  end
 
-    ok_res |> Enum.each(&PubSub.broadcast("invitation:#{state.id}", &1))
-    {:noreply, state}
+  defp do_occurrence_detection(slice, state) do
+    repo = state.module.get_repo()
+
+    with {:ok, date} <- slice |> Analysis.extract_date(),
+         time_slot <- date |> state.module.get_time_slot(),
+         airing_time when is_struct(airing_time, DateTime) <- state.module.get_airing_time(date),
+         {:ok, occ} <-
+           Analysis.create_occurrence(state.item.show.id, airing_time, time_slot)
+           |> MediaWatch.Repo.insert_and_retry(repo)
+           |> Analysis.explain_create_occurrence_error() do
+      {:ok, occ, update_in(state.occurrences, &append(&1, occ))}
+    else
+      {:error, {:unique, occ}} -> {:ok, occ, state}
+      e = {:error, _} -> e
+    end
+  end
+
+  defp mark_slice_usage(slice, %ShowOccurrence{id: id}, type, state) do
+    repo = state.module.get_repo()
+
+    with {:ok, usage} <-
+           Analysis.create_slice_usage(slice.id, id, type)
+           |> MediaWatch.Repo.insert_and_retry(repo),
+         do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
+  end
+
+  defp mark_slice_usage(slice, %Description{item_id: id}, type, state) do
+    repo = state.module.get_repo()
+
+    with {:ok, usage} <-
+           Analysis.create_slice_usage(slice.id, id, type)
+           |> MediaWatch.Repo.insert_and_retry(repo),
+         do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
+  end
+
+  defp add_details(occurrence, slice, state) do
+    repo = state.module.get_repo()
+
+    case Analysis.create_occurrence_details(occurrence.id, slice)
+         |> MediaWatch.Repo.insert_and_retry(repo)
+         |> Analysis.explain_create_occurrence_detail_error() do
+      {:ok, detail} ->
+        {:ok, detail, update_in(state.details, &append(&1, detail))}
+
+      {:error, {:unique, existing}} ->
+        add_details_via_update(existing, slice, state)
+
+      e = {:error, _} ->
+        e
+    end
+  end
+
+  defp add_details_via_update(occurrence, slice, state) do
+    repo = state.module.get_repo()
+
+    case Analysis.update_occurrence_details(occurrence, slice)
+         |> MediaWatch.Repo.update_and_retry(repo) do
+      {:ok, updated} ->
+        {:ok, updated, update_in(state.details, &refresh(&1, updated))}
+
+      {:error, e} ->
+        {:error, e, state}
+    end
+  end
+
+  defp do_guest_detection(occ = %ShowOccurrence{}, %{module: module}) do
+    occ
+    |> Analysis.insert_guests_from(module.get_repo(), module)
+    |> Enum.filter(&match?({:ok, _}, &1))
+  end
+
+  defp do_description(slice, state) do
+    repo = state.module.get_repo()
+
+    with {:ok, desc} <-
+           Analysis.create_description(state.id, slice, state.module)
+           |> MediaWatch.Repo.insert_and_retry(repo),
+         do: {:ok, desc, %{state | description: desc}}
   end
 
   defp append(list, elem) when is_list(list), do: list ++ [elem]
@@ -121,12 +192,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp attempt_catchup(state, :slices) do
-    description_as_list = if desc = state.description, do: [desc], else: []
-
-    slices_seen_ids =
-      (description_as_list ++ state.occurrences)
-      |> Enum.flat_map(& &1.slices)
-      |> Enum.map(& &1.id)
+    slices_seen_ids = state.slice_usages |> Enum.map(& &1.slice_id)
 
     state.slices
     |> Enum.reject(&(&1.id in slices_seen_ids))
@@ -145,7 +211,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
     e -> {:error, e}
   end
 
-  defp catchup(slice = %Slice{}, state), do: handle_slice(slice, state)
+  defp catchup(slice = %Slice{}, state),
+    do: handle_slice(slice, state, slice |> Analysis.classify(state.module))
 
   defp log_catching_up([]), do: nil
 

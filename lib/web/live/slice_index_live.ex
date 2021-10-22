@@ -42,7 +42,7 @@ defmodule MediaWatchWeb.SliceIndexLive do
         <% [occurrence] = item.show.occurrences %>
         <Card.with_image let={block} class="occurrence">
           <%= case block do %>
-            <% :header -> %><%= occurrence.title %>
+            <% :header -> %><%= occurrence.detail.title %>
             <% :content -> %>
               <h1><%= link to: Item.detail_link(item) do %><%= Item.title(item) %><% end %></h1>
               <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
@@ -82,8 +82,8 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
   defp maybe_truncate_description(assigns, occurrence) do
     if MapSet.member?(assigns.non_truncated_descriptions, occurrence.id),
-      do: ~H"<%= occurrence.description %>",
-      else: ~H"<%= occurrence.description |> truncate() %>"
+      do: ~H"<%= occurrence.detail.description %>",
+      else: ~H"<%= occurrence.detail.description |> truncate() %>"
   end
 
   defp truncate(string, max \\ @truncated_length) do

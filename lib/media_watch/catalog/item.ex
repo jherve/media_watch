@@ -55,6 +55,7 @@ defmodule MediaWatch.Catalog.Item do
       @behaviour MediaWatch.Snapshots.Snapshotable
       @behaviour MediaWatch.Parsing.Parsable
       @behaviour MediaWatch.Parsing.Sliceable
+      @behaviour MediaWatch.Analysis.Analyzable
       @behaviour MediaWatch.Analysis.Describable
       @behaviour MediaWatch.Analysis.Recognisable
       @behaviour MediaWatch.Analysis.Hosted
@@ -63,7 +64,13 @@ defmodule MediaWatch.Catalog.Item do
       alias MediaWatch.Catalog.Source
       alias MediaWatch.Snapshots.Snapshot
       alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
-      alias MediaWatch.Analysis.{ShowOccurrence, Invitation, EntityRecognized}
+
+      alias MediaWatch.Analysis.{
+        SliceUsage,
+        ShowOccurrence,
+        ShowOccurrence.Invitation,
+        EntityRecognized
+      }
 
       @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:items][__MODULE__] ||
                 raise("Config for #{__MODULE__} should be set")
@@ -114,17 +121,11 @@ defmodule MediaWatch.Catalog.Item do
       @impl MediaWatch.Parsing.Sliceable
       defdelegate into_slice_cs(attrs, parsed), to: ParsedSnapshot
 
+      @impl MediaWatch.Analysis.Analyzable
+      defdelegate classify(slice), to: SliceUsage
+
       @impl MediaWatch.Analysis.Describable
-      defdelegate create_description(slice), to: Description
-
-      @impl MediaWatch.Analysis.Recurrent
-      def get_occurrence_cs(slice), do: ShowOccurrence.get_occurrence_cs(slice, __MODULE__)
-
-      @impl MediaWatch.Analysis.Recurrent
-      defdelegate get_occurrence_change_cs(occ, used, discarded, new), to: ShowOccurrence
-
-      @impl MediaWatch.Analysis.Recurrent
-      def get_occurrence_at(datetime), do: ShowOccurrence.get_occurrence_at(datetime, __MODULE__)
+      defdelegate get_description_attrs(item_id, slice), to: Description
 
       @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
@@ -141,9 +142,8 @@ defmodule MediaWatch.Catalog.Item do
       end
 
       defoverridable into_slice_cs: 2,
-                     create_description: 1,
-                     get_occurrence_cs: 1,
-                     get_occurrence_change_cs: 4
+                     get_description_attrs: 2,
+                     classify: 1
     end
   end
 end
