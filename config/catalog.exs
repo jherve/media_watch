@@ -78,7 +78,15 @@ config :media_watch, MediaWatch.Catalog,
        url: "https://www.rtl.fr/programmes/l-invite-de-rtl-soir",
        airing_schedule: "20 18 * * MON-FRI",
        duration_minutes: 10,
-       host_names: ["Julien Sellier"]
+       host_names: ["Julien Sellier"],
+       alternate_hosts: [
+         "Thomas Sotto",
+         "Olivier Boy",
+         "Amandine Bégot",
+         "Bénédicte Tassart",
+         "Christophe Pacaud",
+         "Vincent Parizot"
+       ]
      },
      sources: [%{rss_feed: %{url: "https://www.rtl.fr/podcast/l-invite-de-rtl-soir.xml"}}],
      channels: [MediaWatch.Catalog.Channel.RTL]},
