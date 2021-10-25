@@ -48,11 +48,16 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
     entities |> Enum.reject(&(&1.label in hosts))
   end
 
-  defp get_all_hosts(hosted) do
+  def get_all_hosts(hosted) do
     hosted.get_hosts() ++
-      if function_exported?(hosted, :get_alternate_hosts, 0),
+      if(function_exported?(hosted, :get_alternate_hosts, 0),
         do: hosted.get_alternate_hosts(),
         else: []
+      ) ++
+      if(function_exported?(hosted, :get_columnists, 0),
+        do: hosted.get_columnists(),
+        else: []
+      )
   end
 
   def get_guests_cs(occ, list_of_attrs) when is_list(list_of_attrs),

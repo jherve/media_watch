@@ -5,5 +5,8 @@ defmodule MediaWatch.Analysis.Hosted do
   @doc "Get a list of alternate hosts"
   @callback get_alternate_hosts() :: [binary()]
 
-  @optional_callbacks get_alternate_hosts: 0
+  @doc "Get a list of usual columnists"
+  @callback get_columnists() :: [binary()]
+
+  @optional_callbacks get_alternate_hosts: 0, get_columnists: 0
 end

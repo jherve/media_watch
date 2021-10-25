@@ -84,6 +84,7 @@ defmodule MediaWatch.Catalog.Item do
       @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
       @hosts @show[:host_names]
       @alternate_hosts @show[:alternate_hosts]
+      @columnists @show[:columnists]
       @sources @config[:sources] || raise("`sources` should be set")
       @channels @config[:channels] || raise("`channels` should be set")
 
@@ -140,6 +141,11 @@ defmodule MediaWatch.Catalog.Item do
       if @alternate_hosts do
         @impl MediaWatch.Analysis.Hosted
         def get_alternate_hosts(), do: @alternate_hosts
+      end
+
+      if @columnists do
+        @impl MediaWatch.Analysis.Hosted
+        def get_columnists(), do: @columnists
       end
 
       defoverridable into_slice_cs: 2,
