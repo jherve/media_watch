@@ -45,7 +45,11 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
 
   defp reject_hosts(entities, hosted) do
     hosts = get_all_hosts(hosted)
-    entities |> Enum.reject(&(&1.label in hosts))
+    # The entities recognition service only returns names that do not have any hyphens
+    # (e.g. "Jean-Pierre X" is spelled "Jean Pierre X"), but we chose to store hosts
+    # using the correct spelling, with hyphens.
+    hosts_unhyphenated = hosts |> Enum.map(&(&1 |> String.replace("-", " ")))
+    entities |> Enum.reject(&(&1.label in (hosts ++ hosts_unhyphenated)))
   end
 
   def get_all_hosts(hosted) do
