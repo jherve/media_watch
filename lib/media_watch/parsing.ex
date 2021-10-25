@@ -14,8 +14,6 @@ defmodule MediaWatch.Parsing do
 
   def get(id), do: ParsedSnapshot |> Repo.get(id) |> Repo.preload(snapshot: @parsed_preloads)
 
-  def get_all(), do: ParsedSnapshot |> Repo.all() |> Repo.preload(snapshot: @parsed_preloads)
-
   def parse_and_insert(snap, parsable) do
     snap = snap |> Repo.preload([:source, :xml])
     with {:ok, cs} <- parsable.parse(snap), do: cs |> Repo.insert_and_retry()
