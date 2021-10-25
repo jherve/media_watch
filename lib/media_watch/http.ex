@@ -20,6 +20,7 @@ defmodule MediaWatch.Http do
     with {:ok, body} <- body_params |> Jason.encode(body_params) do
       case Finch.build(:post, url, headers, body) |> Finch.request(MediaWatch.Finch) do
         {:ok, %{body: body, status: 200}} -> body |> Jason.decode()
+        e = {:error, _} -> e
       end
     end
   end
