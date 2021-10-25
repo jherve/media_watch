@@ -146,7 +146,7 @@ defmodule MediaWatch.Analysis do
 
   def insert_guests_from(occ, recognisable) do
     if function_exported?(recognisable, :get_guests_attrs, 1) do
-      occ = occ |> Repo.preload(:detail)
+      occ = occ |> Repo.preload([:detail, slices: Slice.preloads()])
 
       apply(recognisable, :get_guests_attrs, [occ])
       |> then(&Invitation.get_guests_cs(occ, &1))

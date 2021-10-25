@@ -1,9 +1,10 @@
 defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   use Ecto.Schema
+  require Logger
   import Ecto.Changeset
   alias MediaWatch.Repo
   alias MediaWatch.Catalog.Person
-  alias MediaWatch.Analysis.ShowOccurrence
+  alias MediaWatch.Analysis.{ShowOccurrence, EntitiesClassification}
   alias __MODULE__, as: Invitation
   @primary_key false
 
@@ -19,6 +20,39 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
     |> cast_assoc(:person, required: true)
     |> cast_assoc(:show_occurrence, required: true)
     |> unique_constraint([:person_id, :show_occurrence_id])
+  end
+
+  def get_guests_attrs(list, hosted) when is_list(list),
+    do: list |> Enum.map(&get_guests_attrs(&1, hosted))
+
+  def get_guests_attrs(%ShowOccurrence{slice_usages: usages}, hosted) do
+    entities =
+      usages |> organize_entities |> EntitiesClassification.cleanup() |> reject_hosts(hosted)
+
+    entities
+    |> EntitiesClassification.get_guests()
+    |> EntitiesClassification.pick_candidates()
+    |> Enum.map(&%{person: %{label: &1}})
+  end
+
+  defp organize_entities(slice_usages),
+    do:
+      slice_usages
+      |> Enum.map(&{&1.slice, &1.type})
+      |> Enum.flat_map(fn {%{entities: entities}, type} ->
+        entities |> Enum.map(&%{label: &1.label, type: type, field: &1.field})
+      end)
+
+  defp reject_hosts(entities, hosted) do
+    hosts = get_all_hosts(hosted)
+    entities |> Enum.reject(&(&1.label in hosts))
+  end
+
+  defp get_all_hosts(hosted) do
+    hosted.get_hosts() ++
+      if function_exported?(hosted, :get_alternate_hosts, 0),
+        do: hosted.get_alternate_hosts(),
+        else: []
   end
 
   def get_guests_cs(occ, list_of_attrs) when is_list(list_of_attrs),

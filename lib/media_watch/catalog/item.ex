@@ -129,6 +129,9 @@ defmodule MediaWatch.Catalog.Item do
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
 
       @impl MediaWatch.Analysis.Recognisable
+      def get_guests_attrs(occ), do: Invitation.get_guests_attrs(occ, __MODULE__)
+
+      @impl MediaWatch.Analysis.Recognisable
       defdelegate get_entities_cs(occ), to: EntityRecognized
 
       @impl MediaWatch.Analysis.Hosted

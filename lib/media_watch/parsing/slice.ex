@@ -6,11 +6,12 @@ defmodule MediaWatch.Parsing.Slice do
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
+  alias MediaWatch.Analysis.EntityRecognized
 
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description]
   @required_fields [:type]
-  @preloads [:rss_entry, :rss_channel_description]
+  @preloads [:rss_entry, :rss_channel_description, :entities]
 
   schema "slices" do
     field :type, Ecto.Enum, values: @valid_types
@@ -19,6 +20,7 @@ defmodule MediaWatch.Parsing.Slice do
     belongs_to :parsed_snapshot, ParsedSnapshot
     has_one :rss_entry, RssEntry, foreign_key: :id
     has_one :rss_channel_description, RssChannelDescription, foreign_key: :id
+    has_many :entities, EntityRecognized
 
     Ecto.Schema.timestamps(type: :utc_datetime)
   end
