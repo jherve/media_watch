@@ -33,7 +33,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   end
 
   def into_slice_cs(attrs, parsed = %ParsedSnapshot{snapshot: %{source: source}})
-      when not is_nil(source) do
+      when not is_nil(source) and not is_struct(source, Ecto.Association.NotLoaded) do
     Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
   end
 

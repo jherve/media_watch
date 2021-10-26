@@ -24,11 +24,32 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   end
 
   @doc false
-  def changeset(occurrence \\ %ShowOccurrence{}, attrs) do
-    occurrence
+  def create_changeset(attrs) do
+    %ShowOccurrence{}
     |> cast(attrs, @all_fields)
     |> cast_assoc(:slice_usages)
     |> validate_required(@required_fields)
     |> unique_constraint([:show_id, :airing_time])
   end
+
+  def explain_error(
+        {:error,
+         cs = %{
+           errors: [
+             show_id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name: "show_occurrences_show_id_airing_time_index"
+                ]}
+           ]
+         }},
+        repo
+      ) do
+    with {_, airing_time} <- cs |> fetch_field(:airing_time),
+         occ when not is_nil(occ) <- ShowOccurrence |> repo.get_by(airing_time: airing_time),
+         do: {:error, {:unique, occ}}
+  end
+
+  def explain_error(ok_or_other_error, _), do: ok_or_other_error
 end

@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.Person do
   use Ecto.Schema
   import Ecto.Changeset
-  alias MediaWatch.{Repo, Wikidata}
+  alias MediaWatch.Wikidata
   alias __MODULE__, as: Person
   @required_fields []
   @optional_fields [:wikidata_qid, :label, :description]
@@ -25,9 +25,10 @@ defmodule MediaWatch.Catalog.Person do
   def get_existing_person_from_cs(
         cs = %{
           errors: [label: {_, [constraint: :unique, constraint_name: "persons_label_index"]}]
-        }
+        },
+        repo
       ) do
-    with {_, label} <- cs |> fetch_field(:label), do: Person |> Repo.get_by(label: label)
+    with {_, label} <- cs |> fetch_field(:label), do: Person |> repo.get_by(label: label)
   end
 
   def get_existing_person_from_cs(
@@ -36,10 +37,11 @@ defmodule MediaWatch.Catalog.Person do
             wikidata_qid:
               {_, [constraint: :unique, constraint_name: "persons_wikidata_qid_index"]}
           ]
-        }
+        },
+        repo
       ) do
     with {_, qid} <- cs |> fetch_field(:wikidata_qid),
-         do: Person |> Repo.get_by(wikidata_qid: qid)
+         do: Person |> repo.get_by(wikidata_qid: qid)
   end
 
   defp set_qid(cs) do

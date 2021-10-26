@@ -12,4 +12,11 @@ defmodule MediaWatch.Snapshots do
   def do_all_snapshots(), do: Catalog.all() |> Enum.each(&do_snapshots/1)
 
   def do_snapshots(module), do: ItemWorker.do_snapshots(module)
+
+  @spec make_snapshot_and_insert(MediaWatch.Catalog.Source.t(), atom()) ::
+          {:ok, Snapshot.t()} | {:error, Ecto.Changeset.t()}
+  def make_snapshot_and_insert(source, snapshotable) do
+    with {:ok, cs} <- snapshotable.make_snapshot(source),
+         do: cs |> Repo.insert_and_retry()
+  end
 end

@@ -2,7 +2,6 @@ defmodule MediaWatch.Catalog.SourceWorker do
   use GenServer
   require Logger
   alias MediaWatch.{Catalog, Snapshots, Parsing, Analysis, PubSub}
-  alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   @max_snapshot_retries 3
@@ -135,7 +134,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   defp do_snapshot(module, source, nb_retries) do
-    case Source.make_snapshot_and_insert(source, module) do
+    case Snapshots.make_snapshot_and_insert(source, module) do
       ok = {:ok, _} ->
         ok
 

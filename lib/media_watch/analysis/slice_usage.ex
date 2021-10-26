@@ -19,8 +19,8 @@ defmodule MediaWatch.Analysis.SliceUsage do
   def types(), do: @types
 
   @doc false
-  def changeset(usage \\ %SliceUsage{}, attrs) do
-    usage
+  def create_changeset(attrs) do
+    %SliceUsage{}
     |> cast(attrs, @all_fields)
     |> validate_required(@required_fields)
     |> unique_constraint([:show_occurrence_id, :slice_id])

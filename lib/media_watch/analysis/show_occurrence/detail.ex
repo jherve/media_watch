@@ -23,4 +23,25 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Detail do
     |> validate_required(@required_fields)
     |> unique_constraint(:id)
   end
+
+  def explain_create_error(
+        {:error,
+         cs = %{
+           errors: [
+             id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name: "show_occurrences_details_id_index"
+                ]}
+           ]
+         }},
+        repo
+      ) do
+    with {_, id} <- cs |> fetch_field(:id),
+         detail when not is_nil(detail) <- Detail |> repo.get(id),
+         do: {:error, {:unique, detail}}
+  end
+
+  def explain_create_error(ok_or_other_error, _), do: ok_or_other_error
 end

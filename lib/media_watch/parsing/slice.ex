@@ -1,7 +1,7 @@
 defmodule MediaWatch.Parsing.Slice do
   use Ecto.Schema
   import Ecto.Changeset
-  import Ecto.Query
+  alias Ecto.Multi
   alias MediaWatch.Repo
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
@@ -35,8 +35,15 @@ defmodule MediaWatch.Parsing.Slice do
     |> cast_assoc(:rss_channel_description)
     |> set_type()
     |> validate_required(@required_fields)
-    |> unsafe_unique_constraint()
-    |> unique_constraint(:source_id, name: :slices_rss_channel_descriptions_index)
+    # SQLite adapter can not recognize the constraint that was violated, and the error reporting
+    # is therefore a bit shaky and auto-magically guessed by ecto_sqlite3 (in some cases, badly)
+    # (see https://hexdocs.pm/ecto_sqlite3/Ecto.Adapters.SQLite3.html#module-handling-foreign-key-constraints-in-changesets)
+    #
+    # Here, the constraint defined as "slices_rss_channel_descriptions_index" in the schema will
+    # wrongfully be thrown as "slices_source_id_index", based on "source_id" field name. Since it
+    # it the only constraint that applies on this field, it's an acceptable compromise to ignore
+    # the actual constraint name.
+    |> unique_constraint(:source_id)
   end
 
   def extract_date(%Slice{type: :rss_entry, rss_entry: %{pub_date: date}}), do: {:ok, date}
@@ -84,15 +91,13 @@ defmodule MediaWatch.Parsing.Slice do
       |> group_multi_results()
 
   defp into_multi(cs_map) do
-    alias Ecto.Multi
-
     cs_map
     |> Enum.reduce(Multi.new(), fn {name, cs}, multi ->
       multi
-      |> Multi.run(name, fn _repo, _ ->
+      |> Multi.run(name, fn repo, _ ->
         # All the operations within the transaction are assumed to be 'successful'
         # whatever their actual result, so that the whole transaction can complete.
-        case Repo.insert_and_retry(cs) |> get_error_reason() do
+        case repo.insert_and_retry(cs) |> get_error_reason() do
           u = {:unique, _val} -> {:ok, u}
           e = {:error, _} -> {:ok, e}
           ok = {:ok, _} -> ok
@@ -134,16 +139,12 @@ defmodule MediaWatch.Parsing.Slice do
 
   defp get_error_reason(ok = {:ok, _obj}), do: ok
 
+  # This is not the actual constraint name, see `changeset` for full explanation.
   defp get_error_reason(
          {:error,
           e = %{
             errors: [
-              source_id:
-                {_,
-                 [
-                   constraint: :unique,
-                   constraint_name: "slices_rss_channel_descriptions_index"
-                 ]}
+              source_id: {_, [constraint: :unique, constraint_name: "slices_source_id_index"]}
             ]
           }}
        ),
@@ -161,16 +162,6 @@ defmodule MediaWatch.Parsing.Slice do
               }
             }
           }}
-       ),
-       do: {:unique, e}
-
-  defp get_error_reason(
-         {:error, e = %{errors: [source_id: {_, [validation: :unsafe_unique_description]}]}}
-       ),
-       do: {:unique, e}
-
-  defp get_error_reason(
-         {:error, e = %{errors: [rss_entry: {_, [validation: :unsafe_unique_entry_pub_date]}]}}
        ),
        do: {:unique, e}
 
@@ -194,54 +185,6 @@ defmodule MediaWatch.Parsing.Slice do
     case cs |> fetch_field(field) do
       {_, val} when not is_nil(val) -> true
       _ -> false
-    end
-  end
-
-  # SQLite adapter can not recognize the constraint that was violated, and the error reporting
-  # is therefore a bit shaky and auto-magically guessed by ecto_sqlite3 (in some cases, badly)
-  # (see https://hexdocs.pm/ecto_sqlite3/Ecto.Adapters.SQLite3.html#module-handling-foreign-key-constraints-in-changesets)
-  # To prevent this, we use this function that checks beforehand whether a conflicting record
-  # already exists in the db (inspired by Ecto's unsafe_validate_unique that does not work
-  # properly with FK fields). This allows proper error detection, and the constraint is checked
-  # by the database anyway (but most likely it will be more difficult to recover)
-  defp unsafe_unique_constraint(cs) do
-    case cs |> fetch_field(:type) do
-      {_, :rss_channel_description} -> cs |> unsafe_unique_description()
-      {_, :rss_entry} -> cs |> unsafe_unique_entry_pub_date()
-    end
-  end
-
-  defp unsafe_unique_description(cs) do
-    with {_, %{id: id}} <- cs |> fetch_field(:source) do
-      query = from(s in Slice, where: s.source_id == ^id)
-
-      if query |> Repo.exists?(),
-        do:
-          cs
-          |> add_error(:source_id, "has already been taken",
-            validation: :unsafe_unique_description
-          ),
-        else: cs
-    end
-  end
-
-  defp unsafe_unique_entry_pub_date(cs) do
-    with {_, %{id: id}} <- cs |> fetch_field(:source),
-         {_, %{pub_date: pub_date}} <- cs |> fetch_field(:rss_entry) do
-      query =
-        from(s in Slice,
-          join: r in RssEntry,
-          on: r.id == s.id,
-          where: s.source_id == ^id and r.pub_date == ^pub_date
-        )
-
-      if query |> Repo.exists?(),
-        do:
-          cs
-          |> add_error(:rss_entry, "has already been taken",
-            validation: :unsafe_unique_entry_pub_date
-          ),
-        else: cs
     end
   end
 end

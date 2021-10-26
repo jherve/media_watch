@@ -1,7 +1,6 @@
 defmodule MediaWatch.Analysis.EntityRecognized do
   use Ecto.Schema
   import Ecto.Changeset
-  alias MediaWatch.Repo
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Spacy
   alias __MODULE__, as: EntityRecognized
@@ -43,14 +42,6 @@ defmodule MediaWatch.Analysis.EntityRecognized do
       (title_list |> into_cs_list(slice, "title")) ++
         (desc_list |> into_cs_list(slice, "description"))
     end
-  end
-
-  def insert_entities(cs_list) when is_list(cs_list) do
-    with {:ok, res} <-
-           Repo.transaction(fn _ ->
-             cs_list |> Enum.map(&Repo.insert_and_retry(&1))
-           end),
-         do: res
   end
 
   def maybe_filter(cs_list, recognisable) when is_list(cs_list),

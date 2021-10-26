@@ -1,6 +1,5 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
-  import Ecto.Changeset
   alias MediaWatch.{Repo, PubSub}
   alias MediaWatch.Catalog.{Item, Show}
   alias MediaWatch.Parsing.Slice
@@ -19,50 +18,53 @@ defmodule MediaWatch.Analysis do
     PubSub.subscribe("occurrence_formatting:#{item_id}")
   end
 
+  @spec get_all_analyzed_items() :: [Item.t()]
   def get_all_analyzed_items(),
     do:
-      from(i in Item,
-        join: s in Show,
-        on: s.id == i.id,
-        left_join: so in ShowOccurrence,
-        on: so.show_id == s.id,
-        preload: [:channels, :description, show: {s, occurrences: so}],
+      from([i, s, so] in item_query(),
+        preload: [:channels, :description],
         order_by: [desc: so.airing_time]
       )
       |> Repo.all()
 
+  @spec get_analyzed_item(integer()) :: [Item.t()]
   def get_analyzed_item(item_id),
     do:
-      from(i in Item,
-        join: s in Show,
-        on: s.id == i.id,
-        left_join: so in ShowOccurrence,
-        on: so.show_id == s.id,
-        preload: [:channels, :description, show: {s, occurrences: {so, :detail}}],
+      from([i, s, so] in item_query(),
+        preload: [:channels, :description, show: [occurrences: :detail]],
         where: i.id == ^item_id,
         order_by: [desc: so.airing_time]
       )
       |> Repo.one()
 
+  @spec get_analyzed_item_by_date(DateTime.t(), DateTime.t()) :: [Item.t()]
   def get_analyzed_item_by_date(date_start, date_end) do
     date_start = date_start |> Timex.to_datetime()
     date_end = date_end |> Timex.to_datetime()
 
-    from(i in Item,
-      join: s in Show,
-      on: s.id == i.id,
-      left_join: so in ShowOccurrence,
-      on: so.show_id == s.id,
-      preload: [:channels, :description, show: {s, occurrences: {so, :detail}}],
+    from([i, s, so] in item_query(),
+      preload: [:channels, :description, show: [occurrences: :detail]],
       where: so.airing_time >= ^date_start and so.airing_time <= ^date_end,
       order_by: [i.id, desc: so.airing_time]
     )
     |> Repo.all()
   end
 
+  defp item_query(),
+    do:
+      from(i in Item,
+        join: s in Show,
+        on: s.id == i.id,
+        left_join: so in ShowOccurrence,
+        on: so.show_id == s.id,
+        preload: [show: {s, occurrences: so}]
+      )
+
+  @spec get_description(integer()) :: Description.t() | nil
   def get_description(item_id),
     do: Description |> Repo.get_by(item_id: item_id) |> Repo.preload([:slices])
 
+  @spec get_occurrences(integer()) :: [ShowOccurrence.t()]
   def get_occurrences(show_id),
     do:
       from(s in ShowOccurrence, where: s.show_id == ^show_id, preload: [:detail, :slices])
@@ -74,41 +76,38 @@ defmodule MediaWatch.Analysis do
 
   def identify_time_slot(dt, recurrent), do: recurrent.get_time_slot(dt)
 
+  @spec create_occurrence(integer(), DateTime.t(), MediaWatch.Analysis.Recurrent.time_slot()) ::
+          {:ok, ShowOccurrence.t()}
+          | {:error, {:unique, ShowOccurrence.t()} | {:error, Ecto.Changeset.t()}}
   def create_occurrence(show_id, airing_time, {slot_start, slot_end}),
     do:
-      ShowOccurrence.changeset(%{
+      ShowOccurrence.create_changeset(%{
         show_id: show_id,
         airing_time: airing_time,
         slot_start: slot_start,
         slot_end: slot_end
       })
+      |> Repo.insert_and_retry()
+      |> ShowOccurrence.explain_error(Repo)
 
-  def explain_create_occurrence_error(
-        {:error,
-         cs = %{
-           errors: [
-             show_id:
-               {_,
-                [
-                  constraint: :unique,
-                  constraint_name: "show_occurrences_show_id_airing_time_index"
-                ]}
-           ]
-         }}
-      ) do
-    with {_, airing_time} <- cs |> fetch_field(:airing_time),
-         occ when not is_nil(occ) <- ShowOccurrence |> Repo.get_by(airing_time: airing_time),
-         do: {:error, {:unique, occ}}
-  end
-
-  def explain_create_occurrence_error(ok_or_other_error), do: ok_or_other_error
-
+  @spec create_slice_usage(integer(), integer(), atom()) ::
+          {:ok, SliceUsage.t()} | {:error, Ecto.Changeset.t()}
   def create_slice_usage(slice_id, desc_id, type = :item_description),
-    do: SliceUsage.changeset(%{slice_id: slice_id, description_id: desc_id, type: type})
+    do:
+      SliceUsage.create_changeset(%{slice_id: slice_id, description_id: desc_id, type: type})
+      |> Repo.insert_and_retry()
 
   def create_slice_usage(slice_id, occ_id, slice_type),
-    do: SliceUsage.changeset(%{slice_id: slice_id, show_occurrence_id: occ_id, type: slice_type})
+    do:
+      SliceUsage.create_changeset(%{
+        slice_id: slice_id,
+        show_occurrence_id: occ_id,
+        type: slice_type
+      })
+      |> Repo.insert_and_retry()
 
+  @spec create_occurrence_details(integer(), Slice.t()) ::
+          {:ok, Detail.t()} | {:error, {:unique, Detail.t()} | {:error, Ecto.Changeset.t()}}
   def create_occurrence_details(occ_id, %Slice{type: :rss_entry, rss_entry: entry}),
     do:
       Detail.changeset(%{
@@ -117,49 +116,55 @@ defmodule MediaWatch.Analysis do
         description: entry.description,
         link: entry.link
       })
+      |> Repo.insert_and_retry()
+      |> Detail.explain_create_error(Repo)
 
-  def explain_create_occurrence_detail_error(
-        {:error,
-         cs = %{
-           errors: [
-             id:
-               {_,
-                [
-                  constraint: :unique,
-                  constraint_name: "show_occurrences_details_id_index"
-                ]}
-           ]
-         }}
-      ) do
-    with {_, id} <- cs |> fetch_field(:id),
-         detail when not is_nil(detail) <- Detail |> Repo.get(id),
-         do: {:error, {:unique, detail}}
+  @spec update_occurrence_details(Detail.t(), Slice.t()) ::
+          {:ok, Detail.t()} | {:error, Ecto.Changeset.t()}
+  def update_occurrence_details(detail = %Detail{}, _slice),
+    do: Detail.changeset(detail, %{}) |> Repo.update_and_retry()
+
+  @spec create_description(integer(), Slice.t(), atom()) ::
+          {:ok, Description.t()} | {:error, Ecto.Changeset.t()}
+  def create_description(item_id, slice, describable),
+    do:
+      describable.get_description_attrs(item_id, slice)
+      |> Description.changeset()
+      |> Repo.insert_and_retry()
+
+  def insert_guests_from(occ, recognisable),
+    do:
+      insert_guests_from(
+        occ,
+        recognisable,
+        function_exported?(recognisable, :get_guests_attrs, 1)
+      )
+
+  def insert_guests_from(_occ, _recognisable, false), do: []
+
+  def insert_guests_from(occ, recognisable, true) do
+    occ = occ |> Repo.preload([:detail, slices: Slice.preloads()])
+
+    with list_of_attrs <- recognisable.get_guests_attrs(occ),
+         cs_list <- Invitation.get_guests_cs(occ, list_of_attrs),
+         do: cs_list |> Enum.map(&insert_guest/1)
   end
 
-  def explain_create_occurrence_detail_error(ok_or_other_error), do: ok_or_other_error
-
-  def update_occurrence_details(detail = %Detail{}, _slice),
-    do: Detail.changeset(detail, %{})
-
-  def create_description(item_id, slice, describable),
-    do: describable.get_description_attrs(item_id, slice) |> Description.changeset()
-
-  def insert_guests_from(occ, recognisable) do
-    if function_exported?(recognisable, :get_guests_attrs, 1) do
-      occ = occ |> Repo.preload([:detail, slices: Slice.preloads()])
-
-      apply(recognisable, :get_guests_attrs, [occ])
-      |> then(&Invitation.get_guests_cs(occ, &1))
-      |> then(&Invitation.insert_guests(&1))
-    else
-      []
+  defp insert_guest(cs) when is_struct(cs, Ecto.Changeset) do
+    case cs |> Repo.insert_and_retry() |> Invitation.handle_error(Repo) do
+      ok = {:ok, _} -> ok
+      {:error, {:person_exists, new_cs}} -> new_cs |> insert_guest()
+      e = {:error, _} -> e
     end
   end
 
-  def insert_entities_from(slice, recognisable),
-    do:
-      slice
-      |> recognisable.get_entities_cs()
-      |> EntityRecognized.maybe_filter(recognisable)
-      |> EntityRecognized.insert_entities()
+  def insert_entities_from(slice, recognisable) do
+    with cs_list when is_list(cs_list) <-
+           slice
+           |> recognisable.get_entities_cs()
+           |> EntityRecognized.maybe_filter(recognisable),
+         {:ok, res} <-
+           Repo.transaction(fn repo -> cs_list |> Enum.map(&repo.insert_and_retry(&1)) end),
+         do: res
+  end
 end

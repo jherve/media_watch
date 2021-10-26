@@ -108,10 +108,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     with {:ok, date} <- slice |> Analysis.extract_date(),
          time_slot <- date |> state.module.get_time_slot(),
          airing_time when is_struct(airing_time, DateTime) <- state.module.get_airing_time(date),
-         {:ok, occ} <-
-           Analysis.create_occurrence(state.item.show.id, airing_time, time_slot)
-           |> Repo.insert_and_retry()
-           |> Analysis.explain_create_occurrence_error() do
+         {:ok, occ} <- Analysis.create_occurrence(state.item.show.id, airing_time, time_slot) do
       {:ok, occ, update_in(state.occurrences, &append(&1, occ))}
     else
       {:error, {:unique, occ}} -> {:ok, occ, state}
@@ -120,23 +117,17 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp mark_slice_usage(slice, %ShowOccurrence{id: id}, type, state) do
-    with {:ok, usage} <-
-           Analysis.create_slice_usage(slice.id, id, type)
-           |> Repo.insert_and_retry(),
+    with {:ok, usage} <- Analysis.create_slice_usage(slice.id, id, type),
          do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
   end
 
   defp mark_slice_usage(slice, %Description{item_id: id}, type, state) do
-    with {:ok, usage} <-
-           Analysis.create_slice_usage(slice.id, id, type)
-           |> Repo.insert_and_retry(),
+    with {:ok, usage} <- Analysis.create_slice_usage(slice.id, id, type),
          do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
   end
 
   defp add_details(occurrence, slice, state) do
-    case Analysis.create_occurrence_details(occurrence.id, slice)
-         |> Repo.insert_and_retry()
-         |> Analysis.explain_create_occurrence_detail_error() do
+    case Analysis.create_occurrence_details(occurrence.id, slice) do
       {:ok, detail} ->
         {:ok, detail, update_in(state.details, &append(&1, detail))}
 
@@ -149,8 +140,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp add_details_via_update(occurrence, slice, state) do
-    case Analysis.update_occurrence_details(occurrence, slice)
-         |> Repo.update_and_retry() do
+    case Analysis.update_occurrence_details(occurrence, slice) do
       {:ok, updated} ->
         {:ok, updated, update_in(state.details, &refresh(&1, updated))}
 
@@ -166,9 +156,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   defp do_description(slice, state) do
-    with {:ok, desc} <-
-           Analysis.create_description(state.id, slice, state.module)
-           |> Repo.insert_and_retry(),
+    with {:ok, desc} <- Analysis.create_description(state.id, slice, state.module),
          do: {:ok, desc, %{state | description: desc}}
   end
 
