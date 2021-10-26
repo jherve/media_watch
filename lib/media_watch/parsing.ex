@@ -1,6 +1,6 @@
 defmodule MediaWatch.Parsing do
   import Ecto.Query
-  alias MediaWatch.Repo
+  alias MediaWatch.{Repo, RecoverableMulti}
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   @parsed_preloads [:xml, :source]
 
@@ -23,8 +23,13 @@ defmodule MediaWatch.Parsing do
     with cs_list when is_list(cs_list) <- sliceable.slice(snap),
          do:
            cs_list
-           |> Enum.with_index(fn cs, idx -> {idx, cs} end)
-           |> Map.new()
-           |> Slice.insert_all()
+           |> Slice.into_multi()
+           |> RecoverableMulti.new(&wrap_result/1)
+           |> Repo.transaction_with_recovery()
   end
+
+  defp wrap_result(res), do: Slice.get_error_reason(res) |> maybe_ignore()
+
+  defp maybe_ignore({:unique, val}), do: {:ignore, val}
+  defp maybe_ignore(e_or_ok), do: e_or_ok
 end

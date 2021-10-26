@@ -3,6 +3,8 @@ defmodule MediaWatch.Repo do
     otp_app: :media_watch,
     adapter: Ecto.Adapters.SQLite3
 
+  alias Ecto.Multi
+  alias MediaWatch.RecoverableMulti
   alias __MODULE__
 
   require Logger
@@ -48,5 +50,39 @@ defmodule MediaWatch.Repo do
         _ ->
           reraise e, __STACKTRACE__
       end
+  end
+
+  @doc """
+  Run a transaction with automatic recovery of some errors.
+  """
+  @spec transaction_with_recovery(Multi.t()) ::
+          {:ok, ok_results :: [any()], ignored :: [Ecto.Changeset.t()]}
+          | {:error, ok_results :: [any()], ignored :: [Ecto.Changeset.t()],
+             errors :: [Ecto.Changeset.t()]}
+  def transaction_with_recovery(multi, failures_so_far \\ %{})
+
+  def transaction_with_recovery(multi = %Multi{}, failures_so_far),
+    do: transaction_with_recovery(multi, failures_so_far, multi |> RecoverableMulti.is_empty?())
+
+  def transaction_with_recovery(_, failures_so_far, true),
+    do: {:error, [], [], failures_so_far |> Map.values()}
+
+  def transaction_with_recovery(multi, failures_so_far, false) do
+    case multi |> Repo.transaction() |> RecoverableMulti.wrap_transaction_result() do
+      {:error, _, _, failures} ->
+        # In case of a rollback, the transaction is attempted again, with all
+        # the steps that led to an error removed.
+        failed_steps = failures |> Map.keys()
+
+        multi
+        |> RecoverableMulti.remove_steps(failed_steps)
+        |> transaction_with_recovery(failures_so_far |> Map.merge(failures))
+
+      {:ok, ok, ignored} ->
+        if failures_so_far |> Enum.empty?(),
+          do: {:ok, ok |> Map.values(), ignored |> Map.values()},
+          else:
+            {:error, ok |> Map.values(), ignored |> Map.values(), failures_so_far |> Map.values()}
+    end
   end
 end
