@@ -33,16 +33,16 @@ defmodule MediaWatch.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6.0"},
+      {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.1"},
       {:ecto_sql, "~> 3.4"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_live_view, "~> 0.16.4"},
-      {:mint, "~> 1.4.0"},
+      {:phoenix_live_view, "~> 0.17"},
+      {:mint, "~> 1.4"},
       {:floki, ">= 0.30.0"},
-      {:phoenix_html, "~> 3.0.4"},
+      {:phoenix_html, "~> 3.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_dashboard, "~> 0.5"},
+      {:phoenix_live_dashboard, "~> 0.6"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 0.5"},
       {:gettext, "~> 0.11"},
@@ -51,11 +51,11 @@ defmodule MediaWatch.MixProject do
       {:ecto_sqlite3, "~> 0.5.6"},
       {:finch, "~> 0.8"},
       {:elixir_feed_parser, "~> 2.1.0"},
-      {:timex, "~> 3.7.5"},
+      {:timex, "~> 3.7"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
-      {:crontab, "~> 1.1.0"}
+      {:crontab, "~> 1.1"}
     ]
   end
 
