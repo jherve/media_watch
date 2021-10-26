@@ -3,7 +3,6 @@ defmodule MediaWatch.Catalog do
   alias MediaWatch.Repo
   alias MediaWatch.Catalog.{Item, Source}
   @source_preloads [:rss_feed]
-  @preloads [:channels, :show, sources: @source_preloads]
   @config Application.compile_env(:media_watch, __MODULE__)
 
   def get_source(id), do: Source |> Repo.get(id) |> Repo.preload(@source_preloads)

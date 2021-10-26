@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{Repo, PubSub, Parsing, Analysis}
+  alias MediaWatch.{PubSub, Parsing, Analysis}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrence, Description}
