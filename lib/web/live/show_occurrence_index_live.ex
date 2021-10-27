@@ -1,4 +1,4 @@
-defmodule MediaWatchWeb.SliceIndexLive do
+defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
   alias MediaWatchWeb.Component.List
@@ -45,9 +45,9 @@ defmodule MediaWatchWeb.SliceIndexLive do
       socket
       |> assign(
         next_day_link:
-          Routes.slice_index_path(socket, :index, date: "#{socket.assigns.next_day}"),
+          Routes.show_occurrence_index_path(socket, :index, date: "#{socket.assigns.next_day}"),
         previous_day_link:
-          Routes.slice_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
+          Routes.show_occurrence_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
 
   defp set_occurrences(socket = %{assigns: %{day: day, next_day: next_day}}),

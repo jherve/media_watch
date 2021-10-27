@@ -14,7 +14,7 @@
       <nav role="navigation">
         <ul>
           <li><%= link "Emissions", to: Routes.item_index_path(@conn, :index) %></li>
-          <li><%= link "Par date", to: Routes.slice_index_path(@conn, :index) %></li>
+          <li><%= link "Par date", to: Routes.show_occurrence_index_path(@conn, :index) %></li>
         </ul>
       </nav>
     </header>
