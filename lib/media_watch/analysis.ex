@@ -41,7 +41,7 @@ defmodule MediaWatch.Analysis do
   def list_show_occurrences(item_id),
     do:
       from([so, _, i] in show_occurrence_query(),
-        preload: [:detail, show: [item: :description]],
+        preload: [:detail, :guests, show: [item: :description]],
         where: i.id == ^item_id,
         order_by: [desc: so.airing_time]
       )
@@ -50,7 +50,7 @@ defmodule MediaWatch.Analysis do
   @spec list_show_occurrences(DateTime.t(), DateTime.t()) :: [ShowOccurrence.t()]
   def list_show_occurrences(dt_start = %DateTime{}, dt_end = %DateTime{}) do
     from([so, s, i] in show_occurrence_query(),
-      preload: [:detail, show: [item: :description]],
+      preload: [:detail, :guests, show: [item: :description]],
       where: so.airing_time >= ^dt_start and so.airing_time <= ^dt_end,
       order_by: [i.id, desc: so.airing_time]
     )

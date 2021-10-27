@@ -1,7 +1,8 @@
 defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   use MediaWatchWeb, :live_component
-  alias MediaWatchWeb.Component.Card
+  alias MediaWatchWeb.Component.{List, Card}
   alias MediaWatchWeb.ItemView
+  alias MediaWatchWeb.PersonLiveComponent
   @truncated_length 100
 
   @impl true
@@ -17,6 +18,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
        |> assign(
          title: detail.title,
          description: detail.description,
+         guests: occ.guests,
          external_link_to_occurrence: detail.link,
          link_to_item: ItemView.detail_link(occ.show_id),
          airing_time: occ.airing_time
@@ -36,7 +38,8 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
           <:header><%= @title %></:header>
 
           <:content>
-            <div class="description"><%= render_description(assigns) %></div>
+            <p><%= render_description(assigns) %></p>
+            <%= render_guests(assigns) %>
             <%= if @display_link_to_item, do: live_redirect("Toutes les émissions", to: @link_to_item) %>
             <%= if @external_link_to_occurrence, do: link("Lien vers l'émission", to: @external_link_to_occurrence) %>
           </:content>
@@ -46,6 +49,16 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
           <:footer><%= @airing_time |> Timex.to_date %></:footer>
         </Card.card>
       </div>
+    """
+
+  defp render_guests(assigns = %{guests: []}),
+    do: ~H|<div class="guests">Pas d'invités detectés</div>|
+
+  defp render_guests(assigns),
+    do: ~H"""
+    <List.ul let={guest} list={@guests} class="guests">
+      <.live_component module={PersonLiveComponent} id={{@occurrence.id, guest.id}} person={guest} />
+    </List.ul>
     """
 
   defp render_description(assigns = %{truncate_description: true}),
