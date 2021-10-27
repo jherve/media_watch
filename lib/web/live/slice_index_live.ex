@@ -40,16 +40,14 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
       <List.ul let={item} list={@items} class="card occurrence">
         <% [occurrence] = item.show.occurrences %>
-        <Card.with_image let={block} class="occurrence">
-          <%= case block do %>
-            <% :header -> %><%= occurrence.detail.title %>
-            <% :content -> %>
-              <h1><%= link to: Item.detail_link(item) do %><%= Item.title(item) %><% end %></h1>
-              <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
-            <% :image -> %><img src={(item.description || %{image: %{}}).image["url"]}>
-            <% _ -> %>
-          <% end %>
-        </Card.with_image>
+        <Card.card class="occurrence">
+          <:header><%= occurrence.detail.title %></:header>
+          <:content>
+            <h1><%= link to: Item.detail_link(item) do %><%= Item.title(item) %><% end %></h1>
+            <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
+          </:content>
+          <:image><img src={(item.description || %{image: %{}}).image["url"]}></:image>
+        </Card.card>
       </List.ul>
     """
 

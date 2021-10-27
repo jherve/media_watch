@@ -10,14 +10,15 @@ defmodule MediaWatchWeb.Component.ShowOccurrence do
 
   def as_card(assigns),
     do: ~H"""
-      <Card.only_text let={block} class="occurrence">
-        <%= case block do %>
-          <% :header -> %><%= @occurrence.detail.title %>
-          <% :content -> %>
-            <div class="description"><%= @occurrence.detail.description %></div>
-            <.link_ {assigns} />
-          <% :footer -> %><%= @occurrence.airing_time |> Timex.to_date %>
-        <% end %>
-      </Card.only_text>
+      <Card.card class="occurrence">
+        <:header><%= @occurrence.detail.title %></:header>
+
+        <:content>
+          <div class="description"><%= @occurrence.detail.description %></div>
+          <.link_ {assigns} />
+        </:content>
+
+        <:footer><%= @occurrence.airing_time |> Timex.to_date %></:footer>
+      </Card.card>
     """
 end

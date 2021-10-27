@@ -20,7 +20,7 @@ defmodule MediaWatchWeb.Component.Description do
 
   def link(assigns) when has_not_nil_description(assigns),
     do: ~H"""
-      <%= link to: @description.link do %><%= render_block(@inner_block) %><% end %>
+      <%= link to: @description.link do %><%= render_slot(@inner_block) %><% end %>
     """
 
   def link(assigns) when has_description(assigns), do: ~H|Pas de lien disponible|

@@ -12,14 +12,11 @@ defmodule MediaWatchWeb.Component.Item do
 
   def as_card(assigns),
     do: ~H"""
-      <Card.with_image let={block} class="item">
-        <%= case block do %>
-          <% :header -> %><%= title(@item) %> (<%= channels(@item) %>)
-          <% :content -> %><Description.short description={@item.description} />
-          <% :image -> %><Description.image description={@item.description} />
-          <% _ -> %>
-        <% end %>
-      </Card.with_image>
+      <Card.card class="item">
+        <:header><%= title(@item) %> (<%= channels(@item) %>)</:header>
+        <:content><Description.short description={@item.description} /></:content>
+        <:image><Description.image description={@item.description} /></:image>
+      </Card.card>
     """
 
   def as_banner(assigns),

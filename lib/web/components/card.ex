@@ -1,27 +1,23 @@
 defmodule MediaWatchWeb.Component.Card do
   use Phoenix.Component
 
-  def with_image(assigns) do
-    assigns = assigns |> assign(:class, "card " <> (assigns |> Map.get(:class, "")))
+  def card(assigns) do
+    has_image? = assigns |> Map.has_key?(:image)
+    base_class = unless has_image?, do: "card card-text ", else: "card "
+
+    assigns =
+      assigns
+      |> assign(:has_image?, has_image?)
+      |> assign(:class, base_class <> (assigns |> Map.get(:class, "")))
+      |> assign_new(:footer, fn -> [] end)
+      |> assign_new(:image, fn -> [] end)
 
     ~H"""
       <article class={@class}>
-        <h1><%= render_block(@inner_block, :header) %></h1>
-        <div class="content"><%= render_block(@inner_block, :content) %></div>
-        <%= render_block(@inner_block, :image) %>
-        <div class="footer"><%= render_block(@inner_block, :footer) %></div>
-      </article>
-    """
-  end
-
-  def only_text(assigns) do
-    assigns = assigns |> assign(:class, "card card-text " <> (assigns |> Map.get(:class, "")))
-
-    ~H"""
-      <article class={@class}>
-        <h1><%= render_block(@inner_block, :header) %></h1>
-        <div class="content"><%= render_block(@inner_block, :content) %></div>
-        <div class="footer"><%= render_block(@inner_block, :footer) %></div>
+        <h1><%= render_slot(@header) %></h1>
+        <div class="content"><%= render_slot(@content) %></div>
+        <%= if @has_image? do %><%= render_slot(@image) %><% end %>
+        <div class="footer"><%= render_slot(@footer) %></div>
       </article>
     """
   end

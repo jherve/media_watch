@@ -9,7 +9,7 @@ defmodule MediaWatchWeb.Component.List do
     ~H"""
       <ul class={@class}>
         <%= for entry <- @list do %>
-          <li class={@class}><%= render_block(@inner_block, entry) %></li>
+          <li class={@class}><%= render_slot(@inner_block, entry) %></li>
         <% end %>
       </ul>
     """
