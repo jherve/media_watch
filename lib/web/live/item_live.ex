@@ -1,7 +1,9 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Snapshots, Analysis}
-  alias MediaWatchWeb.Component.{Item, List, ShowOccurrence}
+  alias MediaWatchWeb.Component.List
+  alias MediaWatchWeb.ShowOccurrenceLiveComponent
+  alias MediaWatchWeb.{ItemView, ItemDescriptionView}
 
   @impl true
   def mount(_params = %{"id" => id}, _session, socket) do
@@ -39,12 +41,26 @@ defmodule MediaWatchWeb.ItemLive do
   @impl true
   def render(assigns),
     do: ~H"""
-      <Item.as_banner item={@item} id="item-banner" />
+      <%= as_banner(assigns) %>
       <button phx-click="trigger_snapshots">Lancer les snapshots</button>
 
       <h2>Emissions</h2>
 
       <%= render_occurrences(assigns) %>
+    """
+
+  defp as_banner(assigns),
+    do: ~H"""
+      <div id="item-banner" class="item banner">
+        <h1><%= ItemView.title(@item) %> (<%= ItemView.channels(@item) %>)</h1>
+        <p><%= ItemDescriptionView.description(@item.description) %></p>
+        <%= if url = ItemDescriptionView.image_url(@item.description) do %><img src={url}/><% end %>
+        <%= if link_ = ItemDescriptionView.link(@item.description) do %>
+          <%= link "Lien vers l'émission", to: link_ %>
+        <% else %>
+          Pas de lien disponible
+        <% end %>
+      </div>
     """
 
   defp render_occurrences(assigns = %{occurrences: []}),
@@ -53,7 +69,7 @@ defmodule MediaWatchWeb.ItemLive do
   defp render_occurrences(assigns),
     do: ~H"""
       <List.ul let={occ} list={@occurrences} class="occurrence card">
-        <ShowOccurrence.as_card occurrence={occ} />
+        <.live_component module={ShowOccurrenceLiveComponent} id={occ.id} occurrence={occ} />
       </List.ul>
     """
 end

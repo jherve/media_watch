@@ -1,9 +1,10 @@
 defmodule MediaWatchWeb.SliceIndexLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
-  alias MediaWatchWeb.Component.{Item, List, Card}
+  alias MediaWatchWeb.Component.List
+  alias MediaWatchWeb.ShowOccurrenceLiveComponent
+  alias MediaWatchWeb.ItemDescriptionView
   @one_day Timex.Duration.from_days(1)
-  @truncated_length 100
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,18 +22,6 @@ defmodule MediaWatchWeb.SliceIndexLive do
     do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_items()}
 
   @impl true
-  def handle_event("toggle_truncate", %{"occurrence" => id}, socket) do
-    id = String.to_integer(id)
-
-    fun =
-      if MapSet.member?(socket.assigns.non_truncated_descriptions, id),
-        do: &(&1 |> MapSet.delete(id)),
-        else: &(&1 |> MapSet.put(id))
-
-    {:noreply, socket |> update(:non_truncated_descriptions, fun)}
-  end
-
-  @impl true
   def render(assigns),
     do: ~H"""
       <h1>Liste des diffusions le <%= @day %></h1>
@@ -40,14 +29,11 @@ defmodule MediaWatchWeb.SliceIndexLive do
 
       <List.ul let={item} list={@items} class="card occurrence">
         <% [occurrence] = item.show.occurrences %>
-        <Card.card class="occurrence">
-          <:header><%= occurrence.detail.title %></:header>
-          <:content>
-            <h1><%= link to: Item.detail_link(item) do %><%= Item.title(item) %><% end %></h1>
-            <p phx-click="toggle_truncate" phx-value-occurrence={occurrence.id}><%= maybe_truncate_description(assigns, occurrence) %></p>
-          </:content>
-          <:image><img src={(item.description || %{image: %{}}).image["url"]}></:image>
-        </Card.card>
+        <.live_component module={ShowOccurrenceLiveComponent}
+                         id={occurrence.id}
+                         occurrence={occurrence}
+                         image_url={ItemDescriptionView.image_url(item.description)}
+                         display_link_to_item={true}/>
       </List.ul>
     """
 
@@ -73,19 +59,5 @@ defmodule MediaWatchWeb.SliceIndexLive do
   defp set_items(socket = %{assigns: %{day: day, next_day: next_day}}),
     do:
       socket
-      |> assign(
-        items: Analysis.get_analyzed_item_by_date(day, next_day),
-        non_truncated_descriptions: MapSet.new()
-      )
-
-  defp maybe_truncate_description(assigns, occurrence) do
-    if MapSet.member?(assigns.non_truncated_descriptions, occurrence.id),
-      do: ~H"<%= occurrence.detail.description %>",
-      else: ~H"<%= occurrence.detail.description |> truncate() %>"
-  end
-
-  defp truncate(string, max \\ @truncated_length) do
-    length = string |> String.length()
-    if length > max, do: "#{string |> String.slice(0..100)}...", else: string
-  end
+      |> assign(items: Analysis.get_analyzed_item_by_date(day, next_day))
 end
