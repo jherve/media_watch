@@ -5,7 +5,7 @@ defmodule MediaWatchWeb.PersonLiveComponent do
 
   def render(assigns),
     do: ~H"""
-      <div>
+      <div class="person">
         <%= @person.label %>
       </div>
     """

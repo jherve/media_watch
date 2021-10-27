@@ -38,8 +38,8 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
           <:header><%= @title %></:header>
 
           <:content>
-            <p><%= render_description(assigns) %></p>
             <%= render_guests(assigns) %>
+            <p><%= render_description(assigns) %></p>
             <%= if @display_link_to_item, do: live_redirect("Toutes les émissions", to: @link_to_item) %>
             <%= if @external_link_to_occurrence, do: link("Lien vers l'émission", to: @external_link_to_occurrence) %>
           </:content>

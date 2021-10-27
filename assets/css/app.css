@@ -95,6 +95,7 @@
 @import "card.css";
 @import "item.css";
 @import "occurrence.css";
+@import "person.css";
 
 main > #item-banner {
   margin-bottom: 2em;

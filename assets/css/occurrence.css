@@ -2,6 +2,20 @@ article.card.occurrence .footer {
   justify-self: end;
 }
 
+article.card.occurrence .content ul.guests {
+  list-style: none;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+article.card.occurrence .content ul.guests > li {
+  background: #ccc;
+}
+
+article.card.occurrence .content ul.guests > li ~ li {
+  margin-right: 0.5em;
+}
+
 li.occurrence {
   background: #eee;
 }
