@@ -37,13 +37,23 @@ defmodule MediaWatch.Analysis do
       )
       |> Repo.one()
 
-  @spec get_analyzed_item_by_date(DateTime.t(), DateTime.t()) :: [Item.t()]
-  def get_analyzed_item_by_date(date_start, date_end) do
+  @spec list_show_occurrences(integer()) :: [ShowOccurrence.t()]
+  def list_show_occurrences(item_id),
+    do:
+      from([so, _, i] in show_occurrence_query(),
+        preload: [:detail, show: [item: :description]],
+        where: i.id == ^item_id,
+        order_by: [desc: so.airing_time]
+      )
+      |> Repo.all()
+
+  @spec list_show_occurrences(Date.t(), Date.t()) :: [ShowOccurrence.t()]
+  def list_show_occurrences(date_start = %Date{}, date_end = %Date{}) do
     date_start = date_start |> Timex.to_datetime()
     date_end = date_end |> Timex.to_datetime()
 
-    from([i, s, so] in item_query(),
-      preload: [:channels, :description, show: [occurrences: :detail]],
+    from([so, s, i] in show_occurrence_query(),
+      preload: [:detail, show: [item: :description]],
       where: so.airing_time >= ^date_start and so.airing_time <= ^date_end,
       order_by: [i.id, desc: so.airing_time]
     )
@@ -58,6 +68,16 @@ defmodule MediaWatch.Analysis do
         left_join: so in ShowOccurrence,
         on: so.show_id == s.id,
         preload: [show: {s, occurrences: so}]
+      )
+
+  defp show_occurrence_query(),
+    do:
+      from(so in ShowOccurrence,
+        join: s in Show,
+        on: so.show_id == s.id,
+        join: i in Item,
+        on: s.id == i.id,
+        preload: [show: {s, item: i}]
       )
 
   @spec get_description(integer()) :: Description.t() | nil

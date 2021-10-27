@@ -7,19 +7,14 @@ defmodule MediaWatchWeb.SliceIndexLive do
   @one_day Timex.Duration.from_days(1)
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, socket |> assign(items: [])}
-  end
-
-  @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
     case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
-      {:ok, date} -> {:noreply, socket |> set_dates(date) |> set_dates_url() |> set_items()}
+      {:ok, date} -> {:noreply, socket |> set_dates(date) |> set_dates_url() |> set_occurrences()}
     end
   end
 
   def handle_params(_params, _, socket),
-    do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_items()}
+    do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_occurrences()}
 
   @impl true
   def render(assigns),
@@ -27,12 +22,11 @@ defmodule MediaWatchWeb.SliceIndexLive do
       <h1>Liste des diffusions le <%= @day %></h1>
       <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
 
-      <List.ul let={item} list={@items} class="card occurrence">
-        <% [occurrence] = item.show.occurrences %>
+      <List.ul let={occurrence} list={@occurrences} class="card occurrence">
         <.live_component module={ShowOccurrenceLiveComponent}
                          id={occurrence.id}
                          occurrence={occurrence}
-                         image_url={ItemDescriptionView.image_url(item.description)}
+                         image_url={ItemDescriptionView.image_url(occurrence.show.item.description)}
                          display_link_to_item={true}/>
       </List.ul>
     """
@@ -56,8 +50,8 @@ defmodule MediaWatchWeb.SliceIndexLive do
           Routes.slice_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
 
-  defp set_items(socket = %{assigns: %{day: day, next_day: next_day}}),
+  defp set_occurrences(socket = %{assigns: %{day: day, next_day: next_day}}),
     do:
       socket
-      |> assign(items: Analysis.get_analyzed_item_by_date(day, next_day))
+      |> assign(occurrences: Analysis.list_show_occurrences(day, next_day))
 end

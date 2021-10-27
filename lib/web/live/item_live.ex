@@ -12,7 +12,11 @@ defmodule MediaWatchWeb.ItemLive do
 
     {:ok,
      socket
-     |> assign(item: item, description: item.description, occurrences: item.show.occurrences)}
+     |> assign(
+       item: item,
+       description: item.description,
+       occurrences: Analysis.list_show_occurrences(id)
+     )}
   end
 
   @impl true
