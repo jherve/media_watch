@@ -23,7 +23,7 @@ defmodule MediaWatch.Analysis do
     do:
       from([i, s, so] in item_query(),
         preload: [:channels, :description],
-        order_by: [desc: so.airing_time]
+        order_by: i.id
       )
       |> Repo.all()
 
