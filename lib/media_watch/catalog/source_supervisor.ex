@@ -1,5 +1,6 @@
 defmodule MediaWatch.Catalog.SourceSupervisor do
   use DynamicSupervisor
+  require Logger
   alias MediaWatch.Catalog.SourceWorker
 
   def start_link(init_arg) do
@@ -7,7 +8,18 @@ defmodule MediaWatch.Catalog.SourceSupervisor do
   end
 
   def start(source_id) do
-    DynamicSupervisor.start_child(__MODULE__, {SourceWorker, source_id})
+    case DynamicSupervisor.start_child(__MODULE__, {SourceWorker, source_id}) do
+      ok = {:ok, _} ->
+        ok
+
+      e = {:error, {:already_started, _}} ->
+        Logger.info("SourceWorker #{source_id} is already started")
+        e
+
+      e = {:error, reason} ->
+        Logger.warning("Could not start SourceWorker #{source_id} because : #{inspect(reason)}")
+        e
+    end
   end
 
   @impl true
