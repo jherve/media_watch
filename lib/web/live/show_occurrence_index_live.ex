@@ -1,20 +1,29 @@
 defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   use MediaWatchWeb, :live_view
+  alias Timex.Timezone
   alias MediaWatch.Analysis
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.ItemDescriptionView
   @one_day Timex.Duration.from_days(1)
+  @timezone "Europe/Paris" |> Timezone.get()
 
   @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
     case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
-      {:ok, date} -> {:noreply, socket |> set_dates(date) |> set_dates_url() |> set_occurrences()}
+      {:ok, date} ->
+        {:noreply,
+         socket
+         |> set_dates(date |> Timex.to_date())
+         |> set_datetimes()
+         |> set_dates_url()
+         |> set_occurrences()}
     end
   end
 
   def handle_params(_params, _, socket),
-    do: {:noreply, socket |> set_dates() |> set_dates_url() |> set_occurrences()}
+    do:
+      {:noreply, socket |> set_dates() |> set_datetimes() |> set_dates_url() |> set_occurrences()}
 
   @impl true
   def render(assigns),
@@ -35,10 +44,20 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
     do:
       socket
       |> assign(
-        day: date |> Timex.to_date(),
+        day: date,
         next_day: date |> Timex.add(@one_day) |> Timex.to_date(),
         previous_day: date |> Timex.subtract(@one_day) |> Timex.to_date()
       )
+
+  defp set_datetimes(socket) do
+    day_as_dt = socket.assigns.day |> Timex.to_datetime(@timezone)
+
+    socket
+    |> assign(
+      start_time: day_as_dt |> Timezone.beginning_of_day(),
+      end_time: day_as_dt |> Timezone.end_of_day()
+    )
+  end
 
   defp set_dates_url(socket),
     do:
@@ -50,8 +69,8 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
           Routes.show_occurrence_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
 
-  defp set_occurrences(socket = %{assigns: %{day: day, next_day: next_day}}),
+  defp set_occurrences(socket = %{assigns: assigns}),
     do:
       socket
-      |> assign(occurrences: Analysis.list_show_occurrences(day, next_day))
+      |> assign(occurrences: Analysis.list_show_occurrences(assigns.start_time, assigns.end_time))
 end

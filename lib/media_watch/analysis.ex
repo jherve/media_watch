@@ -47,14 +47,11 @@ defmodule MediaWatch.Analysis do
       )
       |> Repo.all()
 
-  @spec list_show_occurrences(Date.t(), Date.t()) :: [ShowOccurrence.t()]
-  def list_show_occurrences(date_start = %Date{}, date_end = %Date{}) do
-    date_start = date_start |> Timex.to_datetime()
-    date_end = date_end |> Timex.to_datetime()
-
+  @spec list_show_occurrences(DateTime.t(), DateTime.t()) :: [ShowOccurrence.t()]
+  def list_show_occurrences(dt_start = %DateTime{}, dt_end = %DateTime{}) do
     from([so, s, i] in show_occurrence_query(),
       preload: [:detail, show: [item: :description]],
-      where: so.airing_time >= ^date_start and so.airing_time <= ^date_end,
+      where: so.airing_time >= ^dt_start and so.airing_time <= ^dt_end,
       order_by: [i.id, desc: so.airing_time]
     )
     |> Repo.all()
