@@ -2,7 +2,7 @@ defmodule MediaWatch.Snapshots do
   import Ecto.Query
   alias MediaWatch.{Catalog, Repo}
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Catalog.ItemWorker
+  alias MediaWatch.Catalog.{ItemWorker, Source}
 
   def get_snapshots(source_id),
     do:
@@ -13,10 +13,10 @@ defmodule MediaWatch.Snapshots do
 
   def do_snapshots(module), do: ItemWorker.do_snapshots(module)
 
-  @spec make_snapshot_and_insert(MediaWatch.Catalog.Source.t(), atom()) ::
+  @spec make_snapshot_and_insert(MediaWatch.Catalog.Source.t()) ::
           {:ok, Snapshot.t()} | {:error, Ecto.Changeset.t()}
-  def make_snapshot_and_insert(source, snapshotable) do
-    with {:ok, cs} <- snapshotable.make_snapshot(source),
+  def make_snapshot_and_insert(source) do
+    with {:ok, cs} <- Source.make_snapshot(source),
          do: cs |> Repo.insert_and_retry()
   end
 end

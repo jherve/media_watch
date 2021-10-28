@@ -134,7 +134,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   defp do_snapshot(module, source, nb_retries) do
-    case Snapshots.make_snapshot_and_insert(source, module) do
+    case Snapshots.make_snapshot_and_insert(source) do
       ok = {:ok, _} ->
         ok
 
