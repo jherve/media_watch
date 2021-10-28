@@ -73,7 +73,7 @@ defmodule MediaWatchWeb.ItemLive do
   defp render_occurrences(assigns),
     do: ~H"""
       <List.ul let={occ} list={@occurrences} class="occurrence card">
-        <.live_component module={ShowOccurrenceLiveComponent} id={occ.id} occurrence={occ} />
+        <.live_component module={ShowOccurrenceLiveComponent} id={occ.id} occurrence={occ} display_link_to_date={true} />
       </List.ul>
     """
 end

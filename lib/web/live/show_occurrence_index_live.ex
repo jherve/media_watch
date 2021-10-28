@@ -54,7 +54,8 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
                          id={occurrence.id}
                          occurrence={occurrence}
                          image_url={ItemDescriptionView.image_url(occurrence.show.item.description)}
-                         display_link_to_item={true}/>
+                         display_link_to_item={true}
+                         display_link_to_date={true}/>
       </List.ul>
     """
 

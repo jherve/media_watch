@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   use MediaWatchWeb, :live_component
   alias MediaWatchWeb.Component.{List, Card}
-  alias MediaWatchWeb.ItemView
+  alias MediaWatchWeb.{ItemView, ShowOccurrenceView}
   alias MediaWatchWeb.PersonLiveComponent
   @truncated_length 100
 
@@ -21,10 +21,12 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
          guests: occ.guests,
          external_link_to_occurrence: detail.link,
          link_to_item: ItemView.detail_link(occ.show_id),
-         airing_time: occ.airing_time
+         airing_time: occ.airing_time,
+         airing_day: occ.airing_time |> Timex.to_date()
        )
        |> assign_new(:image_url, fn -> nil end)
-       |> assign_new(:display_link_to_item, fn -> false end)}
+       |> assign_new(:display_link_to_item, fn -> false end)
+       |> assign_new(:display_link_to_date, fn -> false end)}
 
   @impl true
   def handle_event("toggle_truncate", _, socket),
@@ -46,7 +48,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
 
           <:image><%= if @image_url do %><img src={@image_url}><% end %></:image>
 
-          <:footer><%= @airing_time |> Timex.to_date %></:footer>
+          <:footer><%= render_airing_time(assigns) %></:footer>
         </Card.card>
       </div>
     """
@@ -65,6 +67,11 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
     do: ~H"<%= truncate(@description) %>"
 
   defp render_description(assigns = %{truncate_description: false}), do: ~H"<%= @description %>"
+
+  defp render_airing_time(assigns = %{display_link_to_date: true}),
+    do: ~H|<%= live_redirect @airing_day, to: ShowOccurrenceView.link_by_date(@airing_day) %>|
+
+  defp render_airing_time(assigns), do: ~H|<%= @airing_day %>|
 
   defp truncate(string, max \\ @truncated_length) do
     length = string |> String.length()
