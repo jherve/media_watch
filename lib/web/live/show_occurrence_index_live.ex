@@ -14,7 +14,8 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       {:ok, date} ->
         {:noreply,
          socket
-         |> set_dates(date |> Timex.to_date())
+         |> assign(day: date |> Timex.to_date())
+         |> set_dates()
          |> set_datetimes()
          |> set_dates_url()
          |> set_occurrences()}
@@ -23,7 +24,13 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
 
   def handle_params(_params, _, socket),
     do:
-      {:noreply, socket |> set_dates() |> set_datetimes() |> set_dates_url() |> set_occurrences()}
+      {:noreply,
+       socket
+       |> assign(day: Timex.today())
+       |> set_dates()
+       |> set_datetimes()
+       |> set_dates_url()
+       |> set_occurrences()}
 
   @impl true
   def render(assigns),
@@ -40,13 +47,12 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       </List.ul>
     """
 
-  defp set_dates(socket, date \\ Timex.today()),
+  defp set_dates(socket = %{assigns: %{day: day}}),
     do:
       socket
       |> assign(
-        day: date,
-        next_day: date |> Timex.add(@one_day) |> Timex.to_date(),
-        previous_day: date |> Timex.subtract(@one_day) |> Timex.to_date()
+        next_day: day |> Timex.add(@one_day) |> Timex.to_date(),
+        previous_day: day |> Timex.subtract(@one_day) |> Timex.to_date()
       )
 
   defp set_datetimes(socket) do
