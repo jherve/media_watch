@@ -1,7 +1,7 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
   alias MediaWatch.{Repo, PubSub}
-  alias MediaWatch.Catalog.{Item, Show}
+  alias MediaWatch.Catalog.{Item, Show, Person}
   alias MediaWatch.Parsing.Slice
 
   alias MediaWatch.Analysis.{
@@ -36,6 +36,19 @@ defmodule MediaWatch.Analysis do
         order_by: [desc: so.airing_time]
       )
       |> Repo.one()
+
+  def list_show_occurrences(person_id: person_id) do
+    from([so, s, item] in show_occurrence_query(),
+      join: i in Invitation,
+      on: i.show_occurrence_id == so.id,
+      join: p in Person,
+      on: p.id == i.person_id,
+      preload: [:detail, guests: p, show: [item: :description]],
+      where: p.id == ^person_id,
+      order_by: [desc: so.airing_time]
+    )
+    |> Repo.all()
+  end
 
   @spec list_show_occurrences(integer()) :: [ShowOccurrence.t()]
   def list_show_occurrences(item_id),

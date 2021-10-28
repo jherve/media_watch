@@ -1,42 +1,53 @@
 defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   use MediaWatchWeb, :live_view
   alias Timex.Timezone
-  alias MediaWatch.Analysis
+  alias MediaWatch.{Catalog, Analysis}
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.ItemDescriptionView
   @one_day Timex.Duration.from_days(1)
   @timezone "Europe/Paris" |> Timezone.get()
+  @reset_by_person person: nil, person_id: nil
+  @reset_by_date start_time: nil, end_time: nil, next_day: nil, previous_day: nil
 
   @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
     case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
       {:ok, date} ->
-        {:noreply,
-         socket
-         |> assign(day: date |> Timex.to_date())
-         |> set_dates()
-         |> set_datetimes()
-         |> set_dates_url()
-         |> set_occurrences()}
+        {:noreply, socket |> switch_mode(day: date |> Timex.to_date()) |> set_occurrences()}
     end
   end
 
+  def handle_params(_params = %{"person_id" => person_id}, _, socket) do
+    {:noreply, socket |> switch_mode(person_id: person_id) |> set_occurrences()}
+  end
+
   def handle_params(_params, _, socket),
+    do: {:noreply, socket |> switch_mode(day: Timex.today()) |> set_occurrences()}
+
+  defp switch_mode(socket, opts = [day: _]),
     do:
-      {:noreply,
-       socket
-       |> assign(day: Timex.today())
-       |> set_dates()
-       |> set_datetimes()
-       |> set_dates_url()
-       |> set_occurrences()}
+      socket
+      |> assign(mode: :by_date)
+      |> assign(opts)
+      |> assign(@reset_by_person)
+      |> set_dates()
+      |> set_datetimes()
+      |> set_dates_url()
+
+  defp switch_mode(socket, opts = [person_id: person_id]),
+    do:
+      socket
+      |> assign(mode: :by_person)
+      |> assign(opts)
+      |> assign(@reset_by_date)
+      |> assign(person: Catalog.get_person(person_id))
 
   @impl true
   def render(assigns),
     do: ~H"""
-      <h1>Liste des diffusions le <%= @day %></h1>
-      <%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>
+      <h1><%= render_title(assigns) %></h1>
+      <%= render_nav_links(assigns) %>
 
       <List.ul let={occurrence} list={@occurrences} class="card occurrence">
         <.live_component module={ShowOccurrenceLiveComponent}
@@ -46,6 +57,17 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
                          display_link_to_item={true}/>
       </List.ul>
     """
+
+  defp render_title(assigns = %{mode: :by_date}), do: ~H|Liste des diffusions le <%= @day %>|
+
+  defp render_title(assigns = %{mode: :by_person}),
+    do: ~H|Liste des apparitions de <%= @person.label %> (<%= @person.description %>)|
+
+  defp render_nav_links(assigns = %{mode: :by_date}),
+    do:
+      ~H|<%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>|
+
+  defp render_nav_links(assigns = %{mode: :by_person}), do: []
 
   defp set_dates(socket = %{assigns: %{day: day}}),
     do:
@@ -75,8 +97,13 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
           Routes.show_occurrence_index_path(socket, :index, date: "#{socket.assigns.previous_day}")
       )
 
-  defp set_occurrences(socket = %{assigns: assigns}),
+  defp set_occurrences(socket = %{assigns: assigns = %{mode: :by_date}}),
     do:
       socket
       |> assign(occurrences: Analysis.list_show_occurrences(assigns.start_time, assigns.end_time))
+
+  defp set_occurrences(socket = %{assigns: assigns = %{mode: :by_person}}),
+    do:
+      socket
+      |> assign(occurrences: Analysis.list_show_occurrences(person_id: assigns.person_id))
 end

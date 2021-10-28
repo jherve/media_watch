@@ -57,7 +57,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   defp render_guests(assigns),
     do: ~H"""
     <List.ul let={guest} list={@guests} class="guests">
-      <.live_component module={PersonLiveComponent} id={{@occurrence.id, guest.id}} person={guest} />
+      <.live_component module={PersonLiveComponent} id={{@occurrence.id, guest.id}} person={guest} wrap_in_link={true} />
     </List.ul>
     """
 

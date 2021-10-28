@@ -1,11 +1,15 @@
 defmodule MediaWatch.Catalog do
   import Ecto.Query
   alias MediaWatch.Repo
-  alias MediaWatch.Catalog.{Item, Source}
+  alias MediaWatch.Catalog.{Item, Source, Person}
   @source_preloads [:rss_feed]
   @config Application.compile_env(:media_watch, __MODULE__)
 
   def get_source(id), do: Source |> Repo.get(id) |> Repo.preload(@source_preloads)
+
+  def get_person(id), do: Person |> Repo.get(id)
+
+  def list_persons(), do: from(p in Person, order_by: p.label) |> Repo.all()
 
   def try_to_insert_all_channels(),
     do: all_channel_modules() |> Enum.each(& &1.insert())
