@@ -3,6 +3,7 @@ defmodule MediaWatchWeb.ItemLiveComponent do
   alias MediaWatchWeb.Component.Card
   alias MediaWatchWeb.{ItemView, ItemDescriptionView}
 
+  @impl true
   def render(assigns),
     do: ~H"""
       <div>

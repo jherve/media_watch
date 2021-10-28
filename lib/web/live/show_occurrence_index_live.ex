@@ -69,7 +69,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
     do:
       ~H[<%= live_patch @previous_day |> DateTime.to_string(), to: @previous_day_link %> / <%= live_patch @next_day |> DateTime.to_string(), to: @next_day_link %>]
 
-  defp render_nav_links(assigns = %{mode: :by_person}), do: []
+  defp render_nav_links(%{mode: :by_person}), do: []
 
   defp set_dates(socket = %{assigns: %{day: day}}),
     do:

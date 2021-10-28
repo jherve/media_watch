@@ -3,7 +3,6 @@ defmodule MediaWatchWeb.PersonIndexLive do
   alias MediaWatch.Catalog
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.PersonLiveComponent
-  alias MediaWatchWeb.PersonView
 
   @impl true
   def mount(_params, _session, socket) do

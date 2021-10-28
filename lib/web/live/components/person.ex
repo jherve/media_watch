@@ -6,6 +6,7 @@ defmodule MediaWatchWeb.PersonLiveComponent do
   def update(assigns, socket),
     do: {:ok, socket |> assign(assigns) |> assign_new(:wrap_in_link, fn -> false end)}
 
+  @impl true
   def render(assigns = %{wrap_in_link: true}),
     do: ~H"""
       <div class="person">
