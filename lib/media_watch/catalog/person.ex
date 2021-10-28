@@ -3,8 +3,8 @@ defmodule MediaWatch.Catalog.Person do
   import Ecto.Changeset
   alias MediaWatch.Wikidata
   alias __MODULE__, as: Person
-  @required_fields []
-  @optional_fields [:wikidata_qid, :label, :description]
+  @required_fields [:label]
+  @optional_fields [:wikidata_qid, :description]
   @all_fields @required_fields ++ @optional_fields
 
   schema "persons" do
@@ -18,6 +18,7 @@ defmodule MediaWatch.Catalog.Person do
     person
     |> cast(attrs, @all_fields)
     |> update_from_wikidata()
+    |> validate_required(@required_fields)
     |> unique_constraint([:wikidata_qid])
     |> unique_constraint([:label])
   end

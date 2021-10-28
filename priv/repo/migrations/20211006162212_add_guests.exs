@@ -5,7 +5,7 @@ defmodule MediaWatch.Repo.Migrations.AddGuests do
     create table(:persons) do
       add :wikidata_qid, :id
 
-      add :label, :string
+      add :label, :string, null: false
       add :description, :string
     end
 
