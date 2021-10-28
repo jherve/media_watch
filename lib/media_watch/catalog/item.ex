@@ -52,7 +52,6 @@ defmodule MediaWatch.Catalog.Item do
   defmacro __using__(_opts) do
     quote do
       @behaviour MediaWatch.Catalog.Catalogable
-      @behaviour MediaWatch.Parsing.Parsable
       @behaviour MediaWatch.Parsing.Sliceable
       @behaviour MediaWatch.Analysis.Analyzable
       @behaviour MediaWatch.Analysis.Describable
@@ -106,9 +105,6 @@ defmodule MediaWatch.Catalog.Item do
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
         |> Repo.one()
       end
-
-      @impl MediaWatch.Parsing.Parsable
-      defdelegate parse(source), to: Snapshot
 
       @impl MediaWatch.Parsing.Sliceable
       def slice(parsed), do: ParsedSnapshot.slice(parsed, __MODULE__)
