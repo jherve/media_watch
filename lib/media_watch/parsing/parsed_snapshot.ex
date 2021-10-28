@@ -37,7 +37,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
   end
 
-  def slice(parsed, module) do
+  def slice(parsed = %ParsedSnapshot{snapshot: %{type: :xml}}, module) do
     entries = get_entries(parsed) |> Enum.map(&module.into_slice_cs(%{rss_entry: &1}, parsed))
 
     description =
