@@ -4,4 +4,7 @@ defmodule MediaWatch.DateTime do
 
   def max(), do: @max
   def min(), do: @min
+
+  def to_string(date = %Date{}, locale \\ "fr"),
+    do: MediaWatch.Cldr.Date.to_string!(date, format: "EEEE d MMMM y", locale: locale)
 end

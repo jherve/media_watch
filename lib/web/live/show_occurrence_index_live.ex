@@ -1,12 +1,12 @@
 defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   use MediaWatchWeb, :live_view
   alias Timex.Timezone
-  alias MediaWatch.{Catalog, Analysis}
+  alias MediaWatch.{Catalog, Analysis, DateTime}
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.ItemDescriptionView
   @one_day Timex.Duration.from_days(1)
-  @timezone "Europe/Paris" |> Timezone.get()
+  @timezone "Europe/Paris"
   @reset_by_person person: nil, person_id: nil
   @reset_by_date start_time: nil, end_time: nil, next_day: nil, previous_day: nil
 
@@ -59,14 +59,15 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       </List.ul>
     """
 
-  defp render_title(assigns = %{mode: :by_date}), do: ~H|Liste des diffusions le <%= @day %>|
+  defp render_title(assigns = %{mode: :by_date}),
+    do: ~H[Liste des diffusions le <%= @day |> DateTime.to_string() %>]
 
   defp render_title(assigns = %{mode: :by_person}),
     do: ~H|Liste des apparitions de <%= @person.label %> (<%= @person.description %>)|
 
   defp render_nav_links(assigns = %{mode: :by_date}),
     do:
-      ~H|<%= live_patch @previous_day, to: @previous_day_link %> / <%= live_patch @next_day, to: @next_day_link %>|
+      ~H[<%= live_patch @previous_day |> DateTime.to_string(), to: @previous_day_link %> / <%= live_patch @next_day |> DateTime.to_string(), to: @next_day_link %>]
 
   defp render_nav_links(assigns = %{mode: :by_person}), do: []
 

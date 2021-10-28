@@ -1,5 +1,6 @@
 defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   use MediaWatchWeb, :live_component
+  alias MediaWatch.DateTime
   alias MediaWatchWeb.Component.{List, Card}
   alias MediaWatchWeb.{ItemView, ShowOccurrenceView}
   alias MediaWatchWeb.PersonLiveComponent
@@ -69,9 +70,10 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   defp render_description(assigns = %{truncate_description: false}), do: ~H"<%= @description %>"
 
   defp render_airing_time(assigns = %{display_link_to_date: true}),
-    do: ~H|<%= live_redirect @airing_day, to: ShowOccurrenceView.link_by_date(@airing_day) %>|
+    do:
+      ~H[<%= live_redirect @airing_day |> DateTime.to_string(), to: ShowOccurrenceView.link_by_date(@airing_day) %>]
 
-  defp render_airing_time(assigns), do: ~H|<%= @airing_day %>|
+  defp render_airing_time(assigns), do: ~H[<%= @airing_day |> DateTime.to_string() %>]
 
   defp truncate(string, max \\ @truncated_length) do
     length = string |> String.length()
