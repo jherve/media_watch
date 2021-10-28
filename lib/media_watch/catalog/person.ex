@@ -17,7 +17,7 @@ defmodule MediaWatch.Catalog.Person do
   def changeset(person \\ %Person{}, attrs) do
     person
     |> cast(attrs, @all_fields)
-    |> set_qid()
+    |> update_from_wikidata()
     |> unique_constraint([:wikidata_qid])
     |> unique_constraint([:label])
   end
@@ -44,12 +44,13 @@ defmodule MediaWatch.Catalog.Person do
          do: Person |> repo.get_by(wikidata_qid: qid)
   end
 
-  defp set_qid(cs) do
+  defp update_from_wikidata(cs) do
     with {_, label} <- cs |> fetch_field(:label),
          data when is_map(data) <- Wikidata.get_info_from_name(label) do
       cs
       |> put_change(:wikidata_qid, data.id)
       |> put_change(:description, data.description)
+      |> put_change(:label, data.label)
     else
       _ -> cs
     end
