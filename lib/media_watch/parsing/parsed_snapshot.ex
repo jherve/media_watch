@@ -10,6 +10,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
+  alias MediaWatch.Catalog.Source.RssFeed
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ParsedSnapshot
@@ -37,36 +38,12 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
   end
 
-  def slice(parsed = %ParsedSnapshot{snapshot: %{type: :xml}}, module) do
-    entries = get_entries(parsed) |> Enum.map(&module.into_slice_cs(%{rss_entry: &1}, parsed))
-
-    description =
-      %{rss_channel_description: get_channel_description(parsed)} |> module.into_slice_cs(parsed)
-
-    entries ++ [description]
-  end
-
-  defp get_entries(%ParsedSnapshot{data: data, snapshot: %{type: :xml}}),
-    do:
-      data
-      |> Map.get("entries")
-      |> Enum.map(fn %{
-                       "title" => title,
-                       "description" => description,
-                       "rss2:guid" => guid,
-                       "rss2:link" => link,
-                       "rss2:pubDate" => pub_date
-                     } ->
-        %{guid: guid, link: link, pub_date: pub_date, title: title, description: description}
-      end)
-
-  defp get_channel_description(%ParsedSnapshot{
-         data: %{"description" => desc, "title" => title, "url" => url, "image" => image}
-       }),
-       do: %{
-         "description" => desc,
-         "title" => title,
-         "link" => url,
-         "image" => image
-       }
+  def slice(
+        parsed = %ParsedSnapshot{data: data, snapshot: %{source: %{type: :rss_feed}}},
+        module
+      ),
+      do:
+        data
+        |> RssFeed.into_list_of_slice_attrs()
+        |> Enum.map(&module.into_slice_cs(&1, parsed))
 end

@@ -41,4 +41,45 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
 
   defp prune_root(parsed) when is_map(parsed),
     do: parsed |> Map.take([:entries, :title, :url, :description, :image])
+
+  @spec into_list_of_slice_attrs(map()) :: [map()]
+  def into_list_of_slice_attrs(parsed_data) when is_map(parsed_data),
+    do: get_entries(parsed_data) ++ [get_channel_description(parsed_data)]
+
+  defp get_entries(data),
+    do:
+      data
+      |> Map.get("entries")
+      |> Enum.map(fn %{
+                       "title" => title,
+                       "description" => description,
+                       "rss2:guid" => guid,
+                       "rss2:link" => link,
+                       "rss2:pubDate" => pub_date
+                     } ->
+        %{
+          rss_entry: %{
+            guid: guid,
+            link: link,
+            pub_date: pub_date,
+            title: title,
+            description: description
+          }
+        }
+      end)
+
+  defp get_channel_description(%{
+         "description" => desc,
+         "title" => title,
+         "url" => url,
+         "image" => image
+       }),
+       do: %{
+         rss_channel_description: %{
+           "description" => desc,
+           "title" => title,
+           "link" => url,
+           "image" => image
+         }
+       }
 end
