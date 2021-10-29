@@ -24,4 +24,21 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
 
   def into_snapshot_attrs(%RssFeed{url: url}),
     do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{xml: %{content: content}}})
+
+  def parse(content) when is_binary(content), do: content |> ElixirFeedParser.parse()
+  def prune(parsed_content), do: {:ok, parsed_content |> prune_root |> prune_entries}
+
+  defp prune_entries(parsed = %{entries: entries}) when is_map(parsed),
+    do: %{
+      parsed
+      | entries:
+          entries
+          |> Enum.map(
+            &(&1
+              |> Map.take([:title, :description, :"rss2:guid", :"rss2:link", :"rss2:pubDate"]))
+          )
+    }
+
+  defp prune_root(parsed) when is_map(parsed),
+    do: parsed |> Map.take([:entries, :title, :url, :description, :image])
 end

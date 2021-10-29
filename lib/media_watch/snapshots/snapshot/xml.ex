@@ -7,6 +7,7 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
 
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Catalog.Source.RssFeed
   alias __MODULE__, as: Xml
 
   schema "snapshots_xml" do
@@ -22,21 +23,6 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
   end
 
   def into_parsed_snapshot_data(%Xml{content: content}) do
-    with {:ok, parsed} <- content |> ElixirFeedParser.parse(),
-         do: {:ok, parsed |> prune_root |> prune_entries}
+    with {:ok, parsed} <- content |> RssFeed.parse(), do: parsed |> RssFeed.prune()
   end
-
-  defp prune_entries(parsed = %{entries: entries}) when is_map(parsed),
-    do: %{
-      parsed
-      | entries:
-          entries
-          |> Enum.map(
-            &(&1
-              |> Map.take([:title, :description, :"rss2:guid", :"rss2:link", :"rss2:pubDate"]))
-          )
-    }
-
-  defp prune_root(parsed) when is_map(parsed),
-    do: parsed |> Map.take([:entries, :title, :url, :description, :image])
 end
