@@ -187,7 +187,19 @@ config :media_watch, MediaWatch.Catalog,
      sources: [
        %{web_index_page: %{url: "https://www.france.tv/france-5/c-a-vous/"}}
      ],
-     channels: [MediaWatch.Catalog.Channel.France5]}
+     channels: [MediaWatch.Catalog.Channel.France5]},
+    {MediaWatch.Catalog.Item.RuthElkrief2022,
+     show: %{
+       name: "Ruth Elkrief 2022",
+       url: "https://www.lci.fr/emission/ruth-elkrief-2022-12712/",
+       airing_schedule: "0 20 * * MON-THU",
+       duration_minutes: 110,
+       host_names: ["Ruth Elkrief"]
+     },
+     sources: [
+       %{web_index_page: %{url: "https://www.lci.fr/emission/ruth-elkrief-2022-12712/"}}
+     ],
+     channels: [MediaWatch.Catalog.Channel.LCI]}
   ],
   channels: [
     {MediaWatch.Catalog.Channel.France5,
