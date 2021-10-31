@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Parsing, Analysis}
+  alias MediaWatch.{PubSub, Parsing, Analysis, Utils}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrence, Description}
@@ -76,7 +76,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
       {:noreply, state}
     else
       e = {:error, _} ->
-        Logger.warning(inspect(e))
+        Logger.warning(Utils.inspect_error(e))
         {:noreply, state}
     end
   end
@@ -87,7 +87,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
       {:noreply, state}
     else
       e = {:error, _} ->
-        Logger.warning(inspect(e))
+        Logger.warning(Utils.inspect_error(e))
         {:noreply, state}
     end
   end
@@ -99,7 +99,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
       {:noreply, state}
     else
       e = {:error, _} ->
-        Logger.warning(inspect(e))
+        Logger.warning(Utils.inspect_error(e))
         {:noreply, state}
     end
   end

@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.SourceWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{Catalog, Snapshots, Parsing, Analysis, PubSub}
+  alias MediaWatch.{Catalog, Snapshots, Parsing, Analysis, PubSub, Utils}
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
   @max_snapshot_retries 3
@@ -47,10 +47,12 @@ defmodule MediaWatch.Catalog.SourceWorker do
       new_slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
       {:noreply, state}
     else
-      {:error, _} ->
+      {:error, e} ->
+        Logger.warning("Error while doing snapshot : #{Utils.inspect_error(e)}")
         {:noreply, state}
 
-      {:error, _, state} ->
+      {:error, e, state} ->
+        Logger.warning("Error while doing snapshot : #{Utils.inspect_error(e)}")
         {:noreply, state}
     end
   end
