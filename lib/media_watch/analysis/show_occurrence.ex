@@ -47,7 +47,9 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
         repo
       ) do
     with {_, airing_time} <- cs |> fetch_field(:airing_time),
-         occ when not is_nil(occ) <- ShowOccurrence |> repo.get_by(airing_time: airing_time),
+         {_, show_id} <- cs |> fetch_field(:show_id),
+         occ when not is_nil(occ) <-
+           ShowOccurrence |> repo.get_by(airing_time: airing_time, show_id: show_id),
          do: {:error, {:unique, occ}}
   end
 
