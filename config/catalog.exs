@@ -199,7 +199,23 @@ config :media_watch, MediaWatch.Catalog,
      sources: [
        %{web_index_page: %{url: "https://www.lci.fr/emission/ruth-elkrief-2022-12712/"}}
      ],
-     channels: [MediaWatch.Catalog.Channel.LCI]}
+     channels: [MediaWatch.Catalog.Channel.LCI]},
+    {MediaWatch.Catalog.Item.BercoffDansTousSesEtats,
+     show: %{
+       name: "Bercoff dans tous ses états",
+       url: "https://www.sudradio.fr/programme/andre-bercoff-dans-tous-ses-etats",
+       airing_schedule: "0 12 * * MON-FRI",
+       duration_minutes: 120,
+       host_names: ["André Bercoff"]
+     },
+     sources: [
+       %{
+         web_index_page: %{
+           url: "https://www.sudradio.fr/programme/andre-bercoff-dans-tous-ses-etats"
+         }
+       }
+     ],
+     channels: [MediaWatch.Catalog.Channel.SudRadio]}
   ],
   channels: [
     {MediaWatch.Catalog.Channel.France5,
@@ -213,5 +229,6 @@ config :media_watch, MediaWatch.Catalog,
     {MediaWatch.Catalog.Channel.LCI, name: "LCI", url: "https://www.lci.fr"},
     {MediaWatch.Catalog.Channel.RTL, name: "RTL", url: "https://www.rtl.fr"},
     {MediaWatch.Catalog.Channel.RMC, name: "RMC", url: "https://rmc.bfmtv.com/"},
-    {MediaWatch.Catalog.Channel.Europe1, name: "Europe 1", url: "https://www.europe1.fr"}
+    {MediaWatch.Catalog.Channel.Europe1, name: "Europe 1", url: "https://www.europe1.fr"},
+    {MediaWatch.Catalog.Channel.SudRadio, name: "Sud Radio", url: "https://www.sudradio.fr"}
   ]
