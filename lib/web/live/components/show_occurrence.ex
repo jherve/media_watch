@@ -11,23 +11,27 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
     do: {:ok, socket |> assign(truncate_description: true)}
 
   @impl true
-  def update(assigns = %{occurrence: occ = %{detail: detail}}, socket),
-    do:
-      {:ok,
-       socket
-       |> assign(assigns)
-       |> assign(
-         title: detail.title,
-         description: detail.description,
-         guests: occ.guests,
-         external_link_to_occurrence: detail.link,
-         link_to_item: ItemView.detail_link(occ.show_id),
-         airing_time: occ.airing_time,
-         airing_day: occ.airing_time |> Timex.to_date()
-       )
-       |> assign_new(:image_url, fn -> nil end)
-       |> assign_new(:display_link_to_item, fn -> false end)
-       |> assign_new(:display_link_to_date, fn -> false end)}
+  def update(assigns = %{occurrence: occ = %{detail: detail}}, socket) do
+    airing_day = occ.airing_time |> Timex.to_date()
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(
+       # In some rare cases the `detail` may be nil because it could not be interpreted correctly
+       title:
+         if(detail, do: detail.title, else: "Émission du #{airing_day |> DateTime.to_string()}"),
+       description: if(detail, do: detail.description),
+       guests: occ.guests,
+       external_link_to_occurrence: if(detail, do: detail.link),
+       link_to_item: ItemView.detail_link(occ.show_id),
+       airing_time: occ.airing_time,
+       airing_day: airing_day
+     )
+     |> assign_new(:image_url, fn -> nil end)
+     |> assign_new(:display_link_to_item, fn -> false end)
+     |> assign_new(:display_link_to_date, fn -> false end)}
+  end
 
   @impl true
   def handle_event("toggle_truncate", _, socket),
