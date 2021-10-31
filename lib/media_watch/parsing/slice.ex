@@ -4,11 +4,11 @@ defmodule MediaWatch.Parsing.Slice do
   alias Ecto.Multi
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
-  alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription, HtmlListItem, OpenGraph}
+  alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription, HtmlPreviewCard, OpenGraph}
   alias MediaWatch.Analysis.EntityRecognized
 
   alias __MODULE__, as: Slice
-  @valid_types [:rss_entry, :rss_channel_description, :html_list_item, :open_graph]
+  @valid_types [:rss_entry, :rss_channel_description, :html_preview_card, :open_graph]
   @required_fields [:type]
   @preloads [:rss_entry, :rss_channel_description, :entities]
 
@@ -19,7 +19,7 @@ defmodule MediaWatch.Parsing.Slice do
     belongs_to :parsed_snapshot, ParsedSnapshot
     has_one :rss_entry, RssEntry, foreign_key: :id
     has_one :rss_channel_description, RssChannelDescription, foreign_key: :id
-    has_one :html_list_item, HtmlListItem, foreign_key: :id
+    has_one :html_preview_card, HtmlPreviewCard, foreign_key: :id
     has_one :open_graph, OpenGraph, foreign_key: :id
     has_many :entities, EntityRecognized
 
@@ -34,7 +34,7 @@ defmodule MediaWatch.Parsing.Slice do
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:rss_entry)
     |> cast_assoc(:rss_channel_description)
-    |> cast_assoc(:html_list_item)
+    |> cast_assoc(:html_preview_card)
     |> cast_assoc(:open_graph)
     |> set_type()
     |> validate_required(@required_fields)
@@ -51,7 +51,10 @@ defmodule MediaWatch.Parsing.Slice do
 
   def extract_date(%Slice{type: :rss_entry, rss_entry: %{pub_date: date}}), do: {:ok, date}
   def extract_date(%Slice{type: :rss_channel_description}), do: :error
-  def extract_date(%Slice{type: :html_list_item, html_list_item: %{date: date}}), do: {:ok, date}
+
+  def extract_date(%Slice{type: :html_preview_card, html_preview_card: %{date: date}}),
+    do: {:ok, date}
+
   def extract_date(%Slice{type: :open_graph}), do: :error
 
   def preloads(), do: @preloads
@@ -95,10 +98,11 @@ defmodule MediaWatch.Parsing.Slice do
          e = %{
            errors: [],
            changes: %{
-             html_list_item: %{
+             html_preview_card: %{
                errors: [
                  title:
-                   {_, [constraint: :unique, constraint_name: "html_list_items_title_date_index"]}
+                   {_,
+                    [constraint: :unique, constraint_name: "html_preview_cards_title_date_index"]}
                ]
              }
            }

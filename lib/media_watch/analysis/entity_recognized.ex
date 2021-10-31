@@ -37,7 +37,7 @@ defmodule MediaWatch.Analysis.EntityRecognized do
       do: get_entities_cs(slice, title, desc)
 
   def get_entities_cs(
-        slice = %Slice{type: :html_list_item, html_list_item: %{title: title, text: desc}}
+        slice = %Slice{type: :html_preview_card, html_preview_card: %{title: title, text: desc}}
       ),
       do: get_entities_cs(slice, title, desc || "")
 

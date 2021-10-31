@@ -17,20 +17,21 @@ defmodule MediaWatch.Catalog.Item.CAVous do
         snapshot: %{url: page_url, source: %{type: :web_index_page}}
       }) do
     page_url = page_url |> URI.parse()
-    [%{open_graph: OpenGraph.get_list_of_attributes(data)}] ++ get_html_entries(data, page_url)
+    [%{open_graph: OpenGraph.get_list_of_attributes(data)}] ++ get_replay_cards(data, page_url)
   end
 
-  defp get_html_entries(parsed, page_url),
+  defp get_replay_cards(parsed, page_url),
     do:
       parsed
       |> Floki.find(@list_of_shows_selector)
       |> Floki.find(@show_selector)
       |> Enum.map(
         &%{
-          html_list_item: %{
+          html_preview_card: %{
             date: &1 |> get_date,
             title: &1 |> get_title,
-            link: &1 |> get_link(page_url)
+            link: &1 |> get_link(page_url),
+            type: :replay
           }
         }
       )

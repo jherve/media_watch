@@ -149,7 +149,7 @@ defmodule MediaWatch.Analysis do
       |> Repo.insert_and_retry()
       |> Detail.explain_create_error(Repo)
 
-  def create_occurrence_details(occ_id, %Slice{type: :html_list_item, html_list_item: item}),
+  def create_occurrence_details(occ_id, %Slice{type: :html_preview_card, html_preview_card: item}),
     do:
       Detail.changeset(%{
         id: occ_id,

@@ -15,22 +15,25 @@ defmodule MediaWatch.Catalog.Item.LInterviewPolitiqueLCI do
         snapshot: %{url: page_url, source: %{type: :web_index_page}}
       }) do
     page_url = page_url |> URI.parse()
-    get_html_entries(data, page_url) ++ [%{open_graph: OpenGraph.get_list_of_attributes(data)}]
+    get_show_cards(data, page_url) ++ [%{open_graph: OpenGraph.get_list_of_attributes(data)}]
   end
 
-  defp get_html_entries(parsed, page_url) do
+  defp get_show_cards(parsed, page_url) do
     parsed
     |> Floki.find(@list_of_shows_selector)
     |> Floki.find(@show_selector)
-    |> Enum.map(
-      &%{
-        html_list_item: %{
-          date: &1 |> get_date,
-          title: &1 |> get_title,
-          link: &1 |> get_link(page_url)
+    |> Enum.map(fn item ->
+      link = item |> get_link(page_url)
+
+      %{
+        html_preview_card: %{
+          date: item |> get_date,
+          title: item |> get_title,
+          link: link,
+          type: get_type(link)
         }
       }
-    )
+    end)
   end
 
   defp get_date(item), do: item |> Floki.attribute("time", "datetime") |> List.first()
@@ -39,5 +42,12 @@ defmodule MediaWatch.Catalog.Item.LInterviewPolitiqueLCI do
   defp get_link(item, page_url = %URI{}) do
     path = item |> Floki.attribute("a", "href") |> List.first()
     page_url |> URI.merge(path) |> URI.to_string()
+  end
+
+  defp get_type(link) do
+    case link |> URI.parse() |> Map.get(:path) do
+      "/replay-lci" <> _ -> :replay
+      _ -> :article
+    end
   end
 end

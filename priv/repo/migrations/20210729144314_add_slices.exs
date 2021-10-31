@@ -44,17 +44,18 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :image, :map
     end
 
-    create table(:html_list_items, primary_key: false) do
+    create table(:html_preview_cards, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false
+      add :type, :string, null: false
       add :text, :string
       add :link, :string
       add :image, :map
       add :date, :utc_datetime, null: false
     end
 
-    create unique_index(:html_list_items, [:title, :date])
+    create unique_index(:html_preview_cards, [:title, :date, :type])
 
     create table(:open_graphs, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
