@@ -215,6 +215,22 @@ config :media_watch, MediaWatch.Catalog,
          }
        }
      ],
+     channels: [MediaWatch.Catalog.Channel.SudRadio]},
+    {MediaWatch.Catalog.Item.LesIrreductibles,
+     show: %{
+       name: "Les irréductibles",
+       url: "https://www.sudradio.fr/programme/les-irreductibles",
+       airing_schedule: "0 11 * * SUN",
+       duration_minutes: 60,
+       host_names: ["Alexandre Devecchio"]
+     },
+     sources: [
+       %{
+         web_index_page: %{
+           url: "https://www.sudradio.fr/programme/les-irreductibles"
+         }
+       }
+     ],
      channels: [MediaWatch.Catalog.Channel.SudRadio]}
   ],
   channels: [

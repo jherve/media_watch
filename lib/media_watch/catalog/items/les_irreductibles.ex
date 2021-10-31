@@ -1,4 +1,4 @@
-defmodule MediaWatch.Catalog.Item.BercoffDansTousSesEtats do
+defmodule MediaWatch.Catalog.Item.LesIrreductibles do
   use MediaWatch.Catalog.Item
   use MediaWatch.Catalog.Item.Layout.SudRadio
 end
