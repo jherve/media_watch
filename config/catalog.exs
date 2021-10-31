@@ -173,7 +173,16 @@ config :media_watch, MediaWatch.Catalog,
        url: "https://www.france.tv/france-5/c-a-vous/",
        airing_schedule: "0 19 * * MON-FRI",
        duration_minutes: 55,
-       host_names: ["Anne-Elisabeth Lemoine"]
+       host_names: ["Anne-Elisabeth Lemoine"],
+       columnists: [
+         "Patrick Cohen",
+         "Bertrand Chameroy",
+         "Pierre Lescure",
+         "Marion Ruggieri",
+         "Emilie Tran NGuyen",
+         "Mohamed Bouhafsi",
+         "Matthieu Belliard"
+       ]
      },
      sources: [
        %{web_index_page: %{url: "https://www.france.tv/france-5/c-a-vous/"}}
