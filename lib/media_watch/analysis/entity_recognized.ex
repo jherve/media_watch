@@ -42,7 +42,7 @@ defmodule MediaWatch.Analysis.EntityRecognized do
       do: get_entities_cs(slice, title, desc || "")
 
   def get_entities_cs(
-        slice = %Slice{type: :html_header, html_header: %{title: title, description: desc}}
+        slice = %Slice{type: :open_graph, open_graph: %{title: title, description: desc}}
       ),
       do: get_entities_cs(slice, title, desc || "")
 

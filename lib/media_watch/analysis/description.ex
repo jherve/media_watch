@@ -43,14 +43,14 @@ defmodule MediaWatch.Analysis.Description do
       }
 
   def get_description_attrs(item_id, %Slice{
-        type: :html_header,
-        html_header: header
+        type: :open_graph,
+        open_graph: graph
       }),
       do: %{
         item_id: item_id,
-        title: header.title,
-        description: header.description,
-        link: header.link,
-        image: header.image
+        title: graph.title,
+        description: graph.description,
+        link: graph.url,
+        image: %{"url" => graph.image}
       }
 end

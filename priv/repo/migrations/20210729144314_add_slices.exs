@@ -19,8 +19,8 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
            )
 
     create unique_index(:slices, [:source_id],
-             where: "type = 'html_header'",
-             name: :slices_html_headers_index
+             where: "type = 'open_graph'",
+             name: :slices_open_graphs_index
            )
 
     create table(:rss_entries, primary_key: false) do
@@ -56,13 +56,14 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
 
     create unique_index(:html_list_items, [:title, :date])
 
-    create table(:html_headers, primary_key: false) do
+    create table(:open_graphs, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false
-      add :description, :string, null: false
-      add :link, :string
-      add :image, :map
+      add :type, :string
+      add :url, :string, null: false
+      add :image, :string, null: false
+      add :description, :string
     end
   end
 end
