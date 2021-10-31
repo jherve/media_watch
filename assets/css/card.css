@@ -24,6 +24,11 @@ article.card.card-text {
   "content content"
   "footer footer";
 }
+article.card.card-image {
+  grid-template-areas: "header"
+  "image";
+  grid-template-columns: min-content;
+}
 
 article.card h1 {
   grid-area: header;

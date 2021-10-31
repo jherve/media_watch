@@ -21,7 +21,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
     do: ~H"""
       <h1>Liste des émissions <button phx-click="trigger_all_snapshots">Lancer tous les snapshots</button></h1>
 
-      <List.ul let={item} list={@items} class="item card">
+      <List.ul let={item} list={@items} class="item card" id="item-index-list">
         <a href={ItemView.detail_link(item.id)}>
           <.live_component module={ItemLiveComponent} id={item.id} item={item}/>
         </a>
