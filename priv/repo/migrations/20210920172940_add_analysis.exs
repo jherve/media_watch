@@ -26,7 +26,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
         primary_key: true
 
       add :title, :string, null: false
-      add :description, :string, null: false
+      add :description, :string
       add :link, :string
     end
 

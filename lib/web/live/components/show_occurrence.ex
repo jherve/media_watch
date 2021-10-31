@@ -64,6 +64,8 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
     </List.ul>
     """
 
+  defp render_description(assigns = %{description: nil}), do: ~H"Pas de description disponible"
+
   defp render_description(assigns = %{truncate_description: true}),
     do: ~H"<%= truncate(@description) %>"
 

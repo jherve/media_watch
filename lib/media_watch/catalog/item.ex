@@ -52,6 +52,7 @@ defmodule MediaWatch.Catalog.Item do
   defmacro __using__(_opts) do
     quote do
       @behaviour MediaWatch.Catalog.Catalogable
+      @behaviour MediaWatch.Parsing.Parsable
       @behaviour MediaWatch.Parsing.Sliceable
       @behaviour MediaWatch.Analysis.Analyzable
       @behaviour MediaWatch.Analysis.Describable
@@ -102,12 +103,18 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Catalog.Catalogable
       def get() do
-        from(i in query(), preload: [:channels, :show, sources: [:rss_feed]])
+        from(i in query(), preload: [:channels, :show, sources: [:rss_feed, :web_index_page]])
         |> Repo.one()
       end
 
+      @impl MediaWatch.Parsing.Parsable
+      defdelegate parse_snapshot(snap), to: Snapshot
+
+      @impl MediaWatch.Parsing.Parsable
+      defdelegate prune_snapshot(data, snap), to: Snapshot
+
       @impl MediaWatch.Parsing.Sliceable
-      def slice(parsed), do: ParsedSnapshot.slice(parsed, __MODULE__)
+      defdelegate into_list_of_slice_attrs(parsed), to: ParsedSnapshot
 
       @impl MediaWatch.Parsing.Sliceable
       defdelegate into_slice_cs(attrs, parsed), to: ParsedSnapshot
@@ -142,7 +149,9 @@ defmodule MediaWatch.Catalog.Item do
 
       defoverridable into_slice_cs: 2,
                      get_description_attrs: 2,
-                     classify: 1
+                     classify: 1,
+                     prune_snapshot: 2,
+                     into_list_of_slice_attrs: 1
     end
   end
 end

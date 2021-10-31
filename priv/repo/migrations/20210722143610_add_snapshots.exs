@@ -17,5 +17,12 @@ defmodule MediaWatch.Repo.Migrations.AddSnapshots do
     # (from snapshots table) but it's highly unlikely that two distinct sources
     # produce exactly the same snapshot.
     create unique_index(:snapshots_xml, [:content])
+
+    create table(:snapshots_html, primary_key: false) do
+      add :id, references(:snapshots, column: :id, on_delete: :delete_all), primary_key: true
+      add :content, :string, null: false
+    end
+
+    create unique_index(:snapshots_html, [:content])
   end
 end

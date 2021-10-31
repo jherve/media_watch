@@ -36,6 +36,16 @@ defmodule MediaWatch.Analysis.EntityRecognized do
       ),
       do: get_entities_cs(slice, title, desc)
 
+  def get_entities_cs(
+        slice = %Slice{type: :html_list_item, html_list_item: %{title: title, text: desc}}
+      ),
+      do: get_entities_cs(slice, title, desc || "")
+
+  def get_entities_cs(
+        slice = %Slice{type: :html_header, html_header: %{title: title, description: desc}}
+      ),
+      do: get_entities_cs(slice, title, desc || "")
+
   def get_entities_cs(slice = %Slice{}, title, desc) do
     with {:ok, title_list} <- Spacy.extract_entities(title),
          {:ok, desc_list} <- Spacy.extract_entities(desc) do

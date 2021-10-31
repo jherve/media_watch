@@ -149,6 +149,17 @@ defmodule MediaWatch.Analysis do
       |> Repo.insert_and_retry()
       |> Detail.explain_create_error(Repo)
 
+  def create_occurrence_details(occ_id, %Slice{type: :html_list_item, html_list_item: item}),
+    do:
+      Detail.changeset(%{
+        id: occ_id,
+        title: item.title,
+        description: item.text,
+        link: item.link
+      })
+      |> Repo.insert_and_retry()
+      |> Detail.explain_create_error(Repo)
+
   @spec update_occurrence_details(Detail.t(), Slice.t()) ::
           {:ok, Detail.t()} | {:error, Ecto.Changeset.t()}
   def update_occurrence_details(detail = %Detail{}, _slice),

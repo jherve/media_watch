@@ -27,6 +27,7 @@ defmodule MediaWatch.Analysis.Description do
     desc
     |> cast(attrs, @all_fields)
     |> validate_required(@required_fields)
+    |> unique_constraint(:item_id)
   end
 
   def get_description_attrs(item_id, %Slice{
@@ -39,5 +40,17 @@ defmodule MediaWatch.Analysis.Description do
         description: desc.description,
         link: desc.link,
         image: desc.image
+      }
+
+  def get_description_attrs(item_id, %Slice{
+        type: :html_header,
+        html_header: header
+      }),
+      do: %{
+        item_id: item_id,
+        title: header.title,
+        description: header.description,
+        link: header.link,
+        image: header.image
       }
 end

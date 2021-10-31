@@ -15,13 +15,13 @@ defmodule MediaWatch.Parsing do
 
   def get(id), do: ParsedSnapshot |> Repo.get(id) |> Repo.preload(snapshot: @parsed_preloads)
 
-  def parse_and_insert(snap) do
+  def parse_and_insert(snap, parsable) do
     snap = snap |> Repo.preload([:source, :xml])
-    with {:ok, cs} <- Snapshot.parse(snap), do: cs |> Repo.insert_and_retry()
+    with {:ok, cs} <- Snapshot.parse(snap, parsable), do: cs |> Repo.insert_and_retry()
   end
 
   def slice_and_insert(snap, sliceable) do
-    with cs_list when is_list(cs_list) <- sliceable.slice(snap),
+    with cs_list when is_list(cs_list) <- ParsedSnapshot.slice(snap, sliceable),
          do:
            cs_list
            |> Slice.into_multi()

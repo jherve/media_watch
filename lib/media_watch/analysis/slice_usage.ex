@@ -35,4 +35,6 @@ defmodule MediaWatch.Analysis.SliceUsage do
 
   def classify(%Slice{type: :rss_channel_description}), do: :item_description
   def classify(%Slice{type: :rss_entry}), do: :show_occurrence_description
+  def classify(%Slice{type: :html_list_item}), do: :show_occurrence_description
+  def classify(%Slice{type: :html_header}), do: :item_description
 end

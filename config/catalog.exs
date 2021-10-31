@@ -154,15 +154,42 @@ config :media_watch, MediaWatch.Catalog,
        ]
      },
      sources: [%{rss_feed: %{url: "https://radiofrance-podcast.net/podcast09/rss_16170.xml"}}],
-     channels: [MediaWatch.Catalog.Channel.FranceInter]}
+     channels: [MediaWatch.Catalog.Channel.FranceInter]},
+    {MediaWatch.Catalog.Item.LInterviewPolitiqueLCI,
+     show: %{
+       name: "L'interview politique",
+       url: "https://www.lci.fr/emission/l-interview-politique-12190/",
+       airing_schedule: "30 8 * * MON-FRI",
+       duration_minutes: 20,
+       host_names: ["Elizabeth Martichoux"]
+     },
+     sources: [
+       %{web_index_page: %{url: "https://www.lci.fr/emission/l-interview-politique-12190/"}}
+     ],
+     channels: [MediaWatch.Catalog.Channel.LCI]},
+    {MediaWatch.Catalog.Item.CAVous,
+     show: %{
+       name: "C à vous",
+       url: "https://www.france.tv/france-5/c-a-vous/",
+       airing_schedule: "0 19 * * MON-FRI",
+       duration_minutes: 55,
+       host_names: ["Anne-Elisabeth Lemoine"]
+     },
+     sources: [
+       %{web_index_page: %{url: "https://www.france.tv/france-5/c-a-vous/"}}
+     ],
+     channels: [MediaWatch.Catalog.Channel.France5]}
   ],
   channels: [
+    {MediaWatch.Catalog.Channel.France5,
+     name: "France 5", url: "https://www.france.tv/france-5/"},
     {MediaWatch.Catalog.Channel.FranceInter,
      name: "France Inter", url: "https://www.franceinter.fr"},
     {MediaWatch.Catalog.Channel.FranceCulture,
      name: "France Culture", url: "https://www.franceculture.fr"},
     {MediaWatch.Catalog.Channel.FranceInfo,
      name: "France Info", url: "https://www.francetvinfo.fr"},
+    {MediaWatch.Catalog.Channel.LCI, name: "LCI", url: "https://www.lci.fr"},
     {MediaWatch.Catalog.Channel.RTL, name: "RTL", url: "https://www.rtl.fr"},
     {MediaWatch.Catalog.Channel.RMC, name: "RMC", url: "https://rmc.bfmtv.com/"},
     {MediaWatch.Catalog.Channel.Europe1, name: "Europe 1", url: "https://www.europe1.fr"}

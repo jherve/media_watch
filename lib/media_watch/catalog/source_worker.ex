@@ -56,7 +56,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   defp do_parsing(snap = %Snapshot{}, state) do
-    case snap |> Parsing.parse_and_insert() do
+    case snap |> Parsing.parse_and_insert(state.module) do
       {:ok, parsed} -> {:ok, parsed, update_in(state.parsed_snapshots, &append(&1, parsed))}
       {:error, e} -> {:error, e, state}
     end

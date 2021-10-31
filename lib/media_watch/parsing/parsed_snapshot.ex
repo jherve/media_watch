@@ -18,7 +18,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   schema "parsed_snapshots" do
     belongs_to :snapshot, Snapshot
     belongs_to :source, Source
-    field :data, :map
+    field :data, Ecto.MapWithTuple
 
     Ecto.Schema.timestamps(type: :utc_datetime)
   end
@@ -38,12 +38,19 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
   end
 
-  def slice(
-        parsed = %ParsedSnapshot{data: data, snapshot: %{source: %{type: :rss_feed}}},
-        module
-      ),
-      do:
-        data
-        |> RssFeed.into_list_of_slice_attrs()
-        |> Enum.map(&module.into_slice_cs(&1, parsed))
+  def slice(parsed = %ParsedSnapshot{}, module),
+    do:
+      parsed
+      |> module.into_list_of_slice_attrs()
+      |> Enum.map(&module.into_slice_cs(&1, parsed))
+
+  @spec into_list_of_slice_attrs(ParsedSnapshot.t()) :: [map()]
+  def into_list_of_slice_attrs(%ParsedSnapshot{
+        data: data,
+        snapshot: %{source: %{type: :rss_feed}}
+      }),
+      do: data |> RssFeed.into_list_of_slice_attrs()
+
+  def into_list_of_slice_attrs(%ParsedSnapshot{snapshot: %{source: %{type: :web_index_page}}}),
+    do: raise("A custom implementation must be provided for web_index_page snapshots")
 end

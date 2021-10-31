@@ -18,6 +18,11 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
              name: :slices_rss_channel_descriptions_index
            )
 
+    create unique_index(:slices, [:source_id],
+             where: "type = 'html_header'",
+             name: :slices_html_headers_index
+           )
+
     create table(:rss_entries, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
@@ -31,6 +36,27 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
     create unique_index(:rss_entries, [:guid])
 
     create table(:rss_channel_descriptions, primary_key: false) do
+      add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
+
+      add :title, :string, null: false
+      add :description, :string, null: false
+      add :link, :string
+      add :image, :map
+    end
+
+    create table(:html_list_items, primary_key: false) do
+      add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
+
+      add :title, :string, null: false
+      add :text, :string
+      add :link, :string
+      add :image, :map
+      add :date, :utc_datetime, null: false
+    end
+
+    create unique_index(:html_list_items, [:title, :date])
+
+    create table(:html_headers, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false

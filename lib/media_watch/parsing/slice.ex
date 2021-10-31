@@ -4,11 +4,11 @@ defmodule MediaWatch.Parsing.Slice do
   alias Ecto.Multi
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Parsing.ParsedSnapshot
-  alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription}
+  alias MediaWatch.Parsing.Slice.{RssEntry, RssChannelDescription, HtmlListItem, HtmlHeader}
   alias MediaWatch.Analysis.EntityRecognized
 
   alias __MODULE__, as: Slice
-  @valid_types [:rss_entry, :rss_channel_description]
+  @valid_types [:rss_entry, :rss_channel_description, :html_list_item, :html_header]
   @required_fields [:type]
   @preloads [:rss_entry, :rss_channel_description, :entities]
 
@@ -19,6 +19,8 @@ defmodule MediaWatch.Parsing.Slice do
     belongs_to :parsed_snapshot, ParsedSnapshot
     has_one :rss_entry, RssEntry, foreign_key: :id
     has_one :rss_channel_description, RssChannelDescription, foreign_key: :id
+    has_one :html_list_item, HtmlListItem, foreign_key: :id
+    has_one :html_header, HtmlHeader, foreign_key: :id
     has_many :entities, EntityRecognized
 
     Ecto.Schema.timestamps(type: :utc_datetime)
@@ -32,6 +34,8 @@ defmodule MediaWatch.Parsing.Slice do
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:rss_entry)
     |> cast_assoc(:rss_channel_description)
+    |> cast_assoc(:html_list_item)
+    |> cast_assoc(:html_header)
     |> set_type()
     |> validate_required(@required_fields)
     # SQLite adapter can not recognize the constraint that was violated, and the error reporting
@@ -46,7 +50,9 @@ defmodule MediaWatch.Parsing.Slice do
   end
 
   def extract_date(%Slice{type: :rss_entry, rss_entry: %{pub_date: date}}), do: {:ok, date}
-  def extract_date(%Slice{}), do: :error
+  def extract_date(%Slice{type: :rss_channel_description}), do: :error
+  def extract_date(%Slice{type: :html_list_item, html_list_item: %{date: date}}), do: {:ok, date}
+  def extract_date(%Slice{type: :html_header}), do: :error
 
   def preloads(), do: @preloads
 
@@ -77,6 +83,22 @@ defmodule MediaWatch.Parsing.Slice do
              rss_entry: %{
                errors: [
                  guid: {_, [constraint: :unique, constraint_name: "rss_entries_guid_index"]}
+               ]
+             }
+           }
+         }}
+      ),
+      do: {:unique, e}
+
+  def get_error_reason(
+        {:error,
+         e = %{
+           errors: [],
+           changes: %{
+             html_list_item: %{
+               errors: [
+                 title:
+                   {_, [constraint: :unique, constraint_name: "html_list_items_title_date_index"]}
                ]
              }
            }

@@ -22,7 +22,6 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
     |> unique_constraint(:content)
   end
 
-  def into_parsed_snapshot_data(%Xml{content: content}) do
-    with {:ok, parsed} <- content |> RssFeed.parse(), do: parsed |> RssFeed.prune()
-  end
+  def parse_snapshot(%Xml{content: content}), do: content |> RssFeed.parse()
+  def prune_snapshot(parsed_data) when is_map(parsed_data), do: parsed_data |> RssFeed.prune()
 end
