@@ -1,7 +1,7 @@
 defmodule MediaWatch.Analysis do
   import Ecto.Query
   alias MediaWatch.{Repo, PubSub}
-  alias MediaWatch.Catalog.{Item, Show, Person}
+  alias MediaWatch.Catalog.{Item, Show, Person, Channel, ChannelItem}
   alias MediaWatch.Parsing.Slice
 
   alias MediaWatch.Analysis.{
@@ -22,8 +22,12 @@ defmodule MediaWatch.Analysis do
   def get_all_analyzed_items(),
     do:
       from([i, s, so] in item_query(),
-        preload: [:channels, :description],
-        order_by: i.id
+        join: ci in ChannelItem,
+        on: ci.item_id == i.id,
+        join: c in Channel,
+        on: ci.channel_id == c.id,
+        preload: [:description, channels: c],
+        order_by: [c.id, i.id]
       )
       |> Repo.all()
 
