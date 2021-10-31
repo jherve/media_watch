@@ -14,22 +14,34 @@ defmodule MediaWatch.Catalog.Item.LInterviewPolitiqueLCI do
   @impl MediaWatch.Parsing.Sliceable
   def into_list_of_slice_attrs(%ParsedSnapshot{
         data: %{"full" => data},
-        snapshot: %{source: %{type: :web_index_page}}
-      }),
-      do: get_html_entries(data) ++ [get_html_header(data)]
+        snapshot: %{url: page_url, source: %{type: :web_index_page}}
+      }) do
+    page_url = page_url |> URI.parse()
+    get_html_entries(data, page_url) ++ [get_html_header(data)]
+  end
 
-  defp get_html_entries(parsed) do
+  defp get_html_entries(parsed, page_url) do
     parsed
     |> Floki.find(@list_of_shows_selector)
     |> Floki.find(@show_selector)
     |> Enum.map(
-      &%{html_list_item: %{date: &1 |> get_date, title: &1 |> get_title, link: &1 |> get_link}}
+      &%{
+        html_list_item: %{
+          date: &1 |> get_date,
+          title: &1 |> get_title,
+          link: &1 |> get_link(page_url)
+        }
+      }
     )
   end
 
   defp get_date(item), do: item |> Floki.attribute("time", "datetime") |> List.first()
   defp get_title(item), do: item |> Floki.find("h2") |> Floki.text()
-  defp get_link(item), do: item |> Floki.attribute("a", "href") |> List.first()
+
+  defp get_link(item, page_url = %URI{}) do
+    path = item |> Floki.attribute("a", "href") |> List.first()
+    page_url |> URI.merge(path) |> URI.to_string()
+  end
 
   defp get_html_header(parsed) do
     header =
