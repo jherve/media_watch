@@ -23,7 +23,8 @@ defmodule MediaWatch.Catalog.Source.RssFeed do
   end
 
   def into_snapshot_attrs(%RssFeed{url: url}),
-    do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{xml: %{content: content}}})
+    do:
+      with({:ok, content} <- Http.get_body(url), do: {:ok, %{url: url, xml: %{content: content}}})
 
   def parse(content) when is_binary(content), do: content |> ElixirFeedParser.parse()
   def prune(parsed_content), do: {:ok, parsed_content |> prune_root |> prune_entries}

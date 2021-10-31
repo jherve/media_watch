@@ -23,7 +23,11 @@ defmodule MediaWatch.Catalog.Source.WebIndexPage do
   end
 
   def into_snapshot_attrs(%WebIndexPage{url: url}),
-    do: with({:ok, content} <- Http.get_body(url), do: {:ok, %{html: %{content: content}}})
+    do:
+      with(
+        {:ok, content} <- Http.get_body(url),
+        do: {:ok, %{url: url, html: %{content: content}}}
+      )
 
   def parse(content) when is_binary(content), do: content |> Floki.parse_document()
 end

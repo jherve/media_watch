@@ -14,8 +14,10 @@ defmodule MediaWatch.Snapshots.Snapshot do
   alias MediaWatch.Snapshots.Snapshot.{Xml, Html}
   alias MediaWatch.Parsing.ParsedSnapshot
   alias __MODULE__, as: Snapshot
+  @required_fields [:type, :url]
 
   schema "snapshots" do
+    field :url, :string
     field :type, Ecto.Enum, values: [:xml, :html]
 
     belongs_to :source, Source
@@ -28,12 +30,12 @@ defmodule MediaWatch.Snapshots.Snapshot do
   @doc false
   def changeset(snapshot \\ %Snapshot{}, attrs) do
     snapshot
-    |> cast(attrs, [:id])
+    |> cast(attrs, [:id, :url])
     |> cast_assoc(:source, required: true)
     |> cast_assoc(:xml)
     |> cast_assoc(:html)
     |> set_type()
-    |> validate_required([:type])
+    |> validate_required(@required_fields)
   end
 
   def parse(snap = %Snapshot{}, parsable) do
