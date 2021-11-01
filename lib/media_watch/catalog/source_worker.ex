@@ -71,7 +71,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
           ok
 
         {:error, ok, _, errors} ->
-          Logger.error("#{errors |> Enum.count()} errors on slices insertion")
+          Logger.warning("#{errors |> Enum.count()} errors on slices insertion in #{module}")
           ok
       end
 
