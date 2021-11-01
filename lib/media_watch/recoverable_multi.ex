@@ -36,6 +36,10 @@ defmodule MediaWatch.RecoverableMulti do
   @spec is_empty?(Multi.t()) :: boolean()
   def is_empty?(multi = %Multi{}), do: multi |> Multi.to_list() |> length() == 1
 
+  @spec wrap_transaction_result(result :: any()) ::
+          {:ok, list_ok :: list(any())}
+          | {:error, list_ok :: list(any()), list_ignored :: list(any()),
+             list_failed :: list(any())}
   def wrap_transaction_result({:error, :control_stage, nil, changes}) do
     res =
       changes
@@ -52,7 +56,7 @@ defmodule MediaWatch.RecoverableMulti do
       |> Enum.group_by(&categorize_intermediate/1)
       |> Map.new(fn {k, v} -> {k, v |> Map.new(&unwrap_intermediate/1)} end)
 
-    {:ok, res |> Map.get(:ok, %{}), res |> Map.get(:ignore, %{})}
+    {:ok, res |> Map.get(:ok, %{})}
   end
 
   defp categorize_intermediate({_k, {:error, _v}}), do: :error
@@ -63,8 +67,16 @@ defmodule MediaWatch.RecoverableMulti do
 
   defp fail_if_any_error(_repo, changes) do
     # If there is any actual error within the transaction's operations, the
-    # final stage enforces a rollback.
-    failures = changes |> Enum.filter(&match?({_, {:error, _}}, &1)) |> Map.new()
-    if failures |> Enum.empty?(), do: {:ok, nil}, else: {:error, nil}
+    # final stage enforces a rollback. Ignored stages are also rolled back
+    # because they might consist of several operations, some of which might
+    # have completed (e.g. insertion of an object whose associated object violates
+    # some unique constraint)
+    case changes |> Enum.group_by(&categorize_intermediate/1) |> Map.new() do
+      map when is_map_key(map, :error) or is_map_key(map, :ignore) ->
+        {:error, nil}
+
+      _only_ok_map = %{ok: _} ->
+        {:ok, nil}
+    end
   end
 end

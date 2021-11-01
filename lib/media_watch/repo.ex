@@ -59,30 +59,48 @@ defmodule MediaWatch.Repo do
           {:ok, ok_results :: [any()], ignored :: [Ecto.Changeset.t()]}
           | {:error, ok_results :: [any()], ignored :: [Ecto.Changeset.t()],
              errors :: [Ecto.Changeset.t()]}
-  def transaction_with_recovery(multi, failures_so_far \\ %{})
+  def transaction_with_recovery(multi, failures_so_far \\ %{}, ignored_so_far \\ %{})
 
-  def transaction_with_recovery(multi = %Multi{}, failures_so_far),
-    do: transaction_with_recovery(multi, failures_so_far, multi |> RecoverableMulti.is_empty?())
+  def transaction_with_recovery(multi = %Multi{}, failures_so_far, ignored_so_far),
+    do:
+      transaction_with_recovery(
+        multi,
+        failures_so_far,
+        ignored_so_far,
+        multi |> RecoverableMulti.is_empty?()
+      )
 
-  def transaction_with_recovery(_, failures_so_far, true),
-    do: {:error, [], [], failures_so_far |> Map.values()}
+  def transaction_with_recovery(_, failures_so_far, ignored_so_far, true),
+    do: return_result(%{}, ignored_so_far, failures_so_far)
 
-  def transaction_with_recovery(multi, failures_so_far, false) do
+  def transaction_with_recovery(multi, failures_so_far, ignored_so_far, false) do
     case multi |> Repo.transaction() |> RecoverableMulti.wrap_transaction_result() do
-      {:error, _, _, failures} ->
+      {:error, _, ignored, failures} ->
         # In case of a rollback, the transaction is attempted again, with all
         # the steps that led to an error removed.
         failed_steps = failures |> Map.keys()
+        ignored_steps = ignored |> Map.keys()
 
         multi
-        |> RecoverableMulti.remove_steps(failed_steps)
-        |> transaction_with_recovery(failures_so_far |> Map.merge(failures))
+        |> RecoverableMulti.remove_steps(failed_steps ++ ignored_steps)
+        |> transaction_with_recovery(
+          failures_so_far |> Map.merge(failures),
+          ignored_so_far |> Map.merge(ignored)
+        )
 
-      {:ok, ok, ignored} ->
-        if failures_so_far |> Enum.empty?(),
-          do: {:ok, ok |> Map.values(), ignored |> Map.values()},
-          else:
-            {:error, ok |> Map.values(), ignored |> Map.values(), failures_so_far |> Map.values()}
+      {:ok, ok} ->
+        return_result(ok, ignored_so_far, failures_so_far)
     end
   end
+
+  defp return_result(ok, ignored, failures)
+       when is_map(ok) and is_map(ignored) and is_map(failures),
+       do: return_result(ok |> Map.values(), ignored |> Map.values(), failures |> Map.values())
+
+  defp return_result(ok, ignored, []) when is_list(ok) and is_list(ignored),
+    do: {:ok, ok, ignored}
+
+  defp return_result(ok, ignored, failures)
+       when is_list(ok) and is_list(ignored) and is_list(failures),
+       do: {:error, ok, ignored, failures}
 end
