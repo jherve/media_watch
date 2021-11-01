@@ -8,4 +8,7 @@ defmodule MediaWatch.Utils do
       "#{struct} changeset has errors : #{e |> traverse_errors(fn {msg, _opts} -> msg end) |> inspect}"
 
   def inspect_error(e), do: inspect(e)
+
+  @doc "Restart the whole catalog supervisor"
+  def restart_catalog(), do: Supervisor.stop(MediaWatch.Catalog.CatalogSupervisor)
 end
