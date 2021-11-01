@@ -102,7 +102,10 @@ defmodule MediaWatch.Parsing.Slice do
                errors: [
                  title:
                    {_,
-                    [constraint: :unique, constraint_name: "html_preview_cards_title_date_index"]}
+                    [
+                      constraint: :unique,
+                      constraint_name: "html_preview_cards_title_date_type_index"
+                    ]}
                ]
              }
            }
