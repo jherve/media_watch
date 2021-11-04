@@ -35,7 +35,7 @@ defmodule MediaWatch.Analysis do
   def get_analyzed_item(item_id),
     do:
       from([i, s, so] in item_query(),
-        preload: [:channels, :description, show: [occurrences: :detail]],
+        preload: [:channels, :description],
         where: i.id == ^item_id,
         order_by: [desc: so.airing_time]
       )
