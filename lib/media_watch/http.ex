@@ -1,4 +1,11 @@
 defmodule MediaWatch.Http do
+  def is_alive?(url) do
+    case Finch.build(:get, url) |> Finch.request(MediaWatch.Finch, receive_timeout: 500) do
+      {:error, %{reason: reason}} when reason in [:econnrefused, :timeout] -> false
+      {:ok, _} -> true
+    end
+  end
+
   def get_body(url) when is_binary(url) do
     case Finch.build(:get, url) |> Finch.request(MediaWatch.Finch) do
       {:ok, %{body: body, status: 200}} ->

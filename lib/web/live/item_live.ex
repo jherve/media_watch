@@ -37,16 +37,9 @@ defmodule MediaWatchWeb.ItemLive do
   end
 
   @impl true
-  def handle_event("trigger_snapshots", %{}, socket) do
-    socket.assigns.item.module |> Snapshots.do_snapshots()
-    {:noreply, socket}
-  end
-
-  @impl true
   def render(assigns),
     do: ~H"""
       <%= as_banner(assigns) %>
-      <button phx-click="trigger_snapshots">Lancer les snapshots</button>
 
       <h2>Emissions</h2>
 

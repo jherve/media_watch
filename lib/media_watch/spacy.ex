@@ -29,4 +29,6 @@ defmodule MediaWatch.Spacy do
   defp entities_url(), do: %{base_uri() | path: "/entities/"}
 
   defp has_config?(), do: not is_nil(Application.get_env(:media_watch, __MODULE__))
+
+  def is_alive?(), do: base_uri() |> URI.to_string() |> Http.is_alive?()
 end

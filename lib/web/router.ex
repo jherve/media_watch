@@ -24,6 +24,12 @@ defmodule MediaWatchWeb.Router do
     live "/persons", PersonIndexLive, :index
   end
 
+  scope "/admin", MediaWatchWeb do
+    pipe_through :browser
+
+    live "/", AdminMainLive, :index
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", MediaWatchWeb do
   #   pipe_through :api
