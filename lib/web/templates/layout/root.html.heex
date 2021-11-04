@@ -20,5 +20,6 @@
       </nav>
     </header>
     <%= @inner_content %>
+    <footer>Version <%= Application.spec(:media_watch) |> Keyword.get(:vsn) %></footer>
   </body>
 </html>
