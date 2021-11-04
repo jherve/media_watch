@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # Configure your database
 config :media_watch, MediaWatch.Repo, database: "db.sqlite", busy_timeout: 0

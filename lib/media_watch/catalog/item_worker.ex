@@ -28,6 +28,10 @@ defmodule MediaWatch.Catalog.ItemWorker do
       item ->
         item |> init(module)
     end
+  rescue
+    _e in Exqlite.Error ->
+      Logger.warning("Could not start #{module}")
+      {:ok, nil}
   end
 
   def init(item = %Item{id: id}, module) do

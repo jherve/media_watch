@@ -82,9 +82,11 @@ defmodule MediaWatch.Catalog.SourceWorker do
     do: {:ok, slices_list |> Enum.flat_map(&do_entity_recognition(&1, state)), state}
 
   defp do_entity_recognition(slice = %Slice{}, %{module: module}) do
-    slice
-    |> Analysis.insert_entities_from(module)
-    |> Enum.filter(&match?({:ok, _}, &1))
+    case slice |> Analysis.insert_entities_from(module) do
+      # TODO: This effectively prevents any recovery or catchup on entity recognition, in the current state 
+      {:error, _} -> []
+      slice_list when is_list(slice_list) -> slice_list |> Enum.filter(&match?({:ok, _}, &1))
+    end
   end
 
   defp attempt_catchup(state, :snapshots) do

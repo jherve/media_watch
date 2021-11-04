@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :media_watch, MediaWatch.Catalog,
   items: [

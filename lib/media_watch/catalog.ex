@@ -11,8 +11,11 @@ defmodule MediaWatch.Catalog do
 
   def list_persons(), do: from(p in Person, order_by: p.label) |> Repo.all()
 
-  def try_to_insert_all_channels(),
-    do: all_channel_modules() |> Enum.each(& &1.insert())
+  def try_to_insert_all_channels() do
+    all_channel_modules() |> Enum.each(& &1.insert())
+  rescue
+    e in Exqlite.Error -> {:error, e}
+  end
 
   def all_channel_modules(), do: @config[:channels] |> Keyword.keys()
 

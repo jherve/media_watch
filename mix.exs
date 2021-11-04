@@ -1,16 +1,20 @@
 defmodule MediaWatch.MixProject do
   use Mix.Project
+  @app_name :media_watch
 
   def project do
     [
-      app: :media_watch,
-      version: "0.1.0",
+      app: @app_name,
+      version: from_file(),
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      releases: [
+        {@app_name, [steps: [:assemble, &export_sha1/1, &export_docker_image_tag/1, :tar]]}
+      ]
     ]
   end
 
@@ -74,5 +78,35 @@ defmodule MediaWatch.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
+  end
+
+  defp from_file(file \\ "VERSION") do
+    with {:ok, described} <- File.read(file),
+         {:ok, version} <- described |> String.trim() |> to_semver_string() do
+      version
+    end
+  end
+
+  defp to_semver_string(described) when is_binary(described) do
+    with {:ok, _} <- described |> Version.parse(), do: {:ok, described}
+  end
+
+  defp export_sha1(rel) when is_struct(rel, Mix.Release) do
+    with {sha1, 0} <- System.cmd("git", ["rev-parse", "HEAD"]),
+         :ok <- rel |> write_in_rel_path("git-sha1", sha1),
+         do: rel
+  end
+
+  defp export_docker_image_tag(rel) when is_struct(rel, Mix.Release) do
+    with image_tag when not is_nil(image_tag) <- System.get_env("DOCKER_IMAGE_TAG"),
+         :ok <- rel |> write_in_rel_path("docker-image-tag", "#{image_tag}\n") do
+      rel
+    else
+      nil -> rel
+    end
+  end
+
+  defp write_in_rel_path(%{version_path: path}, file_path, content) do
+    path |> Path.join(file_path) |> File.write(content)
   end
 end

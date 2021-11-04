@@ -1,7 +1,12 @@
 defmodule MediaWatch.Spacy do
   alias MediaWatch.Http
 
-  def extract_entities(string, language \\ "fr") do
+  def extract_entities(string, language \\ "fr"),
+    do: extract_entities(string, language, has_config?())
+
+  def extract_entities(_, _, false), do: {:error, :no_config}
+
+  def extract_entities(string, language, true) do
     query = URI.encode_query(lang: language)
 
     with {:ok, %{"ents" => entities}} <-
@@ -11,6 +16,8 @@ defmodule MediaWatch.Spacy do
        |> Enum.map(&convert_to_atom_map/1)
        |> Enum.filter(&(&1.label == "PER"))
        |> Enum.map(&(&1.text |> String.trim()))}
+    else
+      {:error, %Mint.TransportError{reason: :econnrefused}} -> {:error, :server_down}
     end
   end
 
@@ -20,4 +27,6 @@ defmodule MediaWatch.Spacy do
   defp config(key) when is_atom(key), do: Application.get_env(:media_watch, __MODULE__)[key]
   defp base_uri(), do: %URI{host: config(:host), port: config(:port), scheme: "http"}
   defp entities_url(), do: %{base_uri() | path: "/entities/"}
+
+  defp has_config?(), do: not is_nil(Application.get_env(:media_watch, __MODULE__))
 end

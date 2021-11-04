@@ -204,12 +204,11 @@ defmodule MediaWatch.Analysis do
   end
 
   def insert_entities_from(slice, recognisable) do
-    with cs_list when is_list(cs_list) <-
-           slice
-           |> recognisable.get_entities_cs()
-           |> EntityRecognized.maybe_filter(recognisable),
+    with cs_list when is_list(cs_list) <- slice |> recognisable.get_entities_cs(),
+         filtered when is_list(filtered) <-
+           cs_list |> EntityRecognized.maybe_filter(recognisable),
          {:ok, res} <-
-           Repo.transaction(fn repo -> cs_list |> Enum.map(&repo.insert_and_retry(&1)) end),
+           Repo.transaction(fn repo -> filtered |> Enum.map(&repo.insert_and_retry(&1)) end),
          do: res
   end
 end
