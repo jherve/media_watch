@@ -6,13 +6,14 @@ defmodule MediaWatchWeb.AdminMainLive do
   @impl true
   def mount(%{"token" => token}, _, socket) do
     if Auth.is_valid_admin_key?(token),
-      do: {:ok, socket |> do_auth_mount()},
+      do:
+        {:ok, socket |> do_auth_mount() |> assign(display_nuke_command: Auth.open_bar_admin?())},
       else: {:ok, socket |> assign(auth: false)}
   end
 
   def mount(_, _, socket) do
     if Auth.open_bar_admin?(),
-      do: {:ok, socket |> do_auth_mount()},
+      do: {:ok, socket |> do_auth_mount() |> assign(display_nuke_command: true)},
       else: {:ok, socket |> assign(auth: false)}
   end
 
@@ -44,6 +45,11 @@ defmodule MediaWatchWeb.AdminMainLive do
     {:noreply, socket}
   end
 
+  def handle_event("nuke_database", %{}, socket) do
+    Utils.nuke_database()
+    {:noreply, socket}
+  end
+
   @impl true
   def render(assigns = %{auth: false}),
     do: ~H"""
@@ -64,6 +70,11 @@ defmodule MediaWatchWeb.AdminMainLive do
         <li><%= i.show.name %> : <button phx-click="trigger_snapshots" phx-value-id={i.id}>Lancer les snapshots</button></li>
       <% end %>
     </ul>
+    <%= if @display_nuke_command do %>
+      <p><button class="alert-danger"
+                 phx-click="nuke_database"
+                 data-confirm="Êtes-vous SÛR de vouloir faire ça?">Reset de la database</button></p>
+    <% end %>
     """
 
   defp spacy_heartbeat(socket) do
