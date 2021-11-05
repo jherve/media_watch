@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.AdminMainLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.{Spacy, Snapshots, Analysis, Auth}
+  alias MediaWatch.{Spacy, Snapshots, Analysis, Auth, Utils}
   @spacy_heartbeat_period 1_000
 
   @impl true
@@ -25,6 +25,11 @@ defmodule MediaWatchWeb.AdminMainLive do
   @impl true
   def handle_event("trigger_all_snapshots", %{}, socket) do
     Snapshots.do_all_snapshots()
+    {:noreply, socket}
+  end
+
+  def handle_event("restart_catalog", %{}, socket) do
+    Utils.restart_catalog()
     {:noreply, socket}
   end
 
@@ -53,6 +58,7 @@ defmodule MediaWatchWeb.AdminMainLive do
 
     <p>Spacy server is.. <%= if @spacy_is_alive?, do: "alive", else: "unavailable" %></p>
     <p><button phx-click="trigger_all_snapshots">Lancer tous les snapshots</button></p>
+    <p><button phx-click="restart_catalog">Redémarrer tout le catalogue</button></p>
     <ul>
       <%= for i <- @items do %>
         <li><%= i.show.name %> : <button phx-click="trigger_snapshots" phx-value-id={i.id}>Lancer les snapshots</button></li>
