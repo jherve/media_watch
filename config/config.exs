@@ -34,6 +34,8 @@ config :esbuild,
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
+config :media_watch, MediaWatch.Auth, open_bar_admin?: false
+
 import_config "catalog.exs"
 
 # Import environment specific config. This must remain at the bottom

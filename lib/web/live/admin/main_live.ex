@@ -6,14 +6,18 @@ defmodule MediaWatchWeb.AdminMainLive do
   @impl true
   def mount(%{"token" => token}, _, socket) do
     if Auth.is_valid_admin_key?(token),
-      do:
-        {:ok,
-         socket |> assign(auth: true, items: Analysis.get_all_analyzed_items()) |> spacy_heartbeat},
+      do: {:ok, socket |> do_auth_mount()},
       else: {:ok, socket |> assign(auth: false)}
   end
 
-  def mount(_, _, socket),
-    do: {:ok, socket |> assign(auth: false)}
+  def mount(_, _, socket) do
+    if Auth.open_bar_admin?(),
+      do: {:ok, socket |> do_auth_mount()},
+      else: {:ok, socket |> assign(auth: false)}
+  end
+
+  defp do_auth_mount(socket),
+    do: socket |> assign(auth: true, items: Analysis.get_all_analyzed_items()) |> spacy_heartbeat
 
   @impl true
   def handle_info(:spacy_heartbeat, socket), do: {:noreply, socket |> spacy_heartbeat()}

@@ -1,7 +1,13 @@
 defmodule MediaWatch.Auth do
   alias Phoenix.Token
+  alias __MODULE__
   @default_endpoint MediaWatchWeb.Endpoint
   @admin_token_expiration 60 * 15
+  @open_bar_admin? Application.compile_env(:media_watch, Auth)
+                   |> Keyword.get(:open_bar_admin?, false)
+
+  @spec open_bar_admin?() :: boolean()
+  def open_bar_admin?(), do: @open_bar_admin?
 
   @spec generate_admin_key() :: binary()
   def generate_admin_key(), do: Token.sign(@default_endpoint, "admin-access", :admin)

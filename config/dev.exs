@@ -65,3 +65,5 @@ config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
 config :media_watch, MediaWatch.Spacy, host: "localhost", port: 8000
+
+config :media_watch, MediaWatch.Auth, open_bar_admin?: true
