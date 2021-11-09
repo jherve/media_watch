@@ -1,24 +1,15 @@
 defmodule MediaWatchWeb.AdminMainLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.{Spacy, Snapshots, Analysis, Auth, Utils}
+  alias MediaWatch.{Spacy, Snapshots, Analysis, Utils}
   @spacy_heartbeat_period 10_000
 
   @impl true
-  def mount(%{"token" => token}, _, socket) do
-    if Auth.is_valid_admin_key?(token),
-      do:
-        {:ok, socket |> do_auth_mount() |> assign(display_nuke_command: Auth.open_bar_admin?())},
-      else: {:ok, socket |> assign(auth: false)}
-  end
-
-  def mount(_, _, socket) do
-    if Auth.open_bar_admin?(),
-      do: {:ok, socket |> do_auth_mount() |> assign(display_nuke_command: true)},
-      else: {:ok, socket |> assign(auth: false)}
-  end
-
-  defp do_auth_mount(socket),
-    do: socket |> assign(auth: true, items: Analysis.get_all_analyzed_items()) |> spacy_heartbeat
+  def mount(_, _, socket = %{assigns: %{open_bar_admin?: open_bar_admin?}}),
+    do:
+      {:ok,
+       socket
+       |> assign(items: Analysis.get_all_analyzed_items(), display_nuke_command: open_bar_admin?)
+       |> spacy_heartbeat}
 
   @impl true
   def handle_info(:spacy_heartbeat, socket), do: {:noreply, socket |> spacy_heartbeat()}
@@ -51,14 +42,7 @@ defmodule MediaWatchWeb.AdminMainLive do
   end
 
   @impl true
-  def render(assigns = %{auth: false}),
-    do: ~H"""
-    <h1>Admin</h1>
-
-    <p>Please use a valid token</p>
-    """
-
-  def render(assigns = %{auth: true}),
+  def render(assigns),
     do: ~H"""
     <h1>Admin</h1>
 
