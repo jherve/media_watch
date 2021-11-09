@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
-  alias MediaWatch.{Snapshots, Analysis}
+  alias MediaWatch.Analysis
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.{ItemView, ItemDescriptionView}
