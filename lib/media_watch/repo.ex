@@ -9,48 +9,26 @@ defmodule MediaWatch.Repo do
 
   require Logger
 
-  @wait_times [3, 7, 10, 20, 40]
+  @doc "Execute a database operation and return a normal error message on database error."
+  def rescue_if_busy(fun) when is_function(fun, 0),
+    do: fn ->
+      try do
+        fun.()
+      rescue
+        e in Exqlite.Error ->
+          case e do
+            %{message: "Database busy"} ->
+              {:error, :database_busy}
 
-  def insert_and_retry(obj),
-    do: retry_operation_and_log(fn -> obj |> Repo.insert() end, "insertion")
-
-  def update_and_retry(obj),
-    do: retry_operation_and_log(fn -> obj |> Repo.update() end, "update")
-
-  defp retry_operation_and_log(fun, operation_type) do
-    case retry_operation(fun) do
-      {out, nb_retries, duration_ms} ->
-        if duration_ms > 200 or nb_retries > 10,
-          do:
-            Logger.warning(
-              "Busy database prevented #{operation_type} for #{duration_ms} ms after #{nb_retries} retries"
-            )
-
-        out
-
-      out ->
-        out
-    end
-  end
-
-  defp retry_operation(fun, nb_retries \\ 0, start_of_transaction \\ Timex.now())
-       when is_function(fun, 0) do
-    out = fun.()
-
-    if nb_retries == 0,
-      do: out,
-      else: {out, nb_retries, Timex.now() |> Timex.diff(start_of_transaction, :millisecond)}
-  rescue
-    e in Exqlite.Error ->
-      case e do
-        %{message: "Database busy"} ->
-          @wait_times |> Enum.random() |> Process.sleep()
-          retry_operation(fun, nb_retries + 1, start_of_transaction)
-
-        _ ->
-          reraise e, __STACKTRACE__
+            _ ->
+              reraise e, __STACKTRACE__
+          end
       end
-  end
+    end
+
+  def insert_and_retry(obj), do: obj |> Repo.insert()
+
+  def update_and_retry(obj), do: obj |> Repo.update()
 
   @doc """
   Run a transaction with automatic recovery of some errors.

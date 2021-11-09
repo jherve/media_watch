@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.AdminMainLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.{Spacy, Snapshots, Analysis, Auth, Utils}
-  @spacy_heartbeat_period 1_000
+  @spacy_heartbeat_period 10_000
 
   @impl true
   def mount(%{"token" => token}, _, socket) do

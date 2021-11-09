@@ -1,13 +1,13 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Parsing, Analysis, Utils}
+  alias MediaWatch.{PubSub, Analysis, Utils}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.{ShowOccurrence, Description}
+  alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
 
   def start_link(module) when is_atom(module) do
-    GenServer.start_link(__MODULE__, module, name: module)
+    GenServer.start_link(__MODULE__, module, name: module, hibernate_after: 5_000)
   end
 
   def do_snapshots(module), do: GenServer.cast(module, :do_snapshots)
@@ -36,29 +36,11 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   def init(item = %Item{id: id}, module) do
     sources = item.sources
-    occurrences = item.show.id |> Analysis.get_occurrences()
     source_ids = sources |> Enum.map(& &1.id)
     source_ids |> Enum.each(&PubSub.subscribe("slicing:#{&1}"))
     source_ids |> Enum.each(&SourceSupervisor.start/1)
 
-    {:ok,
-     %{
-       id: id,
-       module: module,
-       item: item,
-       sources: sources,
-       description: id |> Analysis.get_description(),
-       occurrences: occurrences,
-       slices: Parsing.get_slices(source_ids),
-       slice_usages: occurrences |> Enum.flat_map(& &1.slice_usages),
-       details: occurrences |> Enum.map(& &1.detail)
-     }, {:continue, :do_catchup}}
-  end
-
-  @impl true
-  def handle_continue(:do_catchup, state) do
-    attempt_catchup(state, :slices)
-    {:noreply, state}
+    {:ok, %{id: id, module: module, item: item, sources: sources}}
   end
 
   @impl true
@@ -68,135 +50,68 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_info(slice = %Slice{}, state),
-    do: handle_slice(slice, state, slice |> Analysis.classify(state.module))
+  def handle_info(slice = %Slice{}, state) do
+    type = slice |> Analysis.classify(state.module)
 
-  defp handle_slice(slice, state, type = :show_occurrence_description) do
-    # TODO: Publish results
-    with {:ok, occ, state} <- do_occurrence_detection(slice, state),
-         {:ok, _, state} <- mark_slice_usage(slice, occ, type, state),
-         {:ok, _, state} <- add_details(occ, slice, state),
-         guests when is_list(guests) <- do_guest_detection(occ, state) do
-      {:noreply, state}
-    else
+    next_step =
+      cond do
+        type in [:show_occurrence_description, :show_occurrence_excerpt] -> :occurrence_detection
+        type == :item_description -> :item_description
+        true -> raise "Unknown type"
+      end
+
+    {:noreply, state |> Map.put(:slice, slice) |> Map.put(:slice_type, type),
+     {:continue, next_step}}
+  end
+
+  @impl true
+  def handle_continue(:occurrence_detection, state = %{slice: slice, slice_type: type}) do
+    case ShowOccurrencesServer.detect_occurrence(slice, state.item.show.id, type, state.module) do
+      {:ok, occ} ->
+        {:noreply, state |> Map.put(:occurrence, occ), {:continue, :add_details}}
+
       e = {:error, _} ->
-        Logger.warning(Utils.inspect_error(e))
+        log(:warning, state, Utils.inspect_error(e))
         {:noreply, state}
     end
   end
 
-  defp handle_slice(slice, state, type = :item_description) do
-    with {:ok, desc, state} <- do_description(slice, state),
-         {:ok, _, state} <- mark_slice_usage(slice, desc, type, state) do
-      {:noreply, state}
-    else
+  def handle_continue(
+        :add_details,
+        state = %{slice: slice, occurrence: occ, slice_type: :show_occurrence_description}
+      ) do
+    case ShowOccurrencesServer.add_details(occ, slice) do
+      {:ok, _} ->
+        {:noreply, state, {:continue, :guest_detection}}
+
       e = {:error, _} ->
-        Logger.warning(Utils.inspect_error(e))
+        log(:warning, state, Utils.inspect_error(e))
         {:noreply, state}
     end
   end
 
-  defp handle_slice(slice, state, type = :show_occurrence_excerpt) do
-    with {:ok, occ, state} <- do_occurrence_detection(slice, state),
-         {:ok, _, state} <- mark_slice_usage(slice, occ, type, state),
-         guests when is_list(guests) <- do_guest_detection(occ, state) do
-      {:noreply, state}
-    else
+  def handle_continue(:add_details, state = %{slice_type: _}),
+    do: {:noreply, state, {:continue, :guest_detection}}
+
+  def handle_continue(:guest_detection, state = %{occurrence: occ}) do
+    case ShowOccurrencesServer.do_guest_detection(occ, state.module) do
+      guests when is_list(guests) ->
+        {:noreply, state}
+
       e = {:error, _} ->
-        Logger.warning(Utils.inspect_error(e))
+        log(:warning, state, Utils.inspect_error(e))
         {:noreply, state}
     end
   end
 
-  defp do_occurrence_detection(slice, state) do
-    with {:ok, date} <- slice |> Analysis.extract_date(),
-         time_slot <- date |> state.module.get_time_slot(),
-         airing_time when is_struct(airing_time, DateTime) <- state.module.get_airing_time(date),
-         {:ok, occ} <- Analysis.create_occurrence(state.item.show.id, airing_time, time_slot) do
-      {:ok, occ, update_in(state.occurrences, &append(&1, occ))}
-    else
-      {:error, {:unique, occ}} -> {:ok, occ, state}
-      e = {:error, _} -> e
+  def handle_continue(:item_description, state = %{slice: slice, slice_type: type}) do
+    case ItemDescriptionServer.do_description(state.id, slice, type, state.module) do
+      {:ok, _} -> nil
+      e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
     end
+
+    {:noreply, state}
   end
 
-  defp mark_slice_usage(slice, %ShowOccurrence{id: id}, type, state) do
-    with {:ok, usage} <- Analysis.create_slice_usage(slice.id, id, type),
-         do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
-  end
-
-  defp mark_slice_usage(slice, %Description{item_id: id}, type, state) do
-    with {:ok, usage} <- Analysis.create_slice_usage(slice.id, id, type),
-         do: {:ok, usage, update_in(state.slice_usages, &append(&1, usage))}
-  end
-
-  defp add_details(occurrence, slice, state) do
-    case Analysis.create_occurrence_details(occurrence.id, slice) do
-      {:ok, detail} ->
-        {:ok, detail, update_in(state.details, &append(&1, detail))}
-
-      {:error, {:unique, existing}} ->
-        add_details_via_update(existing, slice, state)
-
-      e = {:error, _} ->
-        e
-    end
-  end
-
-  defp add_details_via_update(occurrence, slice, state) do
-    case Analysis.update_occurrence_details(occurrence, slice) do
-      {:ok, updated} ->
-        {:ok, updated, update_in(state.details, &refresh(&1, updated))}
-
-      {:error, e} ->
-        {:error, e, state}
-    end
-  end
-
-  defp do_guest_detection(occ = %ShowOccurrence{}, %{module: module}) do
-    occ
-    |> Analysis.insert_guests_from(module)
-    |> Enum.filter(&match?({:ok, _}, &1))
-  end
-
-  defp do_description(slice, state) do
-    with {:ok, desc} <- Analysis.create_description(state.id, slice, state.module),
-         do: {:ok, desc, %{state | description: desc}}
-  end
-
-  defp append(list, elem) when is_list(list), do: list ++ [elem]
-
-  defp refresh(list, elem) when is_list(list) do
-    with current_idx when not is_nil(current_idx) <- list |> Enum.find_index(&(&1.id == elem.id)),
-         do: list |> List.replace_at(current_idx, elem)
-  end
-
-  defp attempt_catchup(state, :slices) do
-    slices_seen_ids = state.slice_usages |> Enum.map(& &1.slice_id)
-
-    state.slices
-    |> Enum.reject(&(&1.id in slices_seen_ids))
-    |> tap(&do_catchup(&1, state))
-  end
-
-  defp do_catchup(list, state) when is_list(list),
-    do:
-      list
-      |> tap(&log_catching_up/1)
-      |> Enum.map(&do_catchup(&1, state))
-
-  defp do_catchup(obj, state) do
-    catchup(obj, state)
-  rescue
-    e -> {:error, e}
-  end
-
-  defp catchup(slice = %Slice{}, state),
-    do: handle_slice(slice, state, slice |> Analysis.classify(state.module))
-
-  defp log_catching_up([]), do: nil
-
-  defp log_catching_up(list = [%obj_type{} | _]) when is_list(list),
-    do:
-      Logger.info("Catching up on #{obj_type} [#{list |> Enum.map(& &1.id) |> Enum.join(", ")}]")
+  defp log(level, state, msg), do: Logger.log(level, "#{state.module}: #{msg}")
 end

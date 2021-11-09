@@ -8,7 +8,15 @@ defmodule MediaWatch.Catalog.CatalogSupervisor do
 
   @impl true
   def init(_init_arg) do
-    children = [SourceSupervisor, ItemSupervisor]
+    children = [
+      MediaWatch.Snapshots.SnapshotsServer,
+      MediaWatch.Parsing.ParsingServer,
+      MediaWatch.Analysis.EntityRecognitionServer,
+      MediaWatch.Analysis.ShowOccurrencesServer,
+      MediaWatch.Analysis.ItemDescriptionServer,
+      SourceSupervisor,
+      ItemSupervisor
+    ]
 
     Supervisor.init(children, strategy: :rest_for_one)
   end
