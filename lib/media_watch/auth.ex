@@ -2,7 +2,8 @@ defmodule MediaWatch.Auth do
   alias Phoenix.Token
   alias __MODULE__
   @default_endpoint MediaWatchWeb.Endpoint
-  @admin_token_expiration 60 * 15
+  # Admin token lasts 10 days
+  @admin_token_expiration 60 * 60 * 24 * 10
   @open_bar_admin? Application.compile_env(:media_watch, Auth)
                    |> Keyword.get(:open_bar_admin?, false)
 
