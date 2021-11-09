@@ -41,7 +41,7 @@ defmodule MediaWatch.Catalog.Channel do
       def insert() do
         %{module: __MODULE__, name: @name, url: @url}
         |> Channel.changeset()
-        |> Repo.insert_and_retry()
+        |> Repo.insert()
       end
 
       @impl true

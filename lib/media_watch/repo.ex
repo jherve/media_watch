@@ -26,10 +26,6 @@ defmodule MediaWatch.Repo do
       end
     end
 
-  def insert_and_retry(obj), do: obj |> Repo.insert()
-
-  def update_and_retry(obj), do: obj |> Repo.update()
-
   @doc """
   Run a transaction with automatic recovery of some errors.
   """

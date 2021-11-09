@@ -17,7 +17,7 @@ defmodule MediaWatch.Parsing do
 
   def parse_and_insert(snap, parsable) do
     snap = snap |> Repo.preload([:source, :xml])
-    with {:ok, cs} <- Snapshot.parse(snap, parsable), do: cs |> Repo.insert_and_retry()
+    with {:ok, cs} <- Snapshot.parse(snap, parsable), do: cs |> Repo.insert()
   end
 
   def slice_and_insert(snap, sliceable) do

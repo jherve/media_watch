@@ -121,7 +121,7 @@ defmodule MediaWatch.Analysis do
         slot_start: slot_start,
         slot_end: slot_end
       })
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
       |> ShowOccurrence.explain_error(Repo)
 
   @spec create_slice_usage(integer(), integer(), atom()) ::
@@ -129,7 +129,7 @@ defmodule MediaWatch.Analysis do
   def create_slice_usage(slice_id, desc_id, type = :item_description),
     do:
       SliceUsage.create_changeset(%{slice_id: slice_id, description_id: desc_id, type: type})
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
 
   def create_slice_usage(slice_id, occ_id, slice_type),
     do:
@@ -138,7 +138,7 @@ defmodule MediaWatch.Analysis do
         show_occurrence_id: occ_id,
         type: slice_type
       })
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
 
   @spec create_occurrence_details(integer(), Slice.t()) ::
           {:ok, Detail.t()} | {:error, {:unique, Detail.t()} | {:error, Ecto.Changeset.t()}}
@@ -150,7 +150,7 @@ defmodule MediaWatch.Analysis do
         description: entry.description,
         link: entry.link
       })
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
       |> Detail.explain_create_error(Repo)
 
   def create_occurrence_details(occ_id, %Slice{type: :html_preview_card, html_preview_card: item}),
@@ -161,13 +161,13 @@ defmodule MediaWatch.Analysis do
         description: item.text,
         link: item.link
       })
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
       |> Detail.explain_create_error(Repo)
 
   @spec update_occurrence_details(Detail.t(), Slice.t()) ::
           {:ok, Detail.t()} | {:error, Ecto.Changeset.t()}
   def update_occurrence_details(detail = %Detail{}, _slice),
-    do: Detail.changeset(detail, %{}) |> Repo.update_and_retry()
+    do: Detail.changeset(detail, %{}) |> Repo.update()
 
   @spec create_description(integer(), Slice.t(), atom()) ::
           {:ok, Description.t()} | {:error, Ecto.Changeset.t()}
@@ -175,7 +175,7 @@ defmodule MediaWatch.Analysis do
     do:
       describable.get_description_attrs(item_id, slice)
       |> Description.changeset()
-      |> Repo.insert_and_retry()
+      |> Repo.insert()
 
   def insert_guests_from(occ, recognisable),
     do:
@@ -196,7 +196,7 @@ defmodule MediaWatch.Analysis do
   end
 
   defp insert_guest(cs) when is_struct(cs, Ecto.Changeset) do
-    case cs |> Repo.insert_and_retry() |> Invitation.handle_error(Repo) do
+    case cs |> Repo.insert() |> Invitation.handle_error(Repo) do
       ok = {:ok, _} -> ok
       {:error, {:person_exists, new_cs}} -> new_cs |> insert_guest()
       e = {:error, _} -> e
@@ -208,7 +208,7 @@ defmodule MediaWatch.Analysis do
          filtered when is_list(filtered) <-
            cs_list |> EntityRecognized.maybe_filter(recognisable),
          {:ok, res} <-
-           Repo.transaction(fn repo -> filtered |> Enum.map(&repo.insert_and_retry(&1)) end),
+           Repo.transaction(fn repo -> filtered |> Enum.map(&repo.insert(&1)) end),
          do: res
   end
 end

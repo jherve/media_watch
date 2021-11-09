@@ -16,7 +16,7 @@ defmodule MediaWatch.RecoverableMulti do
       |> Multi.run(name, fn repo, _ ->
         # All the operations within the transaction are assumed to be 'successful'
         # whatever their actual result, so that the whole transaction can complete.
-        {:ok, repo.insert_and_retry(cs) |> wrap_intermediate_result.()}
+        {:ok, repo.insert(cs) |> wrap_intermediate_result.()}
       end)
     end)
     |> Multi.run(:control_stage, &fail_if_any_error/2)

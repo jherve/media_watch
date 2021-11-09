@@ -17,6 +17,6 @@ defmodule MediaWatch.Snapshots do
           {:ok, Snapshot.t()} | {:error, Ecto.Changeset.t()}
   def make_snapshot_and_insert(source) do
     with {:ok, cs} <- Source.make_snapshot(source),
-         do: cs |> Repo.insert_and_retry()
+         do: cs |> Repo.insert()
   end
 end
