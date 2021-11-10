@@ -67,21 +67,8 @@ defmodule MediaWatch.Catalog.SourceWorker do
     end
   end
 
-  def handle_continue(
-        {:snapshot, :entities_recognition},
-        state = %{slices: [], slices_recognized: slices}
-      ) do
-    PubSub.broadcast("snapshots:#{state.id}", state.snapshot)
-    PubSub.broadcast("parsing:#{state.id}", state.parsed_snapshot)
-    slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
-
-    {:noreply,
-     state
-     |> Map.delete(:snapshot)
-     |> Map.delete(:parsed_snapshot)
-     |> Map.delete(:slices)
-     |> Map.delete(:slices_recognized)}
-  end
+  def handle_continue({:snapshot, :entities_recognition}, state = %{slices: []}),
+    do: {:noreply, state, {:continue, {:snapshot, :final}}}
 
   def handle_continue(
         {:snapshot, :entities_recognition},
@@ -92,6 +79,19 @@ defmodule MediaWatch.Catalog.SourceWorker do
         {:noreply, %{state | slices: slices_tail, slices_recognized: slices ++ [slice]},
          {:continue, {:snapshot, :entities_recognition}}}
     end
+  end
+
+  def handle_continue({:snapshot, :final}, state = %{slices_recognized: slices}) do
+    PubSub.broadcast("snapshots:#{state.id}", state.snapshot)
+    PubSub.broadcast("parsing:#{state.id}", state.parsed_snapshot)
+    slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
+
+    {:noreply,
+     state
+     |> Map.delete(:snapshot)
+     |> Map.delete(:parsed_snapshot)
+     |> Map.delete(:slices)
+     |> Map.delete(:slices_recognized)}
   end
 
   defp to_name(source_id), do: :"#{__MODULE__}.#{source_id}"

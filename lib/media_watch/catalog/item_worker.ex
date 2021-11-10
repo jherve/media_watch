@@ -102,15 +102,23 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
-  def handle_continue({_, :guest_detection}, state = %{occurrence: occ}) do
+  def handle_continue({pipeline, :guest_detection}, state = %{occurrence: occ}) do
     case ShowOccurrencesServer.do_guest_detection(occ, state.module) do
       guests when is_list(guests) ->
-        {:noreply, state}
+        {:noreply, state, {:continue, {pipeline, :final}}}
 
       e = {:error, _} ->
         log(:warning, state, Utils.inspect_error(e))
         {:noreply, state}
     end
+  end
+
+  def handle_continue({:occurrence_description_analysis, :final}, state) do
+    {:noreply, state}
+  end
+
+  def handle_continue({:occurrence_excerpt_analysis, :final}, state) do
+    {:noreply, state}
   end
 
   def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
