@@ -38,19 +38,19 @@ defmodule MediaWatch.Parsing.ParsingServer do
   end
 
   @impl true
-  def handle_task_end(_, {_, _, {:error, :database_busy}}, state), do: {:retry, state}
+  def handle_task_end(_, {_, _, {:error, :database_busy}}, _, state), do: {:retry, state}
 
-  def handle_task_end(_, {:parse, pid, res}, state) do
+  def handle_task_end(_, {:parse, pid, res}, _, state) do
     GenServer.reply(pid, res)
     {:remove, state}
   end
 
-  def handle_task_end(_, {:slice, pid, _, {:ok, ok, _}}, state) do
+  def handle_task_end(_, {:slice, pid, _, {:ok, ok, _}}, _, state) do
     GenServer.reply(pid, {:ok, ok})
     {:remove, state}
   end
 
-  def handle_task_end(_, {:slice, pid, module, {:error, ok, _, errors}}, state) do
+  def handle_task_end(_, {:slice, pid, module, {:error, ok, _, errors}}, _, state) do
     Logger.warning("#{errors |> Enum.count()} errors on slices insertion in #{module}")
     GenServer.reply(pid, {:ok, ok})
     {:remove, state}

@@ -25,14 +25,14 @@ defmodule MediaWatch.Analysis.EntityRecognitionServer do
   end
 
   @impl true
-  def handle_task_end(_, {_, {:error, :database_busy}}, state), do: {:retry, state}
+  def handle_task_end(_, {_, {:error, :database_busy}}, _, state), do: {:retry, state}
 
-  def handle_task_end(_, {pid, {:error, _}}, state) do
+  def handle_task_end(_, {pid, {:error, _}}, _, state) do
     GenServer.reply(pid, [])
     {:remove, state}
   end
 
-  def handle_task_end(_, {pid, list}, state) when is_list(list) do
+  def handle_task_end(_, {pid, list}, _, state) when is_list(list) do
     GenServer.reply(pid, list |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.map(&elem(&1, 1)))
     {:remove, state}
   end

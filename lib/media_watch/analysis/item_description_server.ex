@@ -35,14 +35,14 @@ defmodule MediaWatch.Analysis.ItemDescriptionServer do
   end
 
   @impl true
-  def handle_task_end(_, {_, {:error, :database_busy}}, state), do: {:retry, state}
+  def handle_task_end(_, {_, {:error, :database_busy}}, _, state), do: {:retry, state}
 
-  def handle_task_end(_, {pid, e = {:error, _}}, state) do
+  def handle_task_end(_, {pid, e = {:error, _}}, _, state) do
     GenServer.reply(pid, e)
     {:remove, state}
   end
 
-  def handle_task_end(_, {pid, ok = {:ok, _desc}}, state) do
+  def handle_task_end(_, {pid, ok = {:ok, _desc}}, _, state) do
     GenServer.reply(pid, ok)
     {:remove, state}
   end

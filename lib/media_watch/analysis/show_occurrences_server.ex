@@ -27,7 +27,8 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
       |> Telemetry.span_function_call(@prefix ++ [:do_guest_detection], %{module: module})
 
   @impl true
-  def init([]), do: {:ok, AsyncGenServer.init_state()}
+  def init([]),
+    do: {:ok, AsyncGenServer.init_state(%{unmatched_slices: MapSet.new()})}
 
   @impl true
   def handle_call(
@@ -52,7 +53,7 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
       {operation, pid, result}
     end
     |> Repo.rescue_if_busy({operation, pid, {:error, :database_busy}})
-    |> AsyncGenServer.start_async_task(state)
+    |> AsyncGenServer.start_async_task(state, %{slice_id: slice.id})
   end
 
   def handle_call({operation = :add_details, occurrence, slice}, pid, state) do
@@ -89,19 +90,34 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
   end
 
   @impl true
-  def handle_task_end(_, {_, _, {:error, :database_busy}}, state), do: {:retry, state}
+  def handle_task_end(_, {_, _, {:error, :database_busy}}, _, state), do: {:retry, state}
 
-  def handle_task_end(_, {:detect_occurrence, pid, result}, state) do
+  def handle_task_end(
+        _,
+        {:detect_occurrence, pid, result = {:ok, _}},
+        %{slice_id: slice_id},
+        state
+      ) do
     GenServer.reply(pid, result)
-    {:remove, state}
+    {:remove, update_in(state.unmatched_slices, &(&1 |> MapSet.delete(slice_id)))}
   end
 
-  def handle_task_end(_, {:do_guest_detection, pid, guests}, state) do
+  def handle_task_end(
+        _,
+        {:detect_occurrence, pid, result = {:error, _}},
+        %{slice_id: slice_id},
+        state
+      ) do
+    GenServer.reply(pid, result)
+    {:remove, update_in(state.unmatched_slices, &(&1 |> MapSet.put(slice_id)))}
+  end
+
+  def handle_task_end(_, {:do_guest_detection, pid, guests}, _, state) do
     GenServer.reply(pid, guests)
     {:remove, state}
   end
 
-  def handle_task_end(_, {:add_details, pid, result}, state) do
+  def handle_task_end(_, {:add_details, pid, result}, _, state) do
     GenServer.reply(pid, result)
     {:remove, state}
   end

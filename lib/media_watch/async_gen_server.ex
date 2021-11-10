@@ -3,22 +3,29 @@ defmodule MediaWatch.AsyncGenServer do
   alias MediaWatch.TaskSupervisor
   alias __MODULE__
 
-  @callback handle_task_end(task_ref :: reference(), task_result :: any(), state :: any()) ::
+  @callback handle_task_end(
+              task_ref :: reference(),
+              task_result :: any(),
+              task_context :: any(),
+              state :: any()
+            ) ::
               {:retry, state :: any()} | {:remove, state :: any()}
   @callback handle_task_failure(task_ref :: reference(), failure_reason :: any(), state :: any()) ::
               {:retry, state :: any()} | {:remove, state :: any()}
 
   def init_state(state \\ %{}), do: state |> Map.put(:tasks, %{})
 
-  def start_async_task(fun, state, ctx \\ []) when is_function(fun, 0) and is_map(state) do
+  def start_async_task(fun, state, ctx \\ %{})
+      when is_function(fun, 0) and is_map(state) and is_map(ctx) do
     {task, ctx} = fun |> TaskSupervisor.start_retryable(ctx)
     {:noreply, put_in(state.tasks[task.ref], ctx)}
   end
 
-  def handle_info({ref, res}, state, async_server) do
+  def handle_info({ref, res}, state = %{tasks: tasks}, async_server) do
     Process.demonitor(ref, [:flush])
+    ctx = tasks |> Map.get(ref)
 
-    case async_server.handle_task_end(ref, res, state) do
+    case async_server.handle_task_end(ref, res, ctx, state) do
       {:remove, state} -> {:noreply, state |> remove_task(ref)}
       {:retry, state} -> {:noreply, state |> retry_task(ref)}
     end

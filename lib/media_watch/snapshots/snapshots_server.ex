@@ -21,18 +21,18 @@ defmodule MediaWatch.Snapshots.SnapshotsServer do
   def handle_call({:do_snapshot, module, source}, pid, state) do
     fn -> {pid, Snapshots.make_snapshot_and_insert(source)} end
     |> Repo.rescue_if_busy({pid, {:error, :database_busy}})
-    |> AsyncGenServer.start_async_task(state, module: module)
+    |> AsyncGenServer.start_async_task(state, %{module: module})
   end
 
   @impl true
-  def handle_task_end(_, {pid, {:error, %{reason: :timeout}}}, state) do
+  def handle_task_end(_, {pid, {:error, %{reason: :timeout}}}, _, state) do
     GenServer.reply(pid, {:error, :timeout})
     {:remove, state}
   end
 
-  def handle_task_end(_, {_, {:error, :database_busy}}, state), do: {:retry, state}
+  def handle_task_end(_, {_, {:error, :database_busy}}, _, state), do: {:retry, state}
 
-  def handle_task_end(_, {pid, ok_or_error}, state) do
+  def handle_task_end(_, {pid, ok_or_error}, _, state) do
     GenServer.reply(pid, ok_or_error)
     {:remove, state}
   end
