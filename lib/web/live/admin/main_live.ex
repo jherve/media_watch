@@ -38,6 +38,7 @@ defmodule MediaWatchWeb.AdminMainLive do
 
   def handle_event("nuke_database", %{}, socket) do
     Utils.nuke_database()
+    Utils.restart_catalog()
     {:noreply, socket}
   end
 
