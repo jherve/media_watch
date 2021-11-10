@@ -43,7 +43,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def init(item = %Item{id: id}, module) do
     sources = item.sources
     source_ids = sources |> Enum.map(& &1.id)
-    source_ids |> Enum.each(&PubSub.subscribe("slicing:#{&1}"))
+    source_ids |> Enum.each(&PubSub.subscribe("source:#{&1}"))
     source_ids |> Enum.each(&SourceSupervisor.start/1)
 
     {:ok, %ItemWorker{id: id, module: module, item: item, sources: sources}}

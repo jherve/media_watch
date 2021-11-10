@@ -91,9 +91,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   def handle_continue({:snapshot, :final}, state = %{slices_recognized: slices}) do
-    PubSub.broadcast("snapshots:#{state.id}", state.snapshot)
-    PubSub.broadcast("parsing:#{state.id}", state.parsed_snapshot)
-    slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
+    slices |> Enum.each(&PubSub.broadcast("source:#{state.id}", &1))
 
     {:noreply, state |> reset(@snapshot_stage_fields)}
   end

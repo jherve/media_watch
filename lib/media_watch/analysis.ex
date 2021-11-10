@@ -14,8 +14,7 @@ defmodule MediaWatch.Analysis do
   }
 
   def subscribe(item_id) do
-    PubSub.subscribe("description:#{item_id}")
-    PubSub.subscribe("occurrence_formatting:#{item_id}")
+    PubSub.subscribe("item:#{item_id}")
   end
 
   @spec get_all_analyzed_items() :: [Item.t()]
