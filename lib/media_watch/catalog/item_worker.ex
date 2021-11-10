@@ -120,16 +120,18 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_continue({:occurrence_description_analysis, :final}, state) do
+    publish_show_occurrence(state)
     {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
   end
 
   def handle_continue({:occurrence_excerpt_analysis, :final}, state) do
+    publish_show_occurrence(state)
     {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
   end
 
   def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
     case ItemDescriptionServer.do_description(state.id, slice, type, state.module) do
-      {:ok, _} -> nil
+      {:ok, desc} -> PubSub.broadcast("item:#{state.id}", desc)
       e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
     end
 
@@ -146,4 +148,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   defp reset(state, fields) when is_list(fields),
     do: struct(ItemWorker, state |> Map.from_struct() |> Map.drop(fields))
+
+  defp publish_show_occurrence(state),
+    do: PubSub.broadcast("item:#{state.id}", state.occurrence)
 end

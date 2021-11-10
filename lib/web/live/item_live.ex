@@ -1,6 +1,7 @@
 defmodule MediaWatchWeb.ItemLive do
   use MediaWatchWeb, :live_view
   alias MediaWatch.Analysis
+  alias MediaWatch.Repo
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.{ItemView, ItemDescriptionView}
@@ -24,6 +25,9 @@ defmodule MediaWatchWeb.ItemLive do
     do: {:noreply, socket |> assign(description: desc)}
 
   def handle_info(occ, socket) when is_struct(occ, MediaWatch.Analysis.ShowOccurrence) do
+    # TODO: This should most likely be done in the show_occurrence component
+    occ = occ |> Repo.preload([:detail, :guests])
+
     # Occurrence updates are sent using the same message format, hence the need for
     # the call to `Enum.uniq_by/2`. This function only keeps the first value in case
     # of duplicates, so the new occurrence is always prepended to the list of
@@ -50,9 +54,9 @@ defmodule MediaWatchWeb.ItemLive do
     do: ~H"""
       <div id="item-banner" class="item banner">
         <h1><%= ItemView.title(@item) %> (<%= ItemView.channels(@item) %>)</h1>
-        <p><%= ItemDescriptionView.description(@item.description) %></p>
-        <%= if url = ItemDescriptionView.image_url(@item.description) do %><img src={url}/><% end %>
-        <%= if link_ = ItemDescriptionView.link(@item.description) do %>
+        <p><%= ItemDescriptionView.description(@description) %></p>
+        <%= if url = ItemDescriptionView.image_url(@description) do %><img src={url}/><% end %>
+        <%= if link_ = ItemDescriptionView.link(@description) do %>
           <%= link "Lien vers l'émission", to: link_ %>
         <% else %>
           Pas de lien disponible
