@@ -21,18 +21,19 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   @impl true
-  def handle_cast(:do_snapshots, state = %{source: source}) do
-    do_snap(state, source)
+  def handle_cast(:do_snapshots, state) do
+    {:noreply, state, {:continue, :snapshot}}
   end
 
-  defp do_snap(state, source) do
+  @impl true
+  def handle_continue(:snapshot, state = %{source: source}) do
     case SnapshotsServer.snapshot(state.module, source) do
       {:ok, snap} ->
         {:noreply, state |> Map.put(:snapshot, snap), {:continue, :parsing}}
 
       {:error, :timeout} ->
         log(:info, state, "retrying snapshot")
-        do_snap(state, source)
+        {:noreply, state, {:continue, :snapshot}}
 
       {:error, e} ->
         log(:warning, state, "Error while doing snapshot : #{Utils.inspect_error(e)}")
@@ -41,7 +42,6 @@ defmodule MediaWatch.Catalog.SourceWorker do
     end
   end
 
-  @impl true
   def handle_continue(:parsing, state = %{snapshot: snap}) do
     case ParsingServer.parse(snap, state.module) do
       {:ok, parsed} ->
