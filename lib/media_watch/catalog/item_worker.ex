@@ -53,22 +53,34 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def handle_info(slice = %Slice{}, state) do
     type = slice |> Analysis.classify(state.module)
 
-    next_step =
-      cond do
-        type in [:show_occurrence_description, :show_occurrence_excerpt] -> :occurrence_detection
-        type == :item_description -> :item_description
+    pipeline =
+      case type do
+        :show_occurrence_description -> :occurrence_description_analysis
+        :show_occurrence_excerpt -> :occurrence_excerpt_analysis
+        :item_description -> :item_description_analysis
         true -> raise "Unknown type"
       end
 
     {:noreply, state |> Map.put(:slice, slice) |> Map.put(:slice_type, type),
-     {:continue, next_step}}
+     {:continue, pipeline}}
   end
 
   @impl true
-  def handle_continue(:occurrence_detection, state = %{slice: slice, slice_type: type}) do
+  def handle_continue(pipeline = :occurrence_description_analysis, state) do
+    {:noreply, state, {:continue, {pipeline, :occurrence_detection}}}
+  end
+
+  def handle_continue(pipeline = :occurrence_excerpt_analysis, state) do
+    {:noreply, state, {:continue, {pipeline, :occurrence_detection}}}
+  end
+
+  def handle_continue(
+        stage = {_, :occurrence_detection},
+        state = %{slice: slice, slice_type: type}
+      ) do
     case ShowOccurrencesServer.detect_occurrence(slice, state.item.show.id, type, state.module) do
       {:ok, occ} ->
-        {:noreply, state |> Map.put(:occurrence, occ), {:continue, :add_details}}
+        {:noreply, state |> Map.put(:occurrence, occ), {:continue, next_stage(stage)}}
 
       e = {:error, _} ->
         log(:warning, state, Utils.inspect_error(e))
@@ -77,12 +89,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_continue(
-        :add_details,
-        state = %{slice: slice, occurrence: occ, slice_type: :show_occurrence_description}
+        {pipeline, :add_details},
+        state = %{slice: slice, occurrence: occ}
       ) do
     case ShowOccurrencesServer.add_details(occ, slice) do
       {:ok, _} ->
-        {:noreply, state, {:continue, :guest_detection}}
+        {:noreply, state, {:continue, {pipeline, :guest_detection}}}
 
       e = {:error, _} ->
         log(:warning, state, Utils.inspect_error(e))
@@ -90,10 +102,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
-  def handle_continue(:add_details, state = %{slice_type: _}),
-    do: {:noreply, state, {:continue, :guest_detection}}
-
-  def handle_continue(:guest_detection, state = %{occurrence: occ}) do
+  def handle_continue({_, :guest_detection}, state = %{occurrence: occ}) do
     case ShowOccurrencesServer.do_guest_detection(occ, state.module) do
       guests when is_list(guests) ->
         {:noreply, state}
@@ -104,7 +113,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
   end
 
-  def handle_continue(:item_description, state = %{slice: slice, slice_type: type}) do
+  def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
     case ItemDescriptionServer.do_description(state.id, slice, type, state.module) do
       {:ok, _} -> nil
       e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
@@ -112,6 +121,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
     {:noreply, state}
   end
+
+  defp next_stage({p = :occurrence_description_analysis, :occurrence_detection}),
+    do: {p, :add_details}
+
+  defp next_stage({p = :occurrence_excerpt_analysis, :occurrence_detection}),
+    do: {p, :guest_detection}
 
   defp log(level, state, msg), do: Logger.log(level, "#{state.module}: #{msg}")
 end
