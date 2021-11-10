@@ -5,6 +5,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
+  alias __MODULE__
+  @slice_analysis_fields [:slice, :slice_type]
+  @occurrence_analysis_fields [:occurrence]
+
+  defstruct [:id, :module, :item, :sources] ++
+              @slice_analysis_fields ++ @occurrence_analysis_fields
 
   def start_link(module) when is_atom(module) do
     GenServer.start_link(__MODULE__, module, name: module, hibernate_after: 5_000)
@@ -40,7 +46,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     source_ids |> Enum.each(&PubSub.subscribe("slicing:#{&1}"))
     source_ids |> Enum.each(&SourceSupervisor.start/1)
 
-    {:ok, %{id: id, module: module, item: item, sources: sources}}
+    {:ok, %ItemWorker{id: id, module: module, item: item, sources: sources}}
   end
 
   @impl true
@@ -114,11 +120,11 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_continue({:occurrence_description_analysis, :final}, state) do
-    {:noreply, state}
+    {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
   end
 
   def handle_continue({:occurrence_excerpt_analysis, :final}, state) do
-    {:noreply, state}
+    {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
   end
 
   def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
@@ -127,7 +133,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
       e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
     end
 
-    {:noreply, state}
+    {:noreply, state |> reset(@slice_analysis_fields)}
   end
 
   defp next_stage({p = :occurrence_description_analysis, :occurrence_detection}),
@@ -137,4 +143,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     do: {p, :guest_detection}
 
   defp log(level, state, msg), do: Logger.log(level, "#{state.module}: #{msg}")
+
+  defp reset(state, fields) when is_list(fields),
+    do: struct(ItemWorker, state |> Map.from_struct() |> Map.drop(fields))
 end

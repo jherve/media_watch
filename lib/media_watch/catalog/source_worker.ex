@@ -5,6 +5,10 @@ defmodule MediaWatch.Catalog.SourceWorker do
   alias MediaWatch.Snapshots.SnapshotsServer
   alias MediaWatch.Parsing.ParsingServer
   alias MediaWatch.Analysis.EntityRecognitionServer
+  alias __MODULE__
+  @snapshot_stage_fields [:snapshot, :parsed_snapshot, :slices, :slices_recognized]
+
+  defstruct [:id, :module, :source] ++ @snapshot_stage_fields
 
   def start_link(source_id) do
     # `hibernate_after` option is added in order to try and prevent
@@ -17,7 +21,12 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def init(id) do
-    {:ok, %{id: id, module: Catalog.module_from_source_id(id), source: Catalog.get_source(id)}}
+    {:ok,
+     %SourceWorker{
+       id: id,
+       module: Catalog.module_from_source_id(id),
+       source: Catalog.get_source(id)
+     }}
   end
 
   @impl true
@@ -86,15 +95,13 @@ defmodule MediaWatch.Catalog.SourceWorker do
     PubSub.broadcast("parsing:#{state.id}", state.parsed_snapshot)
     slices |> Enum.each(&PubSub.broadcast("slicing:#{state.id}", &1))
 
-    {:noreply,
-     state
-     |> Map.delete(:snapshot)
-     |> Map.delete(:parsed_snapshot)
-     |> Map.delete(:slices)
-     |> Map.delete(:slices_recognized)}
+    {:noreply, state |> reset(@snapshot_stage_fields)}
   end
 
   defp to_name(source_id), do: :"#{__MODULE__}.#{source_id}"
 
   defp log(level, state, msg), do: Logger.log(level, "#{state.id}/#{state.module}: #{msg}")
+
+  defp reset(state, fields) when is_list(fields),
+    do: struct(SourceWorker, state |> Map.from_struct() |> Map.drop(fields))
 end
