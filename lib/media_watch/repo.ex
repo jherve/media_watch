@@ -10,7 +10,7 @@ defmodule MediaWatch.Repo do
   require Logger
 
   @doc "Execute a database operation and return a normal error message on database error."
-  def rescue_if_busy(fun) when is_function(fun, 0),
+  def rescue_if_busy(fun, error_value) when is_function(fun, 0),
     do: fn ->
       try do
         fun.()
@@ -18,7 +18,7 @@ defmodule MediaWatch.Repo do
         e in Exqlite.Error ->
           case e do
             %{message: "Database busy"} ->
-              {:error, :database_busy}
+              error_value
 
             _ ->
               reraise e, __STACKTRACE__

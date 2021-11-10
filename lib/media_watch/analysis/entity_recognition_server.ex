@@ -1,6 +1,6 @@
 defmodule MediaWatch.Analysis.EntityRecognitionServer do
   use MediaWatch.AsyncGenServer
-  alias MediaWatch.{Analysis, Telemetry}
+  alias MediaWatch.{Analysis, Telemetry, Repo}
   alias MediaWatch.Parsing.Slice
   @name __MODULE__
   @prefix [:media_watch, :entity_recognition_server]
@@ -19,19 +19,21 @@ defmodule MediaWatch.Analysis.EntityRecognitionServer do
 
   @impl true
   def handle_call({:do_entity_recognition, slice = %Slice{}, module}, pid, state) do
-    fn ->
-      entities =
-        case slice |> Analysis.insert_entities_from(module) do
-          # TODO: This effectively prevents any recovery or catchup on entity recognition, in the current state
-          {:error, _} ->
-            []
-
-          list when is_list(list) ->
-            list |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.map(&elem(&1, 1))
-        end
-
-      GenServer.reply(pid, entities)
-    end
+    fn -> {pid, slice |> Analysis.insert_entities_from(module)} end
+    |> Repo.rescue_if_busy({pid, {:error, :database_busy}})
     |> AsyncGenServer.start_async_task(state)
+  end
+
+  @impl true
+  def handle_task_end(_, {_, {:error, :database_busy}}, state), do: {:retry, state}
+
+  def handle_task_end(_, {pid, {:error, _}}, state) do
+    GenServer.reply(pid, [])
+    {:remove, state}
+  end
+
+  def handle_task_end(_, {pid, list}, state) when is_list(list) do
+    GenServer.reply(pid, list |> Enum.filter(&match?({:ok, _}, &1)) |> Enum.map(&elem(&1, 1)))
+    {:remove, state}
   end
 end
