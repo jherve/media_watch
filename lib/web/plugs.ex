@@ -3,6 +3,8 @@ defmodule MediaWatchWeb.Plugs do
   alias MediaWatch.Auth
   @token_key "_admin_token"
 
+  def token_key(), do: @token_key
+
   def check_admin(conn, _) do
     open_bar? = Auth.open_bar_admin?()
 

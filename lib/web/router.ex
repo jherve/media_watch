@@ -25,18 +25,20 @@ defmodule MediaWatchWeb.Router do
   scope "/", MediaWatchWeb do
     pipe_through :browser
 
-    live "/", PageLive, :index
-    live "/changes", ChangelogLive, :index
-    live "/items", ItemIndexLive, :index
-    live "/items/:id", ItemLive, :detail
-    live "/show_occurrences", ShowOccurrenceIndexLive, :index
-    live "/persons", PersonIndexLive, :index
+    live_session :default, on_mount: MediaWatchWeb.Auth do
+      live "/", PageLive, :index
+      live "/changes", ChangelogLive, :index
+      live "/items", ItemIndexLive, :index
+      live "/items/:id", ItemLive, :detail
+      live "/show_occurrences", ShowOccurrenceIndexLive, :index
+      live "/persons", PersonIndexLive, :index
+    end
   end
 
   scope "/admin", MediaWatchWeb do
     pipe_through [:browser, :admin]
 
-    live_session :default, on_mount: MediaWatchWeb.Auth do
+    live_session :admin, on_mount: MediaWatchWeb.Auth do
       live "/", AdminMainLive, :index
     end
   end
