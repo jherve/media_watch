@@ -16,7 +16,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
     GenServer.start_link(__MODULE__, module, name: module, hibernate_after: 5_000)
   end
 
-  def do_snapshots(module), do: GenServer.cast(module, :do_snapshots)
+  @doc "Require snapshot to be taken after `after_` seconds"
+  def do_snapshots(module, after_ \\ 0), do: GenServer.cast(module, {:do_snapshots, after_})
 
   @impl true
   def init(module) when is_atom(module) do
@@ -50,12 +51,17 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_cast(:do_snapshots, state = %{sources: sources}) do
-    sources |> Enum.map(& &1.id) |> Enum.each(&SourceWorker.do_snapshots(&1))
+  def handle_cast({:do_snapshots, duration}, state) do
+    Process.send_after(self(), :do_snapshots, duration * 1_000)
     {:noreply, state}
   end
 
   @impl true
+  def handle_info(:do_snapshots, state = %{sources: sources}) do
+    sources |> Enum.map(& &1.id) |> Enum.each(&SourceWorker.do_snapshots(&1))
+    {:noreply, state}
+  end
+
   def handle_info(slice = %Slice{}, state) do
     type = slice |> Analysis.classify(state.module)
 
