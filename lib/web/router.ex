@@ -24,6 +24,7 @@ defmodule MediaWatchWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+    live "/changes", ChangelogLive, :index
     live "/items", ItemIndexLive, :index
     live "/items/:id", ItemLive, :detail
     live "/show_occurrences", ShowOccurrenceIndexLive, :index
