@@ -81,6 +81,7 @@ defmodule MediaWatch.Catalog.Item do
                     true -> raise("At least one of [`show`] should be set")
                   end)
       @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
+      @duration @show[:duration_minutes] * 60 || raise("`show.duration_minutes` should be set")
       @hosts @show[:host_names]
       @alternate_hosts @show[:alternate_hosts]
       @columnists @show[:columnists]
@@ -127,6 +128,9 @@ defmodule MediaWatch.Catalog.Item do
 
       @impl MediaWatch.Analysis.Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
+
+      @impl MediaWatch.Analysis.Recurrent
+      def get_duration(), do: @duration
 
       @impl MediaWatch.Analysis.Recognisable
       def get_guests_attrs(occ), do: Invitation.get_guests_attrs(occ, __MODULE__)

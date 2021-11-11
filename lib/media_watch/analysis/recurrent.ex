@@ -5,6 +5,7 @@ defmodule MediaWatch.Analysis.Recurrent do
   @callback get_time_zone() :: Timex.TimezoneInfo.t()
   @callback get_time_slot(DateTime.t()) :: time_slot()
   @callback get_airing_time(DateTime.t()) :: DateTime.t() | {:error, atom()}
+  @callback get_duration() :: duration_seconds :: integer()
 
   defmacro __using__(_opts) do
     quote do
