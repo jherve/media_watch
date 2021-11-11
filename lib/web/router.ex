@@ -10,10 +10,12 @@ defmodule MediaWatchWeb.Router do
     plug :put_root_layout, {MediaWatchWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :transfer_admin_token_to_session
+    plug :check_admin
   end
 
   pipeline :admin do
-    plug :check_admin
+    plug :enforce_admin
   end
 
   pipeline :api do
