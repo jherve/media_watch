@@ -1,4 +1,4 @@
-## Dans la prochaine version..
+## Version 1.3 (11/11/2021)
 
 * Ajout de cette page =)
 * La recherche des informations liées à chaque nouvelle diffusion d'une émission

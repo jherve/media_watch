@@ -1,6 +1,6 @@
 # Changelog
 
-## In next version..
+## 1.3.0 (2021-11-11)
 
 * UI: Add a UI changelog page
 * UI: Update admin token handling to have admin flag available in all live views
