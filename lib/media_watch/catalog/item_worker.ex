@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Analysis, Utils}
+  alias MediaWatch.{PubSub, Analysis, Utils, Scheduler}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
@@ -47,7 +47,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
     source_ids |> Enum.each(&PubSub.subscribe("source:#{&1}"))
     source_ids |> Enum.each(&SourceSupervisor.start/1)
 
-    {:ok, %ItemWorker{id: id, module: module, item: item, sources: sources}}
+    {:ok, %ItemWorker{id: id, module: module, item: item, sources: sources},
+     {:continue, :after_init}}
   end
 
   @impl true
@@ -78,6 +79,15 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
+  def handle_continue(:after_init, state = %{module: module}) do
+    job_name = :"#{module}.Snapshot"
+
+    Scheduler.delete_job(job_name)
+    setup_cron_job(module, job_name)
+
+    {:noreply, state}
+  end
+
   def handle_continue(pipeline = :occurrence_description_analysis, state) do
     {:noreply, state, {:continue, {pipeline, :occurrence_detection}}}
   end
@@ -142,6 +152,24 @@ defmodule MediaWatch.Catalog.ItemWorker do
     end
 
     {:noreply, state |> reset(@slice_analysis_fields)}
+  end
+
+  defp setup_cron_job(module, job_name) do
+    duration = module.get_duration()
+    # To stay on the safe side and account for the time it takes for information
+    # to be published, the snapshot is taken with an additional delay after the
+    # end of the show.
+    #
+    # TODO: Find a more-bulletproof solution that allows to "poll" waiting for a
+    # new snapshot.
+    snap_delay = if duration < 60 * 15, do: duration * 2, else: duration * 1.5
+
+    Scheduler.new_job()
+    |> Quantum.Job.set_name(job_name)
+    |> Quantum.Job.set_schedule(module.get_airing_schedule())
+    |> Quantum.Job.set_timezone(module.get_time_zone() |> Timex.Timezone.name_of())
+    |> Quantum.Job.set_task({ItemWorker, :do_snapshots, [module, snap_delay]})
+    |> Scheduler.add_job()
   end
 
   defp next_stage({p = :occurrence_description_analysis, :occurrence_detection}),
