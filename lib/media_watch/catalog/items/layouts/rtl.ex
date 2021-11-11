@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.Item.Layout.RTL do
       use MediaWatch.Catalog.Item, opts
       import Ecto.Changeset
 
-      @impl true
+      @impl MediaWatch.Analysis.Describable
       def get_description_attrs(item_id, slice),
         do:
           super(item_id, slice)

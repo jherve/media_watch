@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.Item.QuestionsPolitiques do
   import Ecto.Changeset
   alias MediaWatch.Parsing.Slice.RssEntry
 
-  @impl true
+  @impl MediaWatch.Parsing.Sliceable
   def into_slice_cs(attrs, parsed),
     do: super(attrs, parsed) |> cast_assoc(:rss_entry, with: &rss_entry_extra_check/2)
 
