@@ -60,7 +60,8 @@ defmodule MediaWatch.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
       {:crontab, "~> 1.1"},
-      {:ex_cldr_dates_times, "~> 2.0"}
+      {:ex_cldr_dates_times, "~> 2.0"},
+      {:quantum, "~> 3.0"}
     ]
   end
 
