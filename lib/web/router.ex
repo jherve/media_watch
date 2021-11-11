@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.Router do
   use MediaWatchWeb, :router
-  import MediaWatchWebPlugs
+  import MediaWatchWeb.Plugs
   import Phoenix.LiveDashboard.Router
 
   pipeline :browser do

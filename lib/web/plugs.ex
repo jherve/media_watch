@@ -1,4 +1,4 @@
-defmodule MediaWatchWebPlugs do
+defmodule MediaWatchWeb.Plugs do
   import Plug.Conn
   alias MediaWatch.Auth
   @token_key "_admin_token"
