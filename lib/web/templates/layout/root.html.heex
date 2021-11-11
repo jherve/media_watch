@@ -20,6 +20,11 @@
       </nav>
     </header>
     <%= @inner_content %>
-    <footer>Version <%= Application.spec(:media_watch) |> Keyword.get(:vsn) %></footer>
+    <footer>
+      <nav>
+        <span><a href={Routes.changelog_path(@conn, :index)}>Nouveautés</a></span>
+      </nav>
+      <span class="version">Version <%= Application.spec(:media_watch) |> Keyword.get(:vsn) %></span>
+    </footer>
   </body>
 </html>
