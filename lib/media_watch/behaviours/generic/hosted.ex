@@ -6,6 +6,7 @@ defmodule MediaWatch.Analysis.Hosted.Generic do
       @columnists opts[:columnists]
 
       alias MediaWatch.Analysis.Hosted
+      @behaviour Hosted
 
       @impl Hosted
       def get_hosts(), do: @hosts

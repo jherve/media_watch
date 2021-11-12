@@ -8,6 +8,7 @@ defmodule MediaWatch.Analysis.Recurrent.Generic do
       @time_zone opts[:timezone] || "Europe/Paris"
 
       alias MediaWatch.Analysis.Recurrent
+      @behaviour Recurrent
 
       @impl Recurrent
       def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()

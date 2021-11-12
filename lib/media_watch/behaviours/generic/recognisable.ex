@@ -80,6 +80,7 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
   defmacro __using__(_opts) do
     quote do
       alias MediaWatch.Analysis.Recognisable
+      @behaviour Recognisable
 
       @impl Recognisable
       defdelegate get_guests_attrs(occ, hosted), to: Recognisable.Generic

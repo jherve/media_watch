@@ -15,6 +15,7 @@ defmodule MediaWatch.Parsing.Parsable.Generic do
   defmacro __using__(_opts) do
     quote do
       alias MediaWatch.Parsing.Parsable
+      @behaviour Parsable
 
       @impl Parsable
       defdelegate parse_snapshot(snap), to: Parsable.Generic

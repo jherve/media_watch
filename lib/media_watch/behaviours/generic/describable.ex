@@ -29,6 +29,7 @@ defmodule MediaWatch.Analysis.Describable.Generic do
   defmacro __using__(_opts) do
     quote do
       alias MediaWatch.Analysis.Describable
+      @behaviour Describable
 
       @impl Describable
       defdelegate get_description_attrs(item_id, slice), to: Describable.Generic

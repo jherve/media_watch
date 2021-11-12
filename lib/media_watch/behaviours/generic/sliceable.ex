@@ -20,6 +20,7 @@ defmodule MediaWatch.Parsing.Sliceable.Generic do
   defmacro __using__(_opts) do
     quote do
       alias MediaWatch.Parsing.Sliceable
+      @behaviour Sliceable
 
       @impl Sliceable
       defdelegate into_list_of_slice_attrs(parsed), to: Sliceable.Generic

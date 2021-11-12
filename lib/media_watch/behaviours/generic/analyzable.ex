@@ -17,6 +17,7 @@ defmodule MediaWatch.Analysis.Analyzable.Generic do
   defmacro __using__(_opts) do
     quote do
       alias MediaWatch.Analysis.Analyzable
+      @behaviour Analyzable
 
       @impl Analyzable
       defdelegate classify(slice), to: Analyzable.Generic
