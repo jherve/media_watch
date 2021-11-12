@@ -21,10 +21,12 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
       fn -> GenServer.call(@name, {:add_details, occurrence, slice}, :infinity) end
       |> Telemetry.span_function_call(@prefix ++ [:add_details])
 
-  def do_guest_detection(occurrence, module),
+  def do_guest_detection(occurrence, recognizable, hosted),
     do:
-      fn -> GenServer.call(@name, {:do_guest_detection, occurrence, module}, :infinity) end
-      |> Telemetry.span_function_call(@prefix ++ [:do_guest_detection], %{module: module})
+      fn ->
+        GenServer.call(@name, {:do_guest_detection, occurrence, recognizable, hosted}, :infinity)
+      end
+      |> Telemetry.span_function_call(@prefix ++ [:do_guest_detection])
 
   @impl true
   def init([]),
@@ -77,11 +79,11 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     |> AsyncGenServer.start_async_task(state)
   end
 
-  def handle_call({operation = :do_guest_detection, occurrence, module}, pid, state) do
+  def handle_call({operation = :do_guest_detection, occurrence, recognizable, hosted}, pid, state) do
     fn ->
       guests =
         occurrence
-        |> Analysis.insert_guests_from(module, module)
+        |> Analysis.insert_guests_from(recognizable, hosted)
         |> Enum.filter(&match?({:ok, _}, &1))
 
       {operation, pid, guests}
