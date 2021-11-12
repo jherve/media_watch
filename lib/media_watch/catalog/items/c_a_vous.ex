@@ -1,6 +1,7 @@
 defmodule MediaWatch.Catalog.Item.CAVous do
   use MediaWatch.Catalog.Item
   alias MediaWatch.Snapshots.Snapshot
+  alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.OpenGraph
   @list_of_shows_selector "[id^=season_france-5_c-a-vous] > ul"
   @show_selector "li"

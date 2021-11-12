@@ -51,42 +51,37 @@ defmodule MediaWatch.Catalog.Item do
 
   defmacro __using__(_opts) do
     quote do
-      @behaviour MediaWatch.Catalog.Catalogable
-      @behaviour MediaWatch.Parsing.Parsable
-      @behaviour MediaWatch.Parsing.Sliceable
-      @behaviour MediaWatch.Analysis.Analyzable
-      @behaviour MediaWatch.Analysis.Describable
-      @behaviour MediaWatch.Analysis.Recognisable
-      @behaviour MediaWatch.Analysis.Hosted
-      use MediaWatch.Analysis.Recurrent
-      import Ecto.Query
-      alias MediaWatch.Repo
-      alias MediaWatch.Catalog.Source
-      alias MediaWatch.Snapshots.Snapshot
-      alias MediaWatch.Parsing.{ParsedSnapshot, Slice}
-
-      alias MediaWatch.Analysis.{
-        SliceUsage,
-        ShowOccurrence,
-        ShowOccurrence.Invitation,
-        EntityRecognized
-      }
-
       @config Application.compile_env(:media_watch, MediaWatch.Catalog)[:items][__MODULE__] ||
                 raise("Config for #{__MODULE__} should be set")
 
       @show @config[:show]
+
       @item_args (cond do
                     not is_nil(@show) -> %{show: @show}
                     true -> raise("At least one of [`show`] should be set")
                   end)
-      @airing_schedule @show[:airing_schedule] || raise("`show.airing_schedule` should be set")
-      @duration @show[:duration_minutes] * 60 || raise("`show.duration_minutes` should be set")
-      @hosts @show[:host_names]
-      @alternate_hosts @show[:alternate_hosts]
-      @columnists @show[:columnists]
+
       @sources @config[:sources] || raise("`sources` should be set")
       @channels @config[:channels] || raise("`channels` should be set")
+
+      @behaviour MediaWatch.Catalog.Catalogable
+      @behaviour MediaWatch.Parsing.Parsable
+      use MediaWatch.Parsing.Parsable.Generic
+      @behaviour MediaWatch.Parsing.Sliceable
+      use MediaWatch.Parsing.Sliceable.Generic
+      @behaviour MediaWatch.Analysis.Analyzable
+      use MediaWatch.Analysis.Analyzable.Generic
+      @behaviour MediaWatch.Analysis.Describable
+      use MediaWatch.Analysis.Describable.Generic
+      @behaviour MediaWatch.Analysis.Recognisable
+      use MediaWatch.Analysis.Recognisable.Generic
+      @behaviour MediaWatch.Analysis.Hosted
+      use MediaWatch.Analysis.Hosted.Generic, @show
+      @behaviour MediaWatch.Analysis.Recurrent
+      use MediaWatch.Analysis.Recurrent.Generic, @show
+
+      import Ecto.Query
+      alias MediaWatch.Repo
 
       @impl MediaWatch.Catalog.Catalogable
       def query(), do: from(i in Item, as: :item, where: i.module == ^__MODULE__)
@@ -107,55 +102,6 @@ defmodule MediaWatch.Catalog.Item do
         from(i in query(), preload: [:channels, :show, sources: [:rss_feed, :web_index_page]])
         |> Repo.one()
       end
-
-      @impl MediaWatch.Parsing.Parsable
-      defdelegate parse_snapshot(snap), to: Snapshot
-
-      @impl MediaWatch.Parsing.Parsable
-      defdelegate prune_snapshot(data, snap), to: Snapshot
-
-      @impl MediaWatch.Parsing.Sliceable
-      defdelegate into_list_of_slice_attrs(parsed), to: ParsedSnapshot
-
-      @impl MediaWatch.Parsing.Sliceable
-      defdelegate into_slice_cs(attrs, parsed), to: ParsedSnapshot
-
-      @impl MediaWatch.Analysis.Analyzable
-      defdelegate classify(slice), to: SliceUsage
-
-      @impl MediaWatch.Analysis.Describable
-      defdelegate get_description_attrs(item_id, slice), to: Description
-
-      @impl MediaWatch.Analysis.Recurrent
-      def get_airing_schedule(), do: @airing_schedule |> Crontab.CronExpression.Parser.parse!()
-
-      @impl MediaWatch.Analysis.Recurrent
-      def get_duration(), do: @duration
-
-      @impl MediaWatch.Analysis.Recognisable
-      def get_guests_attrs(occ), do: Invitation.get_guests_attrs(occ, __MODULE__)
-
-      @impl MediaWatch.Analysis.Recognisable
-      defdelegate get_entities_cs(occ), to: EntityRecognized
-
-      @impl MediaWatch.Analysis.Hosted
-      def get_hosts(), do: @hosts
-
-      if @alternate_hosts do
-        @impl MediaWatch.Analysis.Hosted
-        def get_alternate_hosts(), do: @alternate_hosts
-      end
-
-      if @columnists do
-        @impl MediaWatch.Analysis.Hosted
-        def get_columnists(), do: @columnists
-      end
-
-      defoverridable into_slice_cs: 2,
-                     get_description_attrs: 2,
-                     classify: 1,
-                     prune_snapshot: 2,
-                     into_list_of_slice_attrs: 1
     end
   end
 end

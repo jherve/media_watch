@@ -1,7 +1,7 @@
 defmodule MediaWatch.Analysis.ShowOccurrencesServer do
   use MediaWatch.AsyncGenServer
   alias MediaWatch.{Analysis, Telemetry, Repo}
-  alias MediaWatch.Analysis.ShowOccurrence
+  alias MediaWatch.Analysis.{ShowOccurrence, Recurrent}
   @name __MODULE__
   @prefix [:media_watch, :show_occurrences_server]
 
@@ -39,8 +39,9 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     fn ->
       result =
         with {:ok, date} <- slice |> Analysis.extract_date(),
-             time_slot <- date |> module.get_time_slot(),
-             airing_time when is_struct(airing_time, DateTime) <- module.get_airing_time(date),
+             time_slot <- date |> Recurrent.get_time_slot(module),
+             airing_time when is_struct(airing_time, DateTime) <-
+               Recurrent.get_airing_time(date, module),
              ok = {:ok, %ShowOccurrence{id: id}} <-
                Analysis.create_occurrence(show_id, airing_time, time_slot),
              {:ok, _} <- Analysis.create_slice_usage(slice.id, id, slice_type) do
@@ -80,7 +81,7 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     fn ->
       guests =
         occurrence
-        |> Analysis.insert_guests_from(module)
+        |> Analysis.insert_guests_from(module, module)
         |> Enum.filter(&match?({:ok, _}, &1))
 
       {operation, pid, guests}

@@ -12,7 +12,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot.{Xml, Html}
-  alias MediaWatch.Parsing.ParsedSnapshot
   alias __MODULE__, as: Snapshot
   @required_fields [:type, :url]
 
@@ -37,26 +36,6 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> set_type()
     |> validate_required(@required_fields)
   end
-
-  def parse(snap = %Snapshot{}, parsable) do
-    with {:ok, parsed} <- snap |> parsable.parse_snapshot(),
-         {:ok, pruned} <- parsed |> parsable.prune_snapshot(snap) do
-      {:ok,
-       ParsedSnapshot.changeset(%ParsedSnapshot{snapshot: snap, source: snap.source}, %{
-         data: pruned
-       })}
-    end
-  end
-
-  @spec parse_snapshot(Snapshot.t()) :: {:ok, map()} | {:error, any()}
-  def parse_snapshot(%Snapshot{type: :xml, xml: xml}), do: xml |> Xml.parse_snapshot()
-  def parse_snapshot(%Snapshot{type: :html, html: html}), do: html |> Html.parse_snapshot()
-
-  @spec prune_snapshot(map(), Snapshot.t()) :: {:ok, map()} | {:error, any()}
-  def prune_snapshot(parsed, %Snapshot{type: :xml}), do: parsed |> Xml.prune_snapshot()
-
-  def prune_snapshot(_, %Snapshot{type: :html}),
-    do: raise("A custom implementation must be provided for html snapshots")
 
   defp set_type(cs) do
     cond do

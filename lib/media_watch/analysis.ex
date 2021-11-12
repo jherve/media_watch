@@ -6,11 +6,12 @@ defmodule MediaWatch.Analysis do
 
   alias MediaWatch.Analysis.{
     ShowOccurrence,
-    ShowOccurrence.Detail,
     Description,
-    EntityRecognized,
     ShowOccurrence.Invitation,
-    SliceUsage
+    Recognisable,
+    Describable,
+    Recurrent,
+    Analyzable
   }
 
   def subscribe(item_id) do
@@ -107,107 +108,15 @@ defmodule MediaWatch.Analysis do
 
   def extract_date(slice), do: Slice.extract_date(slice)
 
-  def identify_time_slot(dt, recurrent), do: recurrent.get_time_slot(dt)
+  defdelegate create_occurrence(show_id, airing_time, slot), to: Recurrent
 
-  @spec create_occurrence(integer(), DateTime.t(), MediaWatch.Analysis.Recurrent.time_slot()) ::
-          {:ok, ShowOccurrence.t()}
-          | {:error, {:unique, ShowOccurrence.t()} | {:error, Ecto.Changeset.t()}}
-  def create_occurrence(show_id, airing_time, {slot_start, slot_end}),
-    do:
-      ShowOccurrence.create_changeset(%{
-        show_id: show_id,
-        airing_time: airing_time,
-        slot_start: slot_start,
-        slot_end: slot_end
-      })
-      |> Repo.insert()
-      |> ShowOccurrence.explain_error(Repo)
+  defdelegate create_slice_usage(slice_id, occ_id, slice_type), to: Analyzable
 
-  @spec create_slice_usage(integer(), integer(), atom()) ::
-          {:ok, SliceUsage.t()} | {:error, Ecto.Changeset.t()}
-  def create_slice_usage(slice_id, desc_id, type = :item_description),
-    do:
-      SliceUsage.create_changeset(%{slice_id: slice_id, description_id: desc_id, type: type})
-      |> Repo.insert()
+  defdelegate create_occurrence_details(occ_id, slice), to: Recurrent
+  defdelegate update_occurrence_details(detail, slice), to: Recurrent
 
-  def create_slice_usage(slice_id, occ_id, slice_type),
-    do:
-      SliceUsage.create_changeset(%{
-        slice_id: slice_id,
-        show_occurrence_id: occ_id,
-        type: slice_type
-      })
-      |> Repo.insert()
+  defdelegate create_description(item_id, slice, describable), to: Describable
 
-  @spec create_occurrence_details(integer(), Slice.t()) ::
-          {:ok, Detail.t()} | {:error, {:unique, Detail.t()} | {:error, Ecto.Changeset.t()}}
-  def create_occurrence_details(occ_id, %Slice{type: :rss_entry, rss_entry: entry}),
-    do:
-      Detail.changeset(%{
-        id: occ_id,
-        title: entry.title,
-        description: entry.description,
-        link: entry.link
-      })
-      |> Repo.insert()
-      |> Detail.explain_create_error(Repo)
-
-  def create_occurrence_details(occ_id, %Slice{type: :html_preview_card, html_preview_card: item}),
-    do:
-      Detail.changeset(%{
-        id: occ_id,
-        title: item.title,
-        description: item.text,
-        link: item.link
-      })
-      |> Repo.insert()
-      |> Detail.explain_create_error(Repo)
-
-  @spec update_occurrence_details(Detail.t(), Slice.t()) ::
-          {:ok, Detail.t()} | {:error, Ecto.Changeset.t()}
-  def update_occurrence_details(detail = %Detail{}, _slice),
-    do: Detail.changeset(detail, %{}) |> Repo.update()
-
-  @spec create_description(integer(), Slice.t(), atom()) ::
-          {:ok, Description.t()} | {:error, Ecto.Changeset.t()}
-  def create_description(item_id, slice, describable),
-    do:
-      describable.get_description_attrs(item_id, slice)
-      |> Description.changeset()
-      |> Repo.insert()
-
-  def insert_guests_from(occ, recognisable),
-    do:
-      insert_guests_from(
-        occ,
-        recognisable,
-        function_exported?(recognisable, :get_guests_attrs, 1)
-      )
-
-  def insert_guests_from(_occ, _recognisable, false), do: []
-
-  def insert_guests_from(occ, recognisable, true) do
-    occ = occ |> Repo.preload([:detail, slices: Slice.preloads()])
-
-    with list_of_attrs <- recognisable.get_guests_attrs(occ),
-         cs_list <- Invitation.get_guests_cs(occ, list_of_attrs),
-         do: cs_list |> Enum.map(&insert_guest/1)
-  end
-
-  defp insert_guest(cs) when is_struct(cs, Ecto.Changeset) do
-    case cs |> Repo.insert() |> Invitation.handle_error(Repo) do
-      ok = {:ok, _} -> ok
-      {:error, {:person_exists, new_cs}} -> new_cs |> insert_guest()
-      e = {:error, _} -> e
-    end
-  end
-
-  def insert_entities_from(slice, recognisable) do
-    with cs_list when is_list(cs_list) <- slice |> recognisable.get_entities_cs(),
-         filtered when is_list(filtered) <-
-           cs_list |> EntityRecognized.maybe_filter(recognisable),
-         {:ok, res} <-
-           Repo.transaction(fn repo -> filtered |> Enum.map(&repo.insert(&1)) end),
-         do: res
-  end
+  defdelegate insert_guests_from(occ, recognisable, hosted), to: Recognisable
+  defdelegate insert_entities_from(slice, recognisable), to: Recognisable
 end

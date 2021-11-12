@@ -10,9 +10,7 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
   use Ecto.Schema
   import Ecto.Changeset
   alias MediaWatch.Catalog.Source
-  alias MediaWatch.Catalog.Source.RssFeed
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: ParsedSnapshot
 
   schema "parsed_snapshots" do
@@ -32,25 +30,4 @@ defmodule MediaWatch.Parsing.ParsedSnapshot do
     |> cast_assoc(:source, required: true)
     |> unique_constraint(:snapshot_id)
   end
-
-  def into_slice_cs(attrs, parsed = %ParsedSnapshot{snapshot: %{source: source}})
-      when not is_nil(source) and not is_struct(source, Ecto.Association.NotLoaded) do
-    Slice.changeset(%Slice{parsed_snapshot: parsed, source: source}, attrs)
-  end
-
-  def slice(parsed = %ParsedSnapshot{}, module),
-    do:
-      parsed
-      |> module.into_list_of_slice_attrs()
-      |> Enum.map(&module.into_slice_cs(&1, parsed))
-
-  @spec into_list_of_slice_attrs(ParsedSnapshot.t()) :: [map()]
-  def into_list_of_slice_attrs(%ParsedSnapshot{
-        data: data,
-        snapshot: %{source: %{type: :rss_feed}}
-      }),
-      do: data |> RssFeed.into_list_of_slice_attrs()
-
-  def into_list_of_slice_attrs(%ParsedSnapshot{snapshot: %{source: %{type: :web_index_page}}}),
-    do: raise("A custom implementation must be provided for web_index_page snapshots")
 end
