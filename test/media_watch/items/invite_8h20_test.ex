@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.Invite8h20Test do
   use ExUnit.Case
-  alias MediaWatch.Catalog.Item.Invite8h20
+  alias MediaWatchInventory.Item.Invite8h20
 
   describe "guests detection" do
     @expected_guests [

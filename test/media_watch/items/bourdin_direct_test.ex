@@ -1,6 +1,6 @@
 defmodule MediaWatchWeb.BourdinDirectTest do
   use ExUnit.Case
-  alias MediaWatch.Catalog.Item.BourdinDirect
+  alias MediaWatchInventory.Item.BourdinDirect
 
   describe "guests detection" do
     @expected_guests [

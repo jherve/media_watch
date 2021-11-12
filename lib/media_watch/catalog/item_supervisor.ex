@@ -10,7 +10,8 @@ defmodule MediaWatch.Catalog.ItemSupervisor do
 
   @impl true
   def init(_init_arg) do
-    children = Catalog.all() |> Enum.map(&Supervisor.child_spec({ItemWorker, &1}, id: &1))
+    children =
+      MediaWatchInventory.all() |> Enum.map(&Supervisor.child_spec({ItemWorker, &1}, id: &1))
 
     case Catalog.try_to_insert_all_channels() do
       {:error, e} -> Logger.error("Could not insert channels : #{inspect(e)}")
