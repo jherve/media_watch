@@ -52,7 +52,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_cast({:do_snapshots, duration}, state) do
+  def handle_cast({:do_snapshots, duration}, state) when is_integer(duration) do
     Process.send_after(self(), :do_snapshots, duration * 1_000)
     {:noreply, state}
   end
@@ -168,7 +168,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
     |> Quantum.Job.set_name(job_name)
     |> Quantum.Job.set_schedule(module.get_airing_schedule())
     |> Quantum.Job.set_timezone(module.get_time_zone() |> Timex.Timezone.name_of())
-    |> Quantum.Job.set_task({ItemWorker, :do_snapshots, [module, snap_delay]})
+    |> Quantum.Job.set_task({ItemWorker, :do_snapshots, [module, round(snap_delay)]})
     |> Scheduler.add_job()
   end
 
