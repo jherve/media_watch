@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 (2021-11-12)
+
+* Fix: Ensure only integer values are used in snapshot scheduling
+* Internals: Keep track of pending snapshots
+
 ## 1.3.0 (2021-11-11)
 
 * UI: Add a UI changelog page
