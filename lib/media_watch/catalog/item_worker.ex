@@ -6,11 +6,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
   alias __MODULE__
+  @snapshot_fields [snapshots_pending: MapSet.new()]
   @slice_analysis_fields [:slice, :slice_type]
   @occurrence_analysis_fields [:occurrence]
 
   defstruct [:id, :module, :item, :sources] ++
-              @slice_analysis_fields ++ @occurrence_analysis_fields
+              @snapshot_fields ++ @slice_analysis_fields ++ @occurrence_analysis_fields
 
   def start_link(module) when is_atom(module) do
     GenServer.start_link(__MODULE__, module, name: module, hibernate_after: 5_000)
@@ -52,15 +53,20 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   @impl true
-  def handle_cast({:do_snapshots, duration}, state) when is_integer(duration) do
-    Process.send_after(self(), :do_snapshots, duration * 1_000)
+  def handle_cast({:do_snapshots, 0}, state) do
+    do_snapshot_on_all_sources(state)
     {:noreply, state}
   end
 
+  def handle_cast({:do_snapshots, duration}, state) when is_integer(duration) do
+    timer = Process.send_after(self(), :do_snapshots, duration * 1_000)
+    {:noreply, update_in(state.snapshots_pending, &(&1 |> MapSet.put(timer)))}
+  end
+
   @impl true
-  def handle_info(:do_snapshots, state = %{sources: sources}) do
-    sources |> Enum.map(& &1.id) |> Enum.each(&SourceWorker.do_snapshots(&1))
-    {:noreply, state}
+  def handle_info(:do_snapshots, state) do
+    do_snapshot_on_all_sources(state)
+    {:noreply, update_in(state.snapshots_pending, &clear_expired_timers/1)}
   end
 
   def handle_info(slice = %Slice{}, state) do
@@ -171,6 +177,12 @@ defmodule MediaWatch.Catalog.ItemWorker do
     |> Quantum.Job.set_task({ItemWorker, :do_snapshots, [module, round(snap_delay)]})
     |> Scheduler.add_job()
   end
+
+  defp do_snapshot_on_all_sources(%{sources: sources}),
+    do: sources |> Enum.map(& &1.id) |> Enum.each(&SourceWorker.do_snapshots(&1))
+
+  defp clear_expired_timers(timers = %MapSet{}),
+    do: timers |> Enum.filter(&(&1 |> Process.read_timer())) |> MapSet.new()
 
   defp next_stage({p = :occurrence_description_analysis, :occurrence_detection}),
     do: {p, :add_details}
