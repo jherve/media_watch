@@ -11,7 +11,7 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
     create unique_index(:catalog_channels, [:module])
 
     create table(:catalog_items) do
-      add :module, :string
+      add :module, :string, null: false
     end
 
     create unique_index(:catalog_items, [:module])

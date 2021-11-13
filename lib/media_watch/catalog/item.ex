@@ -28,6 +28,7 @@ defmodule MediaWatch.Catalog.Item do
     item
     |> cast(attrs, [:id, :module])
     |> cast_assoc(:show)
+    |> validate_required([:module])
     |> validate_required_inclusion([:show])
     |> cast_assoc(:sources, required: true)
     |> unique_constraint(:module)

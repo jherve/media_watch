@@ -1,7 +1,7 @@
 defmodule MediaWatch.Catalog.ItemWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{PubSub, Analysis, Utils, Scheduler}
+  alias MediaWatch.{Catalog, PubSub, Analysis, Utils, Scheduler}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
@@ -22,24 +22,14 @@ defmodule MediaWatch.Catalog.ItemWorker do
 
   @impl true
   def init(module) when is_atom(module) do
-    case module.get() do
+    case Catalog.get_item_from_module(module) do
       nil ->
-        case module.insert() do
-          {:ok, item} ->
-            item |> init(module)
-
-          {:error, _} ->
-            Logger.warning("Could not start #{module}")
-            {:ok, nil}
-        end
+        Logger.warning("Could not start #{module}")
+        {:ok, nil}
 
       item ->
         item |> init(module)
     end
-  rescue
-    _e in Exqlite.Error ->
-      Logger.warning("Could not start #{module}")
-      {:ok, nil}
   end
 
   def init(item = %Item{id: id}, module) do
