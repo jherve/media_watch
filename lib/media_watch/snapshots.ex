@@ -1,13 +1,7 @@
 defmodule MediaWatch.Snapshots do
-  import Ecto.Query
   alias MediaWatch.Repo
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.{ItemWorker, Source}
-
-  def get_snapshots(source_id),
-    do:
-      from(s in Snapshot, where: s.source_id == ^source_id, preload: [:xml])
-      |> Repo.all()
 
   def do_all_snapshots(), do: MediaWatchInventory.all() |> Enum.each(&do_snapshots/1)
 

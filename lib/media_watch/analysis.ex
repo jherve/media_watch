@@ -6,7 +6,6 @@ defmodule MediaWatch.Analysis do
 
   alias MediaWatch.Analysis.{
     ShowOccurrence,
-    Description,
     ShowOccurrence.Invitation,
     Recognisable,
     Describable,
@@ -93,16 +92,6 @@ defmodule MediaWatch.Analysis do
         on: s.id == i.id,
         preload: [show: {s, item: i}]
       )
-
-  @spec get_description(integer()) :: Description.t() | nil
-  def get_description(item_id),
-    do: Description |> Repo.get_by(item_id: item_id) |> Repo.preload([:slices])
-
-  @spec get_occurrences(integer()) :: [ShowOccurrence.t()]
-  def get_occurrences(show_id),
-    do:
-      from(s in ShowOccurrence, where: s.show_id == ^show_id, preload: [:detail, :slices])
-      |> Repo.all()
 
   def classify(slice, analyzable), do: analyzable.classify(slice)
 
