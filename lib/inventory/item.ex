@@ -15,19 +15,12 @@ defmodule MediaWatchInventory.Item do
       @channels @config[:channels] || raise("`channels` should be set")
 
       @behaviour MediaWatch.Catalog.Catalogable
-      @behaviour MediaWatch.Parsing.Parsable
       use MediaWatch.Parsing.Parsable.Generic
-      @behaviour MediaWatch.Parsing.Sliceable
       use MediaWatch.Parsing.Sliceable.Generic
-      @behaviour MediaWatch.Analysis.Analyzable
       use MediaWatch.Analysis.Analyzable.Generic
-      @behaviour MediaWatch.Analysis.Describable
       use MediaWatch.Analysis.Describable.Generic
-      @behaviour MediaWatch.Analysis.Recognisable
       use MediaWatch.Analysis.Recognisable.Generic
-      @behaviour MediaWatch.Analysis.Hosted
       use MediaWatch.Analysis.Hosted.Generic, @show
-      @behaviour MediaWatch.Analysis.Recurrent
       use MediaWatch.Analysis.Recurrent.Generic, @show
 
       import Ecto.Query
