@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 (2021-11-16)
+
+* Fix: Fix non-determinism bug in slice/occurrence association that made guest detection fuzzy
+* Internals: Move complex kinda-stateful code into "operation" modules
+* [BREAKING] Internals: Reorganize code into main/utils/inventory and change Item's modules
+names
+* Internals: Better separation of behaviours from implementations
+* Internals: Insert all inventory items through a unique transaction on startup
+
 ## 1.3.1 (2021-11-12)
 
 * Fix: Ensure only integer values are used in snapshot scheduling
