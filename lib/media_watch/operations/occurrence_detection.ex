@@ -1,4 +1,5 @@
 defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
+  alias Ecto.Multi
   alias MediaWatch.{Repo, OperationWithRetry, Catalog}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{Recurrent, ShowOccurrence, SliceUsage}
@@ -16,9 +17,8 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
             slice_date: DateTime.t() | nil,
             time_slot: Recurrent.time_slot() | nil,
             airing_time: DateTime.t() | nil,
-            occurrence: ShowOccurrence.t() | nil,
-            occurrence_created?: boolean() | nil,
             slice_usage_done?: boolean(),
+            multi: Multi.t() | nil,
             retry_strategy: OperationWithRetry.retry_strategy_fun(),
             retries: any()
           }
@@ -32,8 +32,7 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
     :slice_date,
     :time_slot,
     :airing_time,
-    :occurrence,
-    :occurrence_created?,
+    :multi,
     :retries,
     :retry_strategy,
     slice_usage_done?: false
@@ -59,14 +58,11 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
   def run(operation = %OccurrenceDetectionOperation{airing_time: nil}),
     do: operation |> search_matching_slot() |> run()
 
-  def run(operation = %OccurrenceDetectionOperation{occurrence: nil}),
-    do: operation |> create_or_get_occurrence() |> run()
+  def run(operation = %OccurrenceDetectionOperation{multi: nil}),
+    do: operation |> create_multi() |> run()
 
-  def run(operation = %OccurrenceDetectionOperation{slice_usage_done?: false}),
-    do: operation |> mark_slice_as_used() |> run()
-
-  def run(operation = %OccurrenceDetectionOperation{slice_usage_done?: true}),
-    do: operation |> do_return()
+  def run(operation = %OccurrenceDetectionOperation{multi: %Multi{}}),
+    do: operation |> run_multi()
 
   def run(ok = {status, _}) when status in [:ok, :already], do: ok
   def run(e = {:error, _}), do: e
@@ -93,47 +89,72 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
     end
   end
 
-  defp create_or_get_occurrence(
-         operation = %OccurrenceDetectionOperation{
-           show_id: show_id,
-           airing_time: airing_time,
-           time_slot: {slot_start, slot_end}
-         }
-       ) do
-    case %{show_id: show_id, airing_time: airing_time, slot_start: slot_start, slot_end: slot_end}
-         |> ShowOccurrence.create_changeset()
-         |> Repo.safe_insert()
-         |> ShowOccurrence.explain_error(Repo) do
-      {:ok, occ} -> %{operation | occurrence: occ, occurrence_created?: true}
-      {:error, {:unique, occ}} -> %{operation | occurrence: occ, occurrence_created?: false}
-      {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
-      e = {:error, _} -> e
-    end
-  end
-
-  defp mark_slice_as_used(
+  defp create_multi(
          operation = %OccurrenceDetectionOperation{
            slice: %{id: slice_id},
-           occurrence: %{id: occurrence_id},
+           show_id: show_id,
+           airing_time: airing_time,
+           time_slot: {slot_start, slot_end},
            slice_type: type
          }
        ) do
-    case %{slice_id: slice_id, show_occurrence_id: occurrence_id, type: type}
-         |> SliceUsage.create_changeset()
-         |> Repo.safe_insert()
-         |> SliceUsage.explain_error() do
-      {:ok, _} -> %{operation | slice_usage_done?: true}
-      {:error, :unique} -> %{operation | slice_usage_done?: true}
-      {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
+    occurrence_attrs = %{
+      show_id: show_id,
+      airing_time: airing_time,
+      slot_start: slot_start,
+      slot_end: slot_end
+    }
+
+    slice_usage_attrs = %{slice_id: slice_id, type: type}
+
+    multi =
+      Multi.new()
+      |> Multi.run(
+        :create_or_get_occurrence,
+        &create_or_get_occurrence_step(occurrence_attrs, &1, &2)
+      )
+      |> Multi.run(:mark_slice_as_used, &mark_slice_as_used_step(slice_usage_attrs, &1, &2))
+
+    %{operation | multi: multi}
+  end
+
+  defp create_or_get_occurrence_step(occurrence_attrs, repo, _changes) do
+    case occurrence_attrs
+         |> ShowOccurrence.create_changeset()
+         |> repo.insert()
+         |> ShowOccurrence.explain_error(repo) do
+      ok = {:ok, _} -> ok
+      {:error, unique = {:unique, _}} -> {:ok, unique}
       e = {:error, _} -> e
     end
   end
 
-  defp do_return(%OccurrenceDetectionOperation{occurrence: occurrence, occurrence_created?: true}),
-    do: {:ok, occurrence}
+  defp mark_slice_as_used_step(slice_usage_attrs, repo, %{create_or_get_occurrence: res}) do
+    occurrence_id =
+      case res do
+        {:unique, occ} -> occ.id
+        occ -> occ.id
+      end
 
-  defp do_return(%OccurrenceDetectionOperation{occurrence: occurrence, occurrence_created?: false}),
-       do: {:already, occurrence}
+    case slice_usage_attrs
+         |> Map.put(:show_occurrence_id, occurrence_id)
+         |> SliceUsage.create_changeset()
+         |> repo.insert()
+         |> SliceUsage.explain_error() do
+      ok = {:ok, _} -> ok
+      {:error, :unique} -> {:ok, :unique}
+      e = {:error, _} -> e
+    end
+  end
+
+  defp run_multi(operation = %OccurrenceDetectionOperation{multi: multi}) do
+    case multi |> Repo.safe_transaction() do
+      {:ok, %{create_or_get_occurrence: {:unique, occ}}} -> {:already, occ}
+      {:ok, %{create_or_get_occurrence: occ}} -> {:ok, occ}
+      {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
+      e = {:error, _, _, _} -> e
+    end
+  end
 
   defp default_strategy(:database_busy, retries) when retries < @max_db_retries, do: :retry
   defp default_strategy(_, _), do: :abort
