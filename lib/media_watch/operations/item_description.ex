@@ -1,4 +1,5 @@
 defmodule MediaWatch.Analysis.ItemDescriptionOperation do
+  alias Ecto.Multi
   alias MediaWatch.{Repo, OperationWithRetry, Catalog}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{Description, SliceUsage}
@@ -24,6 +25,7 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
     :slice_type,
     :describable,
     :description_cs,
+    :multi,
     :description,
     :retries,
     :retry_strategy
@@ -61,29 +63,51 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
     |> run
   end
 
-  def run(operation = %ItemDescriptionOperation{description_cs: cs, description: nil}) do
-    case cs |> Repo.safe_insert() |> Description.handle_error(Repo) do
-      {:ok, desc} -> %{operation | description: desc} |> run
-      {:error, {:unique, desc}} -> {:already, desc}
+  def run(operation = %ItemDescriptionOperation{multi: nil}) do
+    %{operation | multi: create_multi(operation)} |> run()
+  end
+
+  def run(operation = %ItemDescriptionOperation{multi: multi = %Multi{}}) do
+    case multi |> Repo.safe_transaction() do
+      {:ok, %{insert_description: {:unique, desc}}} -> {:already, desc}
+      {:ok, %{insert_description: desc}} -> {:ok, desc}
       {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
+      e = {:error, _, _, _} -> e
+    end
+  end
+
+  defp create_multi(%ItemDescriptionOperation{
+         description_cs: cs,
+         slice: %{id: slice_id},
+         slice_type: type
+       }) do
+    Multi.new()
+    |> Multi.run(:insert_description, &insert_description(cs, &1, &2))
+    |> Multi.run(:mark_slice_usage, &mark_slice_usage(%{slice_id: slice_id, type: type}, &1, &2))
+  end
+
+  defp insert_description(description_cs, repo, _changes) do
+    case description_cs |> repo.insert() |> Description.handle_error(repo) do
+      ok = {:ok, _} -> ok
+      {:error, unique = {:unique, _}} -> {:ok, unique}
       e = {:error, _} -> e
     end
   end
 
-  def run(
-        operation = %ItemDescriptionOperation{
-          slice: %{id: slice_id},
-          description: description = %{item_id: description_id},
-          slice_type: type
-        }
-      ) do
-    case %{slice_id: slice_id, description_id: description_id, type: type}
+  defp mark_slice_usage(slice_usage_attrs, repo, %{insert_description: res}) do
+    description_id =
+      case res do
+        {:unique, desc} -> desc.item_id
+        desc -> desc.item_id
+      end
+
+    case slice_usage_attrs
+         |> Map.put(:description_id, description_id)
          |> SliceUsage.create_changeset()
-         |> Repo.safe_insert()
+         |> repo.insert()
          |> SliceUsage.explain_error() do
-      {:ok, _} -> {:ok, description}
-      {:error, :unique} -> {:ok, description}
-      {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
+      ok = {:ok, _} -> ok
+      {:error, :unique} -> {:ok, :unique}
       e = {:error, _} -> e
     end
   end
