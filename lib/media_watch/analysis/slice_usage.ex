@@ -32,4 +32,22 @@ defmodule MediaWatch.Analysis.SliceUsage do
       name: "slices_usages_description_id_when_item_description"
     )
   end
+
+  def explain_error(
+        {:error,
+         %{
+           errors: [
+             show_occurrence_id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name: "slices_usages_show_occurrence_id_slice_id_index"
+                ]}
+           ]
+         }}
+      ) do
+    {:error, :unique}
+  end
+
+  def explain_error(ok_or_other_error), do: ok_or_other_error
 end

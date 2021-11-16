@@ -1,5 +1,4 @@
 defmodule MediaWatch.Parsing.Parsable do
-  alias MediaWatch.Repo
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.ParsedSnapshot
 
@@ -14,10 +13,5 @@ defmodule MediaWatch.Parsing.Parsable do
          data: pruned
        })}
     end
-  end
-
-  def parse_and_insert(snap, parsable) do
-    snap = snap |> Repo.preload([:source, :xml])
-    with {:ok, cs} <- parse(snap, parsable), do: cs |> Repo.insert()
   end
 end

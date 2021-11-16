@@ -14,6 +14,8 @@ defmodule MediaWatch.Catalog.Source do
   alias MediaWatch.Snapshots.Snapshot
   alias __MODULE__, as: Source
 
+  @preloads [:rss_feed, :web_index_page]
+
   schema "catalog_sources" do
     field :type, Ecto.Enum, values: [:rss_feed, :web_index_page]
 
@@ -21,6 +23,8 @@ defmodule MediaWatch.Catalog.Source do
     has_one :web_index_page, WebIndexPage, foreign_key: :id
     belongs_to :item, Item, foreign_key: :item_id
   end
+
+  def preloads(), do: @preloads
 
   @doc false
   def changeset(strategy \\ %Source{}, attrs) do
@@ -31,13 +35,13 @@ defmodule MediaWatch.Catalog.Source do
     |> set_type()
   end
 
-  def make_snapshot(source = %{type: :rss_feed, rss_feed: feed}) when not is_nil(feed) do
+  def take_snapshot(source = %{type: :rss_feed, rss_feed: feed}) when not is_nil(feed) do
     with {:ok, attrs} <- feed |> RssFeed.into_snapshot_attrs() do
       {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}
     end
   end
 
-  def make_snapshot(source = %{type: :web_index_page, web_index_page: page})
+  def take_snapshot(source = %{type: :web_index_page, web_index_page: page})
       when not is_nil(page) do
     with {:ok, attrs} <- page |> WebIndexPage.into_snapshot_attrs() do
       {:ok, Snapshot.changeset(%Snapshot{source: source}, attrs)}

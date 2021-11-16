@@ -1,6 +1,7 @@
 defmodule MediaWatch.Analysis.ShowOccurrence.Detail do
   use Ecto.Schema
   import Ecto.Changeset
+  alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.ShowOccurrence
   alias __MODULE__, as: Detail
   @primary_key false
@@ -23,6 +24,12 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Detail do
     |> validate_required(@required_fields)
     |> unique_constraint(:id)
   end
+
+  def attrs_from_slice(%Slice{type: :rss_entry, rss_entry: entry}),
+    do: %{title: entry.title, description: entry.description, link: entry.link}
+
+  def attrs_from_slice(%Slice{type: :html_preview_card, html_preview_card: item}),
+    do: %{title: item.title, description: item.text, link: item.link}
 
   def explain_create_error(
         {:error,

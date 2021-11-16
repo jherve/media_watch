@@ -14,6 +14,7 @@ defmodule MediaWatch.Snapshots.Snapshot do
   alias MediaWatch.Snapshots.Snapshot.{Xml, Html}
   alias __MODULE__, as: Snapshot
   @required_fields [:type, :url]
+  @preloads [:source, :xml, :html]
 
   schema "snapshots" do
     field :url, :string
@@ -36,6 +37,8 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> set_type()
     |> validate_required(@required_fields)
   end
+
+  def preloads(), do: @preloads
 
   defp set_type(cs) do
     cond do

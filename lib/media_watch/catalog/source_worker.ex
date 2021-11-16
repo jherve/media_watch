@@ -1,10 +1,7 @@
 defmodule MediaWatch.Catalog.SourceWorker do
   use GenServer
   require Logger
-  alias MediaWatch.{Catalog, PubSub, Utils}
-  alias MediaWatch.Snapshots.SnapshotsServer
-  alias MediaWatch.Parsing.ParsingServer
-  alias MediaWatch.Analysis.EntityRecognitionServer
+  alias MediaWatch.{Catalog, Snapshots, Parsing, PubSub, Utils, Analysis}
   alias __MODULE__
   @snapshot_stage_fields [:snapshot, :parsed_snapshot, :slices, :slices_recognized]
 
@@ -36,7 +33,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
 
   @impl true
   def handle_continue(:snapshot, state = %{source: source}) do
-    case SnapshotsServer.snapshot(state.module, source) do
+    case Snapshots.snapshot(state.module, source) do
       {:ok, snap} ->
         {:noreply, state |> Map.put(:snapshot, snap), {:continue, {:snapshot, :parsing}}}
 
@@ -52,7 +49,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   def handle_continue({:snapshot, :parsing}, state = %{snapshot: snap}) do
-    case ParsingServer.parse(snap, state.module) do
+    case Parsing.parse(snap, state.module) do
       {:ok, parsed} ->
         {:noreply, state |> Map.put(:parsed_snapshot, parsed), {:continue, {:snapshot, :slicing}}}
 
@@ -64,7 +61,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
   end
 
   def handle_continue({:snapshot, :slicing}, state = %{parsed_snapshot: parsed}) do
-    case ParsingServer.slice(parsed, state.module) do
+    case Parsing.slice(parsed, state.module) do
       {:ok, new_slices} ->
         {:noreply, state |> Map.put(:slices, new_slices) |> Map.put(:slices_recognized, []),
          {:continue, {:snapshot, :entities_recognition}}}
@@ -83,7 +80,7 @@ defmodule MediaWatch.Catalog.SourceWorker do
         {:snapshot, :entities_recognition},
         state = %{slices: [slice | slices_tail], slices_recognized: slices}
       ) do
-    case EntityRecognitionServer.recognize_entities(slice, state.module) do
+    case Analysis.recognize_entities(slice, state.module) do
       entities when is_list(entities) ->
         {:noreply, %{state | slices: slices_tail, slices_recognized: slices ++ [slice]},
          {:continue, {:snapshot, :entities_recognition}}}

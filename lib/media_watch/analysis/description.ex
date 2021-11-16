@@ -28,4 +28,20 @@ defmodule MediaWatch.Analysis.Description do
     |> validate_required(@required_fields)
     |> unique_constraint(:item_id)
   end
+
+  def handle_error(
+        {:error,
+         cs = %{
+           errors: [
+             item_id: {_, [constraint: :unique, constraint_name: "descriptions_item_id_index"]}
+           ]
+         }},
+        repo
+      ) do
+    with {_, item_id} <- cs |> fetch_field(:item_id),
+         desc when not is_nil(desc) <- Description |> repo.get_by(item_id: item_id),
+         do: {:error, {:unique, desc}}
+  end
+
+  def handle_error(ok_or_other_error, _), do: ok_or_other_error
 end

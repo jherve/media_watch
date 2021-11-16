@@ -1,7 +1,8 @@
 defmodule MediaWatch.Snapshots.SnapshotsServer do
   use MediaWatch.AsyncGenServer
   require Logger
-  alias MediaWatch.{Snapshots, Telemetry, Repo}
+  alias MediaWatch.Telemetry
+  alias MediaWatch.Snapshots.SnapshotOperation
   @name __MODULE__
   @prefix [:media_watch, :snapshots_server]
 
@@ -18,20 +19,21 @@ defmodule MediaWatch.Snapshots.SnapshotsServer do
   def init([]), do: {:ok, AsyncGenServer.init_state()}
 
   @impl true
-  def handle_call({:do_snapshot, module, source}, pid, state) do
-    fn -> {pid, Snapshots.make_snapshot_and_insert(source)} end
-    |> Repo.rescue_if_busy({pid, {:error, :database_busy}})
-    |> AsyncGenServer.start_async_task(state, %{module: module})
+  def handle_call({:do_snapshot, _module, source}, pid, state) do
+    fn -> {pid, do_snapshot(source)} end
+    |> AsyncGenServer.start_async_task(state)
   end
+
+  defp do_snapshot(source),
+    do:
+      SnapshotOperation.new(source)
+      |> SnapshotOperation.set_retry_strategy(fn
+        :snap_timeout, nb_retries -> if nb_retries < 5, do: :retry, else: :abort
+        :database_busy, _ -> :retry_exp
+      end)
+      |> SnapshotOperation.run()
 
   @impl true
-  def handle_task_end(_, {pid, {:error, %{reason: :timeout}}}, _, state) do
-    GenServer.reply(pid, {:error, :timeout})
-    {:remove, state}
-  end
-
-  def handle_task_end(_, {_, {:error, :database_busy}}, _, state), do: {:retry, state}
-
   def handle_task_end(_, {pid, ok_or_error}, _, state) do
     GenServer.reply(pid, ok_or_error)
     {:remove, state}

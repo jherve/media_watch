@@ -1,7 +1,8 @@
 defmodule MediaWatch.Analysis.EntityRecognitionServer do
   use MediaWatch.AsyncGenServer
-  alias MediaWatch.{Analysis, Telemetry, Repo}
+  alias MediaWatch.Telemetry
   alias MediaWatch.Parsing.Slice
+  alias MediaWatch.Analysis.EntityRecognitionOperation
   @name __MODULE__
   @prefix [:media_watch, :entity_recognition_server]
 
@@ -19,14 +20,17 @@ defmodule MediaWatch.Analysis.EntityRecognitionServer do
 
   @impl true
   def handle_call({:do_entity_recognition, slice = %Slice{}, module}, pid, state) do
-    fn -> {pid, slice |> Analysis.insert_entities_from(module)} end
-    |> Repo.rescue_if_busy({pid, {:error, :database_busy}})
+    fn -> {pid, do_entity_recognition(slice, module)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
-  @impl true
-  def handle_task_end(_, {_, {:error, :database_busy}}, _, state), do: {:retry, state}
+  defp do_entity_recognition(slice, module),
+    do:
+      EntityRecognitionOperation.new(slice, module)
+      |> EntityRecognitionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> EntityRecognitionOperation.run()
 
+  @impl true
   def handle_task_end(_, {pid, {:error, _}}, _, state) do
     GenServer.reply(pid, [])
     {:remove, state}

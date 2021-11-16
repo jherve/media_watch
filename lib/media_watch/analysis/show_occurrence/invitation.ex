@@ -38,21 +38,20 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
 
   # Handle the case when the invitation already exists
   def handle_error(
-        e =
-          {:error,
-           %{
-             errors: [
-               person_id:
-                 {_,
-                  [
-                    constraint: :unique,
-                    constraint_name:
-                      "show_occurrences_invitations_person_id_show_occurrence_id_index"
-                  ]}
-             ]
-           }},
+        {:error,
+         %{
+           errors: [
+             person_id:
+               {_,
+                [
+                  constraint: :unique,
+                  constraint_name:
+                    "show_occurrences_invitations_person_id_show_occurrence_id_index"
+                ]}
+           ]
+         }},
         _
       ) do
-    e
+    {:error, :unique}
   end
 end

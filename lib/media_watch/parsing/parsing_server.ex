@@ -1,9 +1,9 @@
 defmodule MediaWatch.Parsing.ParsingServer do
   use MediaWatch.AsyncGenServer
   require Logger
-  alias MediaWatch.{Parsing, Telemetry, Repo}
+  alias MediaWatch.{Parsing, Telemetry}
   alias MediaWatch.Snapshots.Snapshot
-  alias MediaWatch.Parsing.ParsedSnapshot
+  alias MediaWatch.Parsing.{ParsedSnapshot, ParsingOperation, SlicingOperation}
   @name __MODULE__
   @prefix [:media_watch, :parsing_server]
 
@@ -26,20 +26,28 @@ defmodule MediaWatch.Parsing.ParsingServer do
 
   @impl true
   def handle_call({:parse, snap = %Snapshot{}, module}, pid, state) do
-    fn -> {:parse, pid, snap |> Parsing.parse_and_insert(module)} end
-    |> Repo.rescue_if_busy({:parse, pid, {:error, :database_busy}})
+    fn -> {:parse, pid, do_parsing(snap, module)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
   def handle_call({:slice, parsed = %ParsedSnapshot{}, module}, pid, state) do
-    fn -> {:slice, pid, module, Parsing.get(parsed.id) |> Parsing.slice_and_insert(module)} end
-    |> Repo.rescue_if_busy({:slice, pid, {:error, :database_busy}})
+    fn -> {:slice, pid, module, Parsing.get(parsed.id) |> do_slicing(module)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
-  @impl true
-  def handle_task_end(_, {_, _, {:error, :database_busy}}, _, state), do: {:retry, state}
+  defp do_parsing(snap, parsable),
+    do:
+      ParsingOperation.new(snap, parsable)
+      |> ParsingOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> ParsingOperation.run()
 
+  defp do_slicing(parsed, sliceable),
+    do:
+      SlicingOperation.new(parsed, sliceable)
+      |> SlicingOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> SlicingOperation.run()
+
+  @impl true
   def handle_task_end(_, {:parse, pid, res}, _, state) do
     GenServer.reply(pid, res)
     {:remove, state}

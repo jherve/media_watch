@@ -9,30 +9,34 @@ defmodule MediaWatch.Repo do
 
   require Logger
 
-  @doc "Execute a database operation and return a normal error message on database error."
-  def rescue_if_busy(fun, error_value) when is_function(fun, 0),
-    do: fn ->
-      try do
-        fun.()
-      rescue
-        e in Exqlite.Error ->
-          case e do
-            %{message: "Database busy"} ->
-              error_value
+  @type transaction_result ::
+          {:ok, ok_results :: [any()], ignored :: [Ecto.Changeset.t()]}
+          | {:error, ok_results :: [any()], ignored :: [Ecto.Changeset.t()],
+             errors :: [Ecto.Changeset.t()]}
 
-            _ ->
-              reraise e, __STACKTRACE__
-          end
-      end
-    end
+  def safe_insert(obj), do: fn -> obj |> Repo.insert() end |> safe_operation()
+  def safe_update(obj), do: fn -> obj |> Repo.update() end |> safe_operation()
+
+  def safe_transaction(fun_or_multi)
+      when is_function(fun_or_multi, 1) or is_struct(fun_or_multi, Multi),
+      do: fn -> fun_or_multi |> Repo.transaction() end |> safe_operation()
+
+  def safe_transaction_with_recovery(multi = %Multi{}),
+    do: fn -> multi |> Repo.transaction_with_recovery() end |> safe_operation()
+
+  defp safe_operation(fun) when is_function(fun, 0) do
+    fun.()
+  rescue
+    e -> if is_db_busy?(e), do: {:error, :database_busy}, else: reraise(e, __STACKTRACE__)
+  end
+
+  def is_db_busy?(%Exqlite.Error{message: "Database busy"}), do: true
+  def is_db_busy?(e) when is_struct(e), do: false
 
   @doc """
   Run a transaction with automatic recovery of some errors.
   """
-  @spec transaction_with_recovery(Multi.t()) ::
-          {:ok, ok_results :: [any()], ignored :: [Ecto.Changeset.t()]}
-          | {:error, ok_results :: [any()], ignored :: [Ecto.Changeset.t()],
-             errors :: [Ecto.Changeset.t()]}
+  @spec transaction_with_recovery(Multi.t()) :: transaction_result()
   def transaction_with_recovery(multi, failures_so_far \\ %{}, ignored_so_far \\ %{})
 
   def transaction_with_recovery(multi = %Multi{}, failures_so_far, ignored_so_far),

@@ -4,7 +4,6 @@ defmodule MediaWatch.Catalog.ItemWorker do
   alias MediaWatch.{Catalog, PubSub, Analysis, Utils, Scheduler}
   alias MediaWatch.Catalog.{Item, SourceSupervisor, SourceWorker}
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.{ShowOccurrencesServer, ItemDescriptionServer}
   alias __MODULE__
   @snapshot_fields [snapshots_pending: MapSet.new()]
   @slice_analysis_fields [:slice, :slice_type]
@@ -96,8 +95,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
         stage = {_, :occurrence_detection},
         state = %{slice: slice, slice_type: type}
       ) do
-    case ShowOccurrencesServer.detect_occurrence(slice, state.item.show.id, type, state.module) do
-      {:ok, occ} ->
+    case Analysis.detect_occurrence(slice, type, state.module) do
+      {status, occ} when status in [:ok, :already] ->
         {:noreply, state |> Map.put(:occurrence, occ), {:continue, next_stage(stage)}}
 
       e = {:error, _} ->
@@ -110,8 +109,8 @@ defmodule MediaWatch.Catalog.ItemWorker do
         {pipeline, :add_details},
         state = %{slice: slice, occurrence: occ}
       ) do
-    case ShowOccurrencesServer.add_details(occ, slice) do
-      {:ok, _} ->
+    case Analysis.add_details(occ, slice) do
+      {status, _} when status in [:ok, :updated] ->
         {:noreply, state, {:continue, {pipeline, :guest_detection}}}
 
       e = {:error, _} ->
@@ -121,7 +120,7 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_continue({pipeline, :guest_detection}, state = %{occurrence: occ}) do
-    case ShowOccurrencesServer.do_guest_detection(occ, state.module, state.module) do
+    case Analysis.do_guest_detection(occ, state.module, state.module) do
       guests when is_list(guests) ->
         {:noreply, state, {:continue, {pipeline, :final}}}
 
@@ -142,8 +141,9 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
-    case ItemDescriptionServer.do_description(state.id, slice, type, state.module) do
+    case Analysis.do_description(slice, type, state.module) do
       {:ok, desc} -> PubSub.broadcast("item:#{state.id}", desc)
+      {:already, _} -> nil
       e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
     end
 

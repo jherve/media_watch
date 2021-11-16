@@ -1,7 +1,13 @@
 defmodule MediaWatch.Analysis.ShowOccurrencesServer do
   use MediaWatch.AsyncGenServer
-  alias MediaWatch.{Analysis, Telemetry, Repo}
-  alias MediaWatch.Analysis.{ShowOccurrence, Recurrent}
+  alias MediaWatch.Telemetry
+
+  alias MediaWatch.Analysis.{
+    OccurrenceDetectionOperation,
+    GuestDetectionOperation,
+    OccurrenceDetailOperation
+  }
+
   @name __MODULE__
   @prefix [:media_watch, :show_occurrences_server]
 
@@ -9,11 +15,9 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     GenServer.start_link(__MODULE__, opts, name: @name)
   end
 
-  def detect_occurrence(slice, show_id, slice_type, module),
+  def detect_occurrence(slice, slice_type, module),
     do:
-      fn ->
-        GenServer.call(@name, {:detect_occurrence, slice, show_id, slice_type, module}, :infinity)
-      end
+      fn -> GenServer.call(@name, {:detect_occurrence, slice, slice_type, module}, :infinity) end
       |> Telemetry.span_function_call(@prefix ++ [:detect_occurrence], %{module: module})
 
   def add_details(occurrence, slice),
@@ -33,74 +37,47 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     do: {:ok, AsyncGenServer.init_state(%{unmatched_slices: MapSet.new()})}
 
   @impl true
-  def handle_call(
-        {operation = :detect_occurrence, slice, show_id, slice_type, module},
-        pid,
-        state
-      ) do
-    fn ->
-      result =
-        with {:ok, date} <- slice |> Analysis.extract_date(),
-             time_slot <- date |> Recurrent.get_time_slot(module),
-             airing_time when is_struct(airing_time, DateTime) <-
-               Recurrent.get_airing_time(date, module),
-             ok = {:ok, %ShowOccurrence{id: id}} <-
-               Analysis.create_occurrence(show_id, airing_time, time_slot),
-             {:ok, _} <- Analysis.create_slice_usage(slice.id, id, slice_type) do
-          ok
-        else
-          {:error, {:unique, occ}} -> {:ok, occ}
-          e = {:error, _} -> e
-        end
-
-      {operation, pid, result}
-    end
-    |> Repo.rescue_if_busy({operation, pid, {:error, :database_busy}})
+  def handle_call({operation = :detect_occurrence, slice, slice_type, module}, pid, state) do
+    fn -> {operation, pid, do_detect_occurrence(slice, slice_type, module)} end
     |> AsyncGenServer.start_async_task(state, %{slice_id: slice.id})
   end
 
   def handle_call({operation = :add_details, occurrence, slice}, pid, state) do
-    fn ->
-      res =
-        case Analysis.create_occurrence_details(occurrence.id, slice) do
-          ok = {:ok, _} ->
-            ok
-
-          {:error, {:unique, existing}} ->
-            Analysis.update_occurrence_details(existing, slice)
-
-          e = {:error, _} ->
-            e
-        end
-
-      {operation, pid, res}
-    end
-    |> Repo.rescue_if_busy({operation, pid, {:error, :database_busy}})
+    fn -> {operation, pid, do_add_details(occurrence, slice)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
   def handle_call({operation = :do_guest_detection, occurrence, recognizable, hosted}, pid, state) do
-    fn ->
-      guests =
-        occurrence
-        |> Analysis.insert_guests_from(recognizable, hosted)
-        |> Enum.filter(&match?({:ok, _}, &1))
-
-      {operation, pid, guests}
-    end
-    |> Repo.rescue_if_busy({operation, pid, {:error, :database_busy}})
+    fn -> {operation, pid, do_guest_detection_(occurrence, recognizable, hosted)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
-  @impl true
-  def handle_task_end(_, {_, _, {:error, :database_busy}}, _, state), do: {:retry, state}
+  defp do_detect_occurrence(slice, slice_type, module),
+    do:
+      OccurrenceDetectionOperation.new(slice, slice_type, module)
+      |> OccurrenceDetectionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> OccurrenceDetectionOperation.run()
 
+  defp do_add_details(occurrence, slice),
+    do:
+      OccurrenceDetailOperation.new(occurrence, slice)
+      |> OccurrenceDetailOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> OccurrenceDetailOperation.run()
+
+  defp do_guest_detection_(occurrence, recognizable, hosted),
+    do:
+      GuestDetectionOperation.new(occurrence, recognizable, hosted)
+      |> GuestDetectionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> GuestDetectionOperation.run()
+
+  @impl true
   def handle_task_end(
         _,
-        {:detect_occurrence, pid, result = {:ok, _}},
+        {:detect_occurrence, pid, result = {status, _}},
         %{slice_id: slice_id},
         state
-      ) do
+      )
+      when status in [:ok, :already] do
     GenServer.reply(pid, result)
     {:remove, update_in(state.unmatched_slices, &(&1 |> MapSet.delete(slice_id)))}
   end

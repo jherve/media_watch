@@ -2,15 +2,13 @@ defmodule MediaWatch.Analysis do
   import Ecto.Query
   alias MediaWatch.{Repo, PubSub}
   alias MediaWatch.Catalog.{Item, Show, Person, Channel, ChannelItem}
-  alias MediaWatch.Parsing.Slice
 
   alias MediaWatch.Analysis.{
     ShowOccurrence,
     ShowOccurrence.Invitation,
-    Recognisable,
-    Describable,
-    Recurrent,
-    Analyzable
+    EntityRecognitionServer,
+    ShowOccurrencesServer,
+    ItemDescriptionServer
   }
 
   def subscribe(item_id) do
@@ -95,17 +93,9 @@ defmodule MediaWatch.Analysis do
 
   def classify(slice, analyzable), do: analyzable.classify(slice)
 
-  def extract_date(slice), do: Slice.extract_date(slice)
-
-  defdelegate create_occurrence(show_id, airing_time, slot), to: Recurrent
-
-  defdelegate create_slice_usage(slice_id, occ_id, slice_type), to: Analyzable
-
-  defdelegate create_occurrence_details(occ_id, slice), to: Recurrent
-  defdelegate update_occurrence_details(detail, slice), to: Recurrent
-
-  defdelegate create_description(item_id, slice, describable), to: Describable
-
-  defdelegate insert_guests_from(occ, recognisable, hosted), to: Recognisable
-  defdelegate insert_entities_from(slice, recognisable), to: Recognisable
+  defdelegate recognize_entities(slice, module), to: EntityRecognitionServer
+  defdelegate detect_occurrence(slice, slice_type, module), to: ShowOccurrencesServer
+  defdelegate add_details(occurrence, slice), to: ShowOccurrencesServer
+  defdelegate do_guest_detection(occurrence, recognizable, hosted), to: ShowOccurrencesServer
+  defdelegate do_description(slice, slice_type, module), to: ItemDescriptionServer
 end
