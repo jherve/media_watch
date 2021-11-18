@@ -39,7 +39,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   # Handle the case when the invitation already exists
   def handle_error(
         {:error,
-         %{
+         cs = %{
            errors: [
              person_id:
                {_,
@@ -50,8 +50,12 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
                 ]}
            ]
          }},
-        _
+        repo
       ) do
-    {:error, :unique}
+    with {_, %{id: show_occurrence_id}} <- cs |> fetch_field(:show_occurrence),
+         {_, %{id: person_id}} <- cs |> fetch_field(:person),
+         invitation when not is_nil(invitation) <-
+           Invitation |> repo.get_by(show_occurrence_id: show_occurrence_id, person_id: person_id),
+         do: {:error, {:unique, invitation}}
   end
 end

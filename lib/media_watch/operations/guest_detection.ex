@@ -74,7 +74,7 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
     case cs |> repo.insert() |> Invitation.handle_error(repo) do
       ok = {:ok, _} -> ok
       {:error, {:person_exists, new_cs}} -> new_cs |> insert_guest(repo, changes)
-      {:error, :unique} -> {:ok, {:already, cs}}
+      {:error, {:unique, invitation}} -> {:ok, {:already, invitation}}
       e = {:error, _} -> e
     end
   end
