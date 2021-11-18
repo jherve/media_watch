@@ -1,4 +1,5 @@
 defmodule MediaWatch.Analysis.GuestDetectionOperation do
+  import Ecto.Query
   alias Ecto.Multi
   alias MediaWatch.{Repo, OperationWithRetry}
   alias MediaWatch.Parsing.Slice
@@ -58,9 +59,18 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
 
   defp do_insertion(operation = %GuestDetectionOperation{guests_cs: guests_cs})
        when is_list(guests_cs) do
+    # We assume that guest detection is more reliable when more information has been
+    # gathered, therefore invitations that already exist are simply deleted.
+    multi =
+      Multi.new()
+      |> Multi.delete_all(
+        :delete_existing,
+        from(i in Invitation, where: i.show_occurrence_id == ^operation.occurrence.id)
+      )
+
     case guests_cs
          |> Enum.with_index()
-         |> Enum.reduce(Multi.new(), fn {cs, idx}, multi ->
+         |> Enum.reduce(multi, fn {cs, idx}, multi ->
            multi |> Multi.run(idx, &insert_guest(cs, &1, &2))
          end)
          |> Repo.safe_transaction() do
