@@ -46,7 +46,7 @@ defmodule MediaWatch.Analysis do
       on: i.show_occurrence_id == so.id,
       join: p in Person,
       on: p.id == i.person_id,
-      preload: [:detail, guests: p, show: [item: :description]],
+      preload: [:detail, invitations: {i, person: p}, guests: p, show: [item: :description]],
       where: p.id == ^person_id,
       order_by: [desc: so.airing_time]
     )

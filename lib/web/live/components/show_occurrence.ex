@@ -3,7 +3,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   alias MediaWatch.DateTime
   alias MediaWatchWeb.Component.{List, Card}
   alias MediaWatchWeb.{ItemView, ShowOccurrenceView}
-  alias MediaWatchWeb.PersonLiveComponent
+  alias MediaWatchWeb.InvitationLiveComponent
   @truncated_length 100
 
   @impl true
@@ -22,6 +22,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
        title:
          if(detail, do: detail.title, else: "Émission du #{airing_day |> DateTime.to_string()}"),
        description: if(detail, do: detail.description),
+       invitations: occ.invitations,
        guests: occ.guests,
        external_link_to_occurrence: if(detail, do: detail.link),
        link_to_item: ItemView.detail_link(occ.show_id),
@@ -45,7 +46,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
           <:header><%= @title %></:header>
 
           <:content>
-            <%= render_guests(assigns) %>
+            <%= render_invitations(assigns) %>
             <p phx-click="toggle_truncate" phx-target={@myself}><%= render_description(assigns) %></p>
             <%= if @display_link_to_item, do: live_redirect("Toutes les émissions", to: @link_to_item) %>
             <%= if @external_link_to_occurrence, do: link("Lien vers l'émission", to: @external_link_to_occurrence) %>
@@ -58,15 +59,18 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
       </div>
     """
 
-  defp render_guests(assigns = %{guests: []}),
+  defp render_invitations(assigns = %{invitations: []}),
     do: ~H|<div class="guests">Pas d'invités detectés</div>|
 
-  defp render_guests(assigns),
+  defp render_invitations(assigns),
     do: ~H"""
-    <List.ul let={guest} list={@guests} class="guests">
-      <.live_component module={PersonLiveComponent} id={{@occurrence.id, guest.id}} person={guest} wrap_in_link={true} />
+    <List.ul let={invitation} list={@invitations} class="invitations">
+      <.live_component module={InvitationLiveComponent} id={invitation_id(invitation)} invitation={invitation} />
     </List.ul>
     """
+
+  defp invitation_id(invitation),
+    do: {:invitation, invitation.show_occurrence_id, invitation.person_id}
 
   defp render_description(assigns = %{description: nil}), do: ~H"Pas de description disponible"
 

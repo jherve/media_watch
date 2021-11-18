@@ -2,17 +2,17 @@ article.card.occurrence .footer {
   justify-self: end;
 }
 
-article.card.occurrence .content ul.guests {
+article.card.occurrence .content ul.invitations {
   list-style: none;
   display: flex;
   flex-direction: row-reverse;
 }
 
-article.card.occurrence .content ul.guests > li {
+article.card.occurrence .content ul.invitations > li {
   background: #ccc;
 }
 
-article.card.occurrence .content ul.guests > li ~ li {
+article.card.occurrence .content ul.invitations > li ~ li {
   margin-right: 0.5em;
 }
 
