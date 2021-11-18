@@ -8,7 +8,9 @@ defmodule MediaWatch.Analysis do
     ShowOccurrence.Invitation,
     EntityRecognitionServer,
     ShowOccurrencesServer,
-    ItemDescriptionServer
+    ItemDescriptionServer,
+    DescriptionSliceAnalysisPipeline,
+    OccurrenceSliceAnalysisPipeline
   }
 
   def subscribe(item_id) do
@@ -92,6 +94,16 @@ defmodule MediaWatch.Analysis do
       )
 
   def classify(slice, analyzable), do: analyzable.classify(slice)
+
+  def run_occurrence_pipeline(slice, type, module, run_details?),
+    do:
+      OccurrenceSliceAnalysisPipeline.new(slice, type, module, run_details?)
+      |> OccurrenceSliceAnalysisPipeline.run()
+
+  def run_description_pipeline(slice, type, module),
+    do:
+      DescriptionSliceAnalysisPipeline.new(slice, type, module)
+      |> DescriptionSliceAnalysisPipeline.run()
 
   defdelegate recognize_entities(slice, module), to: EntityRecognitionServer
   defdelegate detect_occurrence(slice, slice_type, module), to: ShowOccurrencesServer

@@ -61,16 +61,37 @@ defmodule MediaWatch.Catalog.ItemWorker do
   def handle_info(slice = %Slice{}, state) do
     type = slice |> Analysis.classify(state.module)
 
-    pipeline =
-      case type do
-        :show_occurrence_description -> :occurrence_description_analysis
-        :show_occurrence_excerpt -> :occurrence_excerpt_analysis
-        :item_description -> :item_description_analysis
-        true -> raise "Unknown type"
-      end
+    case type do
+      :show_occurrence_description ->
+        run_occurrence_pipeline(state, slice, type, true)
+        {:noreply, state}
 
-    {:noreply, state |> Map.put(:slice, slice) |> Map.put(:slice_type, type),
-     {:continue, pipeline}}
+      :show_occurrence_excerpt ->
+        run_occurrence_pipeline(state, slice, type, false)
+        {:noreply, state}
+
+      :item_description ->
+        run_description_pipeline(state, slice, type)
+        {:noreply, state}
+
+      true ->
+        raise "Unknown type"
+    end
+  end
+
+  defp run_occurrence_pipeline(state, slice, type, run_details?) do
+    case Analysis.run_occurrence_pipeline(slice, type, state.module, run_details?) do
+      {:ok, %{occurrence: occ}} -> PubSub.broadcast("item:#{state.id}", occ)
+      {:error, step, e} -> log(:warning, state, "(#{step}) #{Utils.inspect_error(e)}")
+    end
+  end
+
+  defp run_description_pipeline(state, slice, type) do
+    case Analysis.run_description_pipeline(slice, type, state.module) do
+      {:ok, %{description: desc}} -> PubSub.broadcast("item:#{state.id}", desc)
+      {:ok, %{}} -> nil
+      {:error, e} -> log(:warning, state, Utils.inspect_error(e))
+    end
   end
 
   @impl true
@@ -81,73 +102,6 @@ defmodule MediaWatch.Catalog.ItemWorker do
     setup_cron_job(module, job_name)
 
     {:noreply, state}
-  end
-
-  def handle_continue(pipeline = :occurrence_description_analysis, state) do
-    {:noreply, state, {:continue, {pipeline, :occurrence_detection}}}
-  end
-
-  def handle_continue(pipeline = :occurrence_excerpt_analysis, state) do
-    {:noreply, state, {:continue, {pipeline, :occurrence_detection}}}
-  end
-
-  def handle_continue(
-        stage = {_, :occurrence_detection},
-        state = %{slice: slice, slice_type: type}
-      ) do
-    case Analysis.detect_occurrence(slice, type, state.module) do
-      {status, occ} when status in [:ok, :already] ->
-        {:noreply, state |> Map.put(:occurrence, occ), {:continue, next_stage(stage)}}
-
-      e = {:error, _} ->
-        log(:warning, state, Utils.inspect_error(e))
-        {:noreply, state}
-    end
-  end
-
-  def handle_continue(
-        {pipeline, :add_details},
-        state = %{slice: slice, occurrence: occ}
-      ) do
-    case Analysis.add_details(occ, slice) do
-      {status, _} when status in [:ok, :updated] ->
-        {:noreply, state, {:continue, {pipeline, :guest_detection}}}
-
-      e = {:error, _} ->
-        log(:warning, state, Utils.inspect_error(e))
-        {:noreply, state}
-    end
-  end
-
-  def handle_continue({pipeline, :guest_detection}, state = %{occurrence: occ}) do
-    case Analysis.do_guest_detection(occ, state.module, state.module) do
-      guests when is_list(guests) ->
-        {:noreply, state, {:continue, {pipeline, :final}}}
-
-      e = {:error, _} ->
-        log(:warning, state, Utils.inspect_error(e))
-        {:noreply, state}
-    end
-  end
-
-  def handle_continue({:occurrence_description_analysis, :final}, state) do
-    publish_show_occurrence(state)
-    {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
-  end
-
-  def handle_continue({:occurrence_excerpt_analysis, :final}, state) do
-    publish_show_occurrence(state)
-    {:noreply, state |> reset(@slice_analysis_fields ++ @occurrence_analysis_fields)}
-  end
-
-  def handle_continue(:item_description_analysis, state = %{slice: slice, slice_type: type}) do
-    case Analysis.do_description(slice, type, state.module) do
-      {:ok, desc} -> PubSub.broadcast("item:#{state.id}", desc)
-      {:already, _} -> nil
-      e = {:error, _} -> log(:warning, state, Utils.inspect_error(e))
-    end
-
-    {:noreply, state |> reset(@slice_analysis_fields)}
   end
 
   defp setup_cron_job(module, job_name) do
@@ -174,17 +128,5 @@ defmodule MediaWatch.Catalog.ItemWorker do
   defp clear_expired_timers(timers = %MapSet{}),
     do: timers |> Enum.filter(&(&1 |> Process.read_timer())) |> MapSet.new()
 
-  defp next_stage({p = :occurrence_description_analysis, :occurrence_detection}),
-    do: {p, :add_details}
-
-  defp next_stage({p = :occurrence_excerpt_analysis, :occurrence_detection}),
-    do: {p, :guest_detection}
-
   defp log(level, state, msg), do: Logger.log(level, "#{state.module}: #{msg}")
-
-  defp reset(state, fields) when is_list(fields),
-    do: struct(ItemWorker, state |> Map.from_struct() |> Map.drop(fields))
-
-  defp publish_show_occurrence(state),
-    do: PubSub.broadcast("item:#{state.id}", state.occurrence)
 end
