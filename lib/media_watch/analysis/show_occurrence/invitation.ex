@@ -32,6 +32,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
     end
   end
 
+  def rescue_error({:error, {:trigger, _, "show_occurrence_locked"}}, _), do: {:error, :locked}
+
   def rescue_error(e = {:error, _}, _), do: e
 
   defp invitation_exists?(

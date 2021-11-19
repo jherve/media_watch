@@ -16,6 +16,7 @@ defmodule MediaWatch.Repo do
 
   def safe_insert(obj), do: fn -> obj |> Repo.insert() end |> safe_operation()
   def safe_update(obj), do: fn -> obj |> Repo.update() end |> safe_operation()
+  def safe_delete(obj), do: fn -> obj |> Repo.delete() end |> safe_operation()
 
   def safe_transaction(fun_or_multi)
       when is_function(fun_or_multi, 1) or is_struct(fun_or_multi, Multi),
@@ -27,11 +28,18 @@ defmodule MediaWatch.Repo do
   defp safe_operation(fun) when is_function(fun, 0) do
     fun.()
   rescue
-    e -> if is_db_busy?(e), do: {:error, :database_busy}, else: reraise(e, __STACKTRACE__)
+    e -> e |> handle_runtime_error(__STACKTRACE__)
   end
 
-  def is_db_busy?(%Exqlite.Error{message: "Database busy"}), do: true
-  def is_db_busy?(e) when is_struct(e), do: false
+  defp handle_runtime_error(%Exqlite.Error{message: "Database busy"}, _),
+    do: {:error, :database_busy}
+
+  defp handle_runtime_error(%Exqlite.Error{message: "trigger:" <> error}, _) do
+    [trigger_name, reason] = error |> String.split(":", parts: 2)
+    {:error, {:trigger, trigger_name, reason}}
+  end
+
+  defp handle_runtime_error(e, stacktrace) when is_struct(e), do: reraise(e, stacktrace)
 
   @doc """
   Run a transaction with automatic recovery of some errors.

@@ -1,6 +1,8 @@
 defmodule MediaWatch.Analysis.ShowOccurrence do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
+  alias Ecto.Multi
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Analysis.{ShowOccurrence.Invitation, SliceUsage}
   alias __MODULE__, as: ShowOccurrence
@@ -13,6 +15,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
     field :airing_time, :utc_datetime
     field :slot_start, :utc_datetime
     field :slot_end, :utc_datetime
+    field :manual_edited?, :boolean
 
     has_one :detail, ShowOccurrence.Detail, foreign_key: :id
 
@@ -54,4 +57,18 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   end
 
   def explain_error(ok_or_other_error, _), do: ok_or_other_error
+
+  def into_manual_multi(multi = %Multi{}, show_occurrence_id) do
+    query = from(so in ShowOccurrence, where: so.id == ^show_occurrence_id)
+
+    unlock_multi(query)
+    |> Multi.append(multi)
+    |> Multi.append(lock_multi(query))
+  end
+
+  defp unlock_multi(query),
+    do: Multi.new() |> Multi.update_all(:unlock, query, set: [manual_edited?: false])
+
+  defp lock_multi(query),
+    do: Multi.new() |> Multi.update_all(:lock, query, set: [manual_edited?: true])
 end

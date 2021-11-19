@@ -1,7 +1,7 @@
 defmodule MediaWatch.Analysis.GuestDetectionOperation do
   import Ecto.Query
   alias Ecto.Multi
-  alias MediaWatch.{Repo, OperationWithRetry}
+  alias MediaWatch.{Analysis, Repo, OperationWithRetry}
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.ShowOccurrence
   alias MediaWatch.Analysis.ShowOccurrence.Invitation
@@ -71,30 +71,21 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
     case guests_cs
          |> Enum.with_index()
          |> Enum.reduce(multi, fn {cs, idx}, multi ->
-           multi |> Multi.run(idx, &insert_guest(cs, &1, &2))
+           multi
+           |> Multi.run(idx, fn repo, _ ->
+             case Analysis.insert_invitation(cs, false, repo) do
+               already = {:already, _} -> {:ok, already}
+               ok_or_error -> ok_or_error
+             end
+           end)
          end)
          |> Repo.safe_transaction() do
       {:error, e = :database_busy} -> OperationWithRetry.maybe_retry(operation, e)
       {:ok, res_map} -> res_map |> Map.values()
+      {:error, _, :locked, _changes} -> {:error, :locked}
       e = {:error, _, _cs, _changes} -> e
     end
   end
-
-  defp insert_guest(cs, repo, changes) when is_struct(cs, Ecto.Changeset) do
-    case cs |> repo.insert() do
-      ok = {:ok, _} ->
-        ok
-
-      e = {:error, _} ->
-        e |> Invitation.rescue_error(repo) |> do_recovery(repo, changes)
-    end
-  end
-
-  defp do_recovery({:error, {:person_exists, new_cs}}, repo, changes),
-    do: new_cs |> insert_guest(repo, changes)
-
-  defp do_recovery({:error, {:unique, invitation}}, _, _), do: {:ok, {:already, invitation}}
-  defp do_recovery(e = {:error, _}, _, _), do: e
 
   defp default_strategy(:database_busy, retries) when retries < @max_db_retries, do: :retry
   defp default_strategy(_, _), do: :abort
