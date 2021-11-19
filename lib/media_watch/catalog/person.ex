@@ -23,27 +23,34 @@ defmodule MediaWatch.Catalog.Person do
     |> unique_constraint([:label])
   end
 
-  def get_existing_person_from_cs(
-        cs = %{
-          errors: [label: {_, [constraint: :unique, constraint_name: "persons_label_index"]}]
-        },
-        repo
-      ) do
-    with {_, label} <- cs |> fetch_field(:label), do: Person |> repo.get_by(label: label)
+  def get_existing_person_from_cs!(cs = %Ecto.Changeset{errors: errors}, repo) do
+    cond do
+      errors |> Enum.any?(&has_unique_label?/1) ->
+        with {_, label} <- cs |> fetch_field(:label), do: Person |> repo.get_by(label: label)
+
+      errors |> Enum.any?(&has_unique_qid?/1) ->
+        with {_, qid} <- cs |> fetch_field(:wikidata_qid),
+             do: Person |> repo.get_by(wikidata_qid: qid)
+
+      true ->
+        raise "Person changeset does not contain enough information"
+    end
   end
 
-  def get_existing_person_from_cs(
-        cs = %{
-          errors: [
-            wikidata_qid:
-              {_, [constraint: :unique, constraint_name: "persons_wikidata_qid_index"]}
-          ]
-        },
-        repo
-      ) do
-    with {_, qid} <- cs |> fetch_field(:wikidata_qid),
-         do: Person |> repo.get_by(wikidata_qid: qid)
-  end
+  defp has_unique_label?(
+         {:label, {_, [constraint: :unique, constraint_name: "persons_label_index"]}}
+       ),
+       do: true
+
+  defp has_unique_label?(_), do: false
+
+  defp has_unique_qid?(
+         {:wikidata_qid,
+          {_, [constraint: :unique, constraint_name: "persons_wikidata_qid_index"]}}
+       ),
+       do: true
+
+  defp has_unique_qid?(_), do: false
 
   defp update_from_wikidata(cs) do
     with {_, label} <- cs |> fetch_field(:label),

@@ -81,13 +81,20 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
   end
 
   defp insert_guest(cs, repo, changes) when is_struct(cs, Ecto.Changeset) do
-    case cs |> repo.insert() |> Invitation.handle_error(repo) do
-      ok = {:ok, _} -> ok
-      {:error, {:person_exists, new_cs}} -> new_cs |> insert_guest(repo, changes)
-      {:error, {:unique, invitation}} -> {:ok, {:already, invitation}}
-      e = {:error, _} -> e
+    case cs |> repo.insert() do
+      ok = {:ok, _} ->
+        ok
+
+      e = {:error, _} ->
+        e |> Invitation.rescue_error(repo) |> do_recovery(repo, changes)
     end
   end
+
+  defp do_recovery({:error, {:person_exists, new_cs}}, repo, changes),
+    do: new_cs |> insert_guest(repo, changes)
+
+  defp do_recovery({:error, {:unique, invitation}}, _, _), do: {:ok, {:already, invitation}}
+  defp do_recovery(e = {:error, _}, _, _), do: e
 
   defp default_strategy(:database_busy, retries) when retries < @max_db_retries, do: :retry
   defp default_strategy(_, _), do: :abort
