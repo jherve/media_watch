@@ -16,11 +16,15 @@ defmodule MediaWatchWeb.ItemLive do
      |> assign(
        item: item,
        description: item.description,
-       occurrences: Analysis.list_show_occurrences(id)
+       occurrences: Analysis.list_show_occurrences(id),
+       display_admin?: false
      )}
   end
 
   @impl true
+  def handle_info({:display_admin?, display_admin?}, socket),
+    do: {:noreply, socket |> assign(display_admin?: display_admin?)}
+
   def handle_info(desc, socket) when is_struct(desc, MediaWatch.Analysis.Description),
     do: {:noreply, socket |> assign(description: desc)}
 
@@ -43,6 +47,7 @@ defmodule MediaWatchWeb.ItemLive do
   @impl true
   def render(assigns),
     do: ~H"""
+      <%= MediaWatchWeb.AdminToggleLiveComponent.as_component(assigns) %>
       <%= as_banner(assigns) %>
 
       <h2>Emissions</h2>
@@ -74,7 +79,7 @@ defmodule MediaWatchWeb.ItemLive do
                          id={occ.id}
                          occurrence={occ}
                          display_link_to_date={true}
-                         can_edit_invitations?={@admin} />
+                         can_edit_invitations?={@display_admin?} />
       </List.ul>
     """
 end

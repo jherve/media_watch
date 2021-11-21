@@ -11,6 +11,9 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   @reset_by_date start_time: nil, end_time: nil, next_day: nil, previous_day: nil
 
   @impl true
+  def mount(_, _, socket), do: {:ok, socket |> assign(display_admin?: false)}
+
+  @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
     case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
       {:ok, date} ->
@@ -44,8 +47,13 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       |> assign(person: Catalog.get_person(person_id))
 
   @impl true
+  def handle_info({:display_admin?, display_admin?}, socket),
+    do: {:noreply, socket |> assign(display_admin?: display_admin?)}
+
+  @impl true
   def render(assigns),
     do: ~H"""
+      <%= MediaWatchWeb.AdminToggleLiveComponent.as_component(assigns) %>
       <h1><%= render_title(assigns) %></h1>
       <%= render_nav_links(assigns) %>
 
@@ -56,7 +64,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
                          image_url={ItemDescriptionView.image_url(occurrence.show.item.description)}
                          display_link_to_item={true}
                          display_link_to_date={true}
-                         can_edit_invitations?={@admin}/>
+                         can_edit_invitations?={@display_admin?}/>
       </List.ul>
     """
 
