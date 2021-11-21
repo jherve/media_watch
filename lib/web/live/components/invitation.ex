@@ -29,5 +29,5 @@ defmodule MediaWatchWeb.InvitationLiveComponent do
       </div>
     """
 
-  defp person_id(invitation), do: {:person, invitation.show_occurrence_id, invitation.person_id}
+  defp person_id(invitation), do: {:person, invitation.id, invitation.person_id}
 end

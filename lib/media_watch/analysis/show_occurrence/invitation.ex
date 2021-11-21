@@ -5,11 +5,10 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   alias MediaWatch.Catalog.Person
   alias MediaWatch.Analysis.ShowOccurrence
   alias __MODULE__, as: Invitation
-  @primary_key false
 
   schema "show_occurrences_invitations" do
-    belongs_to :person, Person, primary_key: true
-    belongs_to :show_occurrence, ShowOccurrence, primary_key: true
+    belongs_to :person, Person
+    belongs_to :show_occurrence, ShowOccurrence
   end
 
   @doc false

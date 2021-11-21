@@ -41,12 +41,9 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   end
 
   def update(%{invitation_deleted: invitation}, socket) do
-    is_deleted? = fn tested ->
-      tested.show_occurrence_id == invitation.show_occurrence_id and
-        tested.person_id == invitation.person_id
-    end
-
-    {:ok, socket |> update(:invitations, &(&1 |> Enum.reject(is_deleted?)))}
+    {:ok,
+     socket
+     |> update(:invitations, &(&1 |> Enum.reject(fn tested -> tested.id == invitation.id end)))}
   end
 
   @impl true
@@ -107,8 +104,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
     </List.ul>
     """
 
-  defp invitation_id(invitation),
-    do: {:invitation, invitation.show_occurrence_id, invitation.person_id}
+  defp invitation_id(invitation), do: {:invitation, invitation.id}
 
   defp render_guest_form_toggle(assigns = %{can_edit_invitations?: true}),
     do: ~H"""
