@@ -99,7 +99,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
       <.live_component module={InvitationLiveComponent}
                        id={invitation_id(invitation)}
                        invitation={invitation}
-                       display_delete_button={@can_edit_invitations?}
+                       display_edit_buttons={@can_edit_invitations?}
                        notify_parent={@send_update} />
     </List.ul>
     """

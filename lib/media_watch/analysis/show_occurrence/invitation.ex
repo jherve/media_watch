@@ -9,6 +9,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   schema "show_occurrences_invitations" do
     belongs_to :person, Person
     belongs_to :show_occurrence, ShowOccurrence
+    field :auto?, :boolean
+    field :verified?, :boolean
   end
 
   @doc false
@@ -22,6 +24,11 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
 
   def get_guests_cs(occ, list_of_attrs) when is_list(list_of_attrs),
     do: list_of_attrs |> Enum.map(&changeset(%Invitation{show_occurrence: occ}, &1))
+
+  def set_manual_fields(cs = %Ecto.Changeset{}, false), do: cs |> put_change(:auto?, true)
+
+  def set_manual_fields(cs = %Ecto.Changeset{}, true),
+    do: cs |> put_change(:auto?, false) |> put_change(:verified?, true)
 
   def rescue_error(e = {:error, cs = %Ecto.Changeset{errors: errors}}, repo) do
     cond do

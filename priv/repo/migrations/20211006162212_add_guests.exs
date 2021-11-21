@@ -15,6 +15,8 @@ defmodule MediaWatch.Repo.Migrations.AddGuests do
     create table(:show_occurrences_invitations) do
       add :person_id, references(:persons, column: :id, on_delete: :delete_all)
       add :show_occurrence_id, references(:show_occurrences, column: :id, on_delete: :delete_all)
+      add :auto?, :boolean, null: false
+      add :verified?, :boolean, default: false
     end
 
     create unique_index(:show_occurrences_invitations, [:person_id, :show_occurrence_id])

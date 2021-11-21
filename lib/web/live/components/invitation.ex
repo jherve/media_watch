@@ -9,8 +9,8 @@ defmodule MediaWatchWeb.InvitationLiveComponent do
       {:ok,
        socket
        |> assign(assigns)
-       |> assign(person: invitation.person)
-       |> assign_new(:display_delete_button, fn -> false end)}
+       |> assign(person: invitation.person, verified?: invitation.verified?)
+       |> assign_new(:display_edit_buttons, fn -> false end)}
 
   @impl true
   def handle_event("delete", _, socket = %{assigns: %{invitation: invitation}}) do
@@ -20,12 +20,20 @@ defmodule MediaWatchWeb.InvitationLiveComponent do
     {:noreply, socket}
   end
 
+  def handle_event("confirm", _, socket = %{assigns: %{invitation: invitation}}) do
+    :ok = Analysis.confirm_invitation(invitation)
+    {:noreply, socket |> assign(verified?: true)}
+  end
+
   @impl true
   def render(assigns),
     do: ~H"""
       <div class="invitation">
         <.live_component module={PersonLiveComponent} id={person_id(@invitation)} person={@person} wrap_in_link={true} />
-        <%= if @display_delete_button do %><button phx-click="delete" phx-target={@myself}>Enlever</button><% end %>
+        <%= if @display_edit_buttons do %><button phx-click="delete" phx-target={@myself}>Enlever</button><% end %>
+        <%= if @display_edit_buttons and not @verified? do %>
+          <button phx-click="confirm" phx-target={@myself}>Confirmer</button>
+        <% end %>
       </div>
     """
 

@@ -140,7 +140,7 @@ defmodule MediaWatch.Analysis do
   def insert_invitation(invitation_cs, manual? \\ false, repo \\ Repo)
 
   def insert_invitation(invitation_cs = %Ecto.Changeset{}, manual? = false, repo) do
-    case invitation_cs |> repo.safe_insert() do
+    case invitation_cs |> Invitation.set_manual_fields(manual?) |> repo.safe_insert() do
       ok = {:ok, _} ->
         ok
 
@@ -150,6 +150,8 @@ defmodule MediaWatch.Analysis do
   end
 
   def insert_invitation(invitation_cs = %Ecto.Changeset{}, manual? = true, repo) do
+    invitation_cs = invitation_cs |> Invitation.set_manual_fields(manual?)
+
     show_occurrence_id =
       invitation_cs |> Ecto.Changeset.fetch_field!(:show_occurrence) |> Map.get(:id)
 
@@ -166,6 +168,14 @@ defmodule MediaWatch.Analysis do
         |> do_invitation_insertion_recovery(manual?, repo)
     end
   end
+
+  defp do_invitation_insertion_recovery({:error, {:unique, existing}}, _, _),
+    do: {:already, existing}
+
+  defp do_invitation_insertion_recovery({:error, {:person_exists, new_cs}}, manual?, repo),
+    do: new_cs |> insert_invitation(manual?, repo)
+
+  defp do_invitation_insertion_recovery(e = {:error, _}, _, _), do: e
 
   def changeset_for_guest_addition(show_occurrence = %ShowOccurrence{}, params \\ %{}) do
     %GuestAddition{show_occurrence: show_occurrence} |> GuestAddition.changeset(params)
@@ -191,11 +201,12 @@ defmodule MediaWatch.Analysis do
     end
   end
 
-  defp do_invitation_insertion_recovery({:error, {:unique, existing}}, _, _),
-    do: {:already, existing}
-
-  defp do_invitation_insertion_recovery({:error, {:person_exists, new_cs}}, manual?, repo),
-    do: new_cs |> insert_invitation(manual?, repo)
-
-  defp do_invitation_insertion_recovery(e = {:error, _}, _, _), do: e
+  def confirm_invitation(invitation = %Invitation{}) do
+    with {:ok, _} <-
+           Multi.new()
+           |> Multi.update(:update, invitation |> Ecto.Changeset.change(%{verified?: true}))
+           |> ShowOccurrence.into_manual_multi(invitation.show_occurrence_id)
+           |> Repo.safe_transaction(),
+         do: :ok
+  end
 end
