@@ -13,6 +13,7 @@ defmodule MediaWatchWeb.PersonIndexLive do
      |> assign(all_persons: all_persons, persons_displayed: all_persons, search_cs: changeset())}
   end
 
+  @impl true
   def handle_event("change", %{"search" => params}, socket) do
     cs = params |> changeset()
 

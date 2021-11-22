@@ -8,6 +8,7 @@ defmodule MediaWatchWeb.AdminToggleLiveComponent do
     {:ok, socket |> assign(display_admin?: cs |> extract_value(), changeset: cs)}
   end
 
+  @impl true
   def handle_event("change", %{"admin_toggle" => params}, socket) do
     cs = params |> changeset()
 
