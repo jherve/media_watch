@@ -62,7 +62,8 @@ defmodule MediaWatch.MixProject do
       {:crontab, "~> 1.1"},
       {:ex_cldr_dates_times, "~> 2.0"},
       {:quantum, "~> 3.0"},
-      {:earmark, "~> 1.4"}
+      {:earmark, "~> 1.4"},
+      {:seqfuzz, "~> 0.2.0"}
     ]
   end
 
