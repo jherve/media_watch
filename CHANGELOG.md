@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 (2021-11-22)
+
+* UI: Add a search-by-name feature in persons' index
+* UI: Allow admins to add/delete invitations on each show
+* UI: Add a toggle for admin commands
+* [BREAKING] Internals: Mark show occurrences / invitations as auto edited or verified by hand
+* Internals: Add "pipeline" modules for workers'  operations
+* Internals: Wrap some operations into a database transaction, for consistency
+
 ## 1.4.0 (2021-11-16)
 
 * Fix: Fix non-determinism bug in slice/occurrence association that made guest detection fuzzy
