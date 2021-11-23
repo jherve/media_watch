@@ -2,50 +2,37 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
   @behaviour MediaWatch.Analysis.Recognisable
   alias MediaWatch.PersonRecognition
   alias MediaWatch.Parsing.Slice
-  alias MediaWatch.Analysis.{Hosted, EntityRecognized, ShowOccurrence, EntitiesClassification}
+  alias MediaWatch.Analysis.{Hosted, ShowOccurrence, EntitiesClassification}
 
-  def get_entities_cs(
-        slice = %Slice{
-          type: :rss_channel_description,
-          rss_channel_description: %{title: title, description: desc}
-        }
-      ),
-      do: get_entities_cs(slice, title, desc)
+  def get_entities_attrs(%Slice{
+        type: :rss_channel_description,
+        rss_channel_description: %{title: title, description: desc}
+      }),
+      do: get_entities_attrs(title, desc)
 
-  def get_entities_cs(
-        slice = %Slice{type: :rss_entry, rss_entry: %{title: title, description: desc}}
-      ),
-      do: get_entities_cs(slice, title, desc)
+  def get_entities_attrs(%Slice{type: :rss_entry, rss_entry: %{title: title, description: desc}}),
+    do: get_entities_attrs(title, desc)
 
-  def get_entities_cs(
-        slice = %Slice{type: :html_preview_card, html_preview_card: %{title: title, text: desc}}
-      ),
-      do: get_entities_cs(slice, title, desc || "")
+  def get_entities_attrs(%Slice{
+        type: :html_preview_card,
+        html_preview_card: %{title: title, text: desc}
+      }),
+      do: get_entities_attrs(title, desc || "")
 
-  def get_entities_cs(
-        slice = %Slice{type: :open_graph, open_graph: %{title: title, description: desc}}
-      ),
-      do: get_entities_cs(slice, title, desc || "")
+  def get_entities_attrs(%Slice{type: :open_graph, open_graph: %{title: title, description: desc}}),
+      do: get_entities_attrs(title, desc || "")
 
-  def get_entities_cs(slice = %Slice{}, title, desc) do
-    with %{title: title_list, desc: desc_list} <-
-           PersonRecognition.identify_persons(%{title: title, desc: desc}) do
-      (title_list |> into_cs_list(slice, "title")) ++
-        (desc_list |> into_cs_list(slice, "description"))
-    end
-  end
+  defp get_entities_attrs(title, desc),
+    do:
+      %{title: title, description: desc}
+      |> PersonRecognition.identify_persons()
+      |> Enum.flat_map(fn {k, v} -> v |> into_attrs_list(k |> Atom.to_string()) end)
 
-  defp into_cs_list(name_list, slice, field) when is_list(name_list) do
-    name_list
-    |> Enum.uniq()
-    |> Enum.map(
-      &EntityRecognized.changeset(%EntityRecognized{slice: slice}, %{
-        type: "PER",
-        label: &1,
-        field: field
-      })
-    )
-  end
+  defp into_attrs_list(name_list, location_in_slice) when is_list(name_list),
+    do:
+      name_list
+      |> Enum.uniq()
+      |> Enum.map(&%{type: "PER", label: &1, location_in_slice: location_in_slice})
 
   def get_guests_attrs(list, hosted) when is_list(list),
     do: list |> Enum.map(&get_guests_attrs(&1, hosted))
@@ -64,7 +51,7 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
     do:
       slices
       |> Enum.flat_map(fn %{entities: entities, type: type, kind: kind} ->
-        entities |> Enum.map(&%{label: &1.label, type: {type, kind}, field: &1.field})
+        entities |> Enum.map(&%{label: &1.label, type: {type, kind}, field: &1.location_in_slice})
       end)
 
   defp reject_hosts(entities, hosted) do
@@ -85,9 +72,9 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
       defdelegate get_guests_attrs(occ, hosted), to: Recognisable.Generic
 
       @impl Recognisable
-      defdelegate get_entities_cs(occ), to: Recognisable.Generic
+      defdelegate get_entities_attrs(slice), to: Recognisable.Generic
 
-      defoverridable get_guests_attrs: 2, get_entities_cs: 1
+      defoverridable get_guests_attrs: 2
     end
   end
 end

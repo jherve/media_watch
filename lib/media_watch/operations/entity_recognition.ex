@@ -1,6 +1,7 @@
 defmodule MediaWatch.Analysis.EntityRecognitionOperation do
   alias MediaWatch.{Repo, OperationWithRetry}
   alias MediaWatch.Parsing.Slice
+  alias MediaWatch.Analysis.Recognisable
   alias __MODULE__
   @behaviour OperationWithRetry
   @errors_with_retry [:database_busy]
@@ -38,7 +39,7 @@ defmodule MediaWatch.Analysis.EntityRecognitionOperation do
           entities_cs: nil
         }
       ) do
-    with cs_list when is_list(cs_list) <- slice |> recognisable.get_entities_cs(),
+    with cs_list when is_list(cs_list) <- slice |> Recognisable.get_entities_cs!(recognisable),
          filtered when is_list(filtered) <- cs_list |> maybe_filter(recognisable) do
       %{operation | entities_cs: filtered} |> run
     end

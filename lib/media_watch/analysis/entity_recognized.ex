@@ -3,13 +3,13 @@ defmodule MediaWatch.Analysis.EntityRecognized do
   import Ecto.Changeset
   alias MediaWatch.Parsing.Slice
   alias __MODULE__, as: EntityRecognized
-  @required_fields [:label, :type, :field]
+  @required_fields [:label, :type, :location_in_slice]
   @all_fields @required_fields
 
   schema "entities_recognized" do
     field :label, :string
     field :type, :string
-    field :field, :string
+    field :location_in_slice, :string
     belongs_to :slice, Slice
   end
 
@@ -19,6 +19,6 @@ defmodule MediaWatch.Analysis.EntityRecognized do
     |> cast(attrs, @all_fields)
     |> cast_assoc(:slice, required: true)
     |> validate_required(@required_fields)
-    |> unique_constraint([:slice_id, :label, :type, :field])
+    |> unique_constraint([:slice_id, :label, :type, :location_in_slice])
   end
 end
