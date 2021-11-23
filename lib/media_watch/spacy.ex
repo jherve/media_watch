@@ -6,18 +6,18 @@ defmodule MediaWatch.Spacy do
 
   def extract_entities(_, _, false), do: {:error, :no_config}
 
-  def extract_entities(string, language, true) do
+  def extract_entities(string, language, true) when is_binary(string) do
     query = URI.encode_query(lang: language)
 
-    with {:ok, %{"ents" => entities}} <-
-           Http.post_json("#{entities_url() |> URI.to_string()}?#{query}", %{text: string}) do
-      {:ok,
-       entities
-       |> Enum.map(&convert_to_atom_map/1)
-       |> Enum.filter(&(&1.label == "PER"))
-       |> Enum.map(&(&1.text |> String.trim()))}
-    else
-      {:error, %Mint.TransportError{reason: :econnrefused}} -> {:error, :server_down}
+    case Http.post_json("#{entities_url() |> URI.to_string()}?#{query}", %{text: string}) do
+      {:ok, %{"ents" => entities}} ->
+        {:ok,
+         entities
+         |> Enum.map(&convert_to_atom_map/1)
+         |> Enum.map(&%{&1 | text: &1.text |> String.trim()})}
+
+      {:error, %Mint.TransportError{reason: :econnrefused}} ->
+        {:error, :server_down}
     end
   end
 

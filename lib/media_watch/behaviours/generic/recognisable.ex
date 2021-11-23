@@ -1,6 +1,6 @@
 defmodule MediaWatch.Analysis.Recognisable.Generic do
   @behaviour MediaWatch.Analysis.Recognisable
-  alias MediaWatch.Spacy
+  alias MediaWatch.PersonRecognition
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.{Hosted, EntityRecognized, ShowOccurrence, EntitiesClassification}
 
@@ -28,8 +28,8 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
       do: get_entities_cs(slice, title, desc || "")
 
   def get_entities_cs(slice = %Slice{}, title, desc) do
-    with {:ok, title_list} <- Spacy.extract_entities(title),
-         {:ok, desc_list} <- Spacy.extract_entities(desc) do
+    with %{title: title_list, desc: desc_list} <-
+           PersonRecognition.identify_persons(%{title: title, desc: desc}) do
       (title_list |> into_cs_list(slice, "title")) ++
         (desc_list |> into_cs_list(slice, "description"))
     end
