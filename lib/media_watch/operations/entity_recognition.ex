@@ -7,13 +7,13 @@ defmodule MediaWatch.Analysis.EntityRecognitionOperation do
   @max_db_retries 20
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %EntityRecognitionOperation{
-            slice: Slice.t(),
-            module: atom(),
-            entities_cs: [Ecto.Changeset.t()] | nil,
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %EntityRecognitionOperation{
+          slice: Slice.t(),
+          module: atom(),
+          entities_cs: [Ecto.Changeset.t()] | nil,
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:slice]}
   defstruct [:slice, :module, :entities_cs, :retries, :retry_strategy]

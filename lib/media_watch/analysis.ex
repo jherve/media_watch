@@ -33,7 +33,7 @@ defmodule MediaWatch.Analysis do
       )
       |> Repo.all()
 
-  @spec get_analyzed_item(integer()) :: [Item.t()]
+  @spec get_analyzed_item(integer()) :: Item.t()
   def get_analyzed_item(item_id),
     do:
       from([i, s, so] in item_query(),

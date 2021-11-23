@@ -9,18 +9,18 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
   @max_db_retries 20
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %OccurrenceDetectionOperation{
-            slice: Slice.t(),
-            module: atom(),
-            show_id: integer() | nil,
-            slice_date: DateTime.t() | nil,
-            time_slot: Recurrent.time_slot() | nil,
-            airing_time: DateTime.t() | nil,
-            slice_usage_done?: boolean(),
-            multi: Multi.t() | nil,
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %OccurrenceDetectionOperation{
+          slice: Slice.t(),
+          module: atom(),
+          show_id: integer() | nil,
+          slice_date: DateTime.t() | nil,
+          time_slot: Recurrent.time_slot() | nil,
+          airing_time: DateTime.t() | nil,
+          slice_usage_done?: boolean(),
+          multi: Multi.t() | nil,
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:slice, :retry_strategy]}
   defstruct [

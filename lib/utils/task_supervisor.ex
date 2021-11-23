@@ -5,9 +5,9 @@ defmodule MediaWatch.TaskSupervisor do
     Task.Supervisor.async_nolink(MediaWatch.TaskSupervisor, fun)
   end
 
-  @spec start_retryable(fun :: (() -> any()), Keyword.t()) :: {Task.t(), map()}
-  def start_retryable(fun, ctx \\ []) when is_function(fun, 0) do
-    {fun |> start(), ctx |> Map.new() |> Map.merge(%{nb_retries: 0, fun: fun})}
+  @spec start_retryable(fun :: (() -> any()), map()) :: {Task.t(), map()}
+  def start_retryable(fun, ctx \\ %{}) when is_function(fun, 0) do
+    {fun |> start(), ctx |> Map.merge(%{nb_retries: 0, fun: fun})}
   end
 
   @spec retry_task(map()) :: {Task.t(), map()}

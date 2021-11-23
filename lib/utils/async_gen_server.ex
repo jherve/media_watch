@@ -15,6 +15,7 @@ defmodule MediaWatch.AsyncGenServer do
 
   def init_state(state \\ %{}), do: state |> Map.put(:tasks, %{})
 
+  @spec start_async_task(fun :: (() -> any()), map(), map()) :: {:noreply, map()}
   def start_async_task(fun, state, ctx \\ %{})
       when is_function(fun, 0) and is_map(state) and is_map(ctx) do
     {task, ctx} = fun |> TaskSupervisor.start_retryable(ctx)

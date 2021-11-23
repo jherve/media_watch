@@ -9,14 +9,14 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
   @max_db_retries 20
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %ItemDescriptionOperation{
-            slice: Slice.t(),
-            describable: atom(),
-            description_cs: Ecto.Changeset.t() | nil,
-            description: Description.t() | nil,
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %ItemDescriptionOperation{
+          slice: Slice.t(),
+          describable: atom(),
+          description_cs: Ecto.Changeset.t() | nil,
+          description: Description.t() | nil,
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:slice, :description, :description_cs, :retry_strategy]}
   defstruct [

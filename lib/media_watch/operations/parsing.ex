@@ -8,13 +8,13 @@ defmodule MediaWatch.Parsing.ParsingOperation do
   @max_db_retries 20
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %ParsingOperation{
-            snapshot: Snapshot.t(),
-            module: atom(),
-            parsed_snapshot_cs: Ecto.Changeset.t(),
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %ParsingOperation{
+          snapshot: Snapshot.t(),
+          module: atom(),
+          parsed_snapshot_cs: Ecto.Changeset.t(),
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:snapshot, :parsed_snapshot_cs]}
   defstruct [:snapshot, :module, :parsed_snapshot_cs, :retries, :retry_strategy]

@@ -1,12 +1,13 @@
 defmodule MediaWatch.Spacy do
   alias MediaWatch.Http
 
+  @spec extract_entities(binary, binary) :: {:ok, list} | {:error, atom}
   def extract_entities(string, language \\ "fr"),
     do: extract_entities(string, language, has_config?())
 
-  def extract_entities(_, _, false), do: {:error, :no_config}
+  defp extract_entities(_, _, false), do: {:error, :no_config}
 
-  def extract_entities(string, language, true) when is_binary(string) do
+  defp extract_entities(string, language, true) when is_binary(string) do
     query = URI.encode_query(lang: language)
 
     case Http.post_json("#{entities_url() |> URI.to_string()}?#{query}", %{text: string}) do

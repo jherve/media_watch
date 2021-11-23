@@ -37,9 +37,8 @@ defmodule MediaWatch.RecoverableMulti do
   def is_empty?(multi = %Multi{}), do: multi |> Multi.to_list() |> length() == 1
 
   @spec wrap_transaction_result(result :: any()) ::
-          {:ok, list_ok :: list(any())}
-          | {:error, list_ok :: list(any()), list_ignored :: list(any()),
-             list_failed :: list(any())}
+          {:ok, ok :: map()}
+          | {:error, ok :: map(), ignored :: map(), failed :: map()}
   def wrap_transaction_result({:error, :control_stage, nil, changes}) do
     res =
       changes

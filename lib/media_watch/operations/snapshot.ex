@@ -8,12 +8,12 @@ defmodule MediaWatch.Snapshots.SnapshotOperation do
   @max_db_retries 20
   @errors_with_retry [:snap_timeout, :database_busy]
 
-  @opaque t :: %SnapshotOperation{
-            source: Source.t(),
-            snapshot_cs: Ecto.Changeset.t(),
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: map()
-          }
+  @type t :: %SnapshotOperation{
+          source: Source.t(),
+          snapshot_cs: Ecto.Changeset.t(),
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: map()
+        }
 
   @derive {Inspect, except: [:source, :snapshot_cs, :retry_strategy]}
   defstruct [:source, :snapshot_cs, :retry_strategy, :retries]

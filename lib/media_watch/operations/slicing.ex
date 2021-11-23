@@ -7,12 +7,12 @@ defmodule MediaWatch.Parsing.SlicingOperation do
   @max_db_retries 20
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %SlicingOperation{
-            parsed_snapshot: ParsedSnapshot.t(),
-            module: atom(),
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %SlicingOperation{
+          parsed_snapshot: ParsedSnapshot.t(),
+          module: atom(),
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:parsed_snapshot]}
   defstruct [:parsed_snapshot, :module, :list_of_slices_cs, :retries, :retry_strategy]

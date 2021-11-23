@@ -12,14 +12,14 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
   @preloads [:detail, slices: Slice.preloads()]
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %GuestDetectionOperation{
-            occurrence: ShowOccurrence.t(),
-            recognisable: atom(),
-            hosted: atom(),
-            guests_cs: [Ecto.Changeset.t()] | nil,
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %GuestDetectionOperation{
+          occurrence: ShowOccurrence.t(),
+          recognisable: atom(),
+          hosted: atom(),
+          guests_cs: [Ecto.Changeset.t()] | nil,
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:occurrence]}
   defstruct [:occurrence, :recognisable, :hosted, :guests_cs, :retries, :retry_strategy]

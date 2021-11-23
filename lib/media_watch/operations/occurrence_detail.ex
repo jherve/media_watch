@@ -10,14 +10,14 @@ defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
   @preloads [:detail, slices: Slice.preloads()]
 
   @type error_reason :: :max_db_retries
-  @opaque t :: %OccurrenceDetailOperation{
-            occurrence: ShowOccurrence.t(),
-            slice: Slice.t(),
-            detail: Detail.t() | nil,
-            detail_created?: boolean() | nil,
-            retry_strategy: OperationWithRetry.retry_strategy_fun(),
-            retries: any()
-          }
+  @type t :: %OccurrenceDetailOperation{
+          occurrence: ShowOccurrence.t(),
+          slice: Slice.t(),
+          detail: Detail.t() | nil,
+          detail_created?: boolean() | nil,
+          retry_strategy: OperationWithRetry.retry_strategy_fun(),
+          retries: any()
+        }
 
   @derive {Inspect, except: [:occurrence, :slice]}
   defstruct [
