@@ -11,7 +11,6 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
   @type error_reason :: :max_db_retries
   @opaque t :: %OccurrenceDetectionOperation{
             slice: Slice.t(),
-            slice_type: atom(),
             module: atom(),
             show_id: integer() | nil,
             slice_date: DateTime.t() | nil,
@@ -26,7 +25,6 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
   @derive {Inspect, except: [:slice, :retry_strategy]}
   defstruct [
     :slice,
-    :slice_type,
     :module,
     :show_id,
     :slice_date,
@@ -38,12 +36,11 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
     slice_usage_done?: false
   ]
 
-  @spec new(Slice.t(), atom(), atom()) :: OccurrenceDetectionOperation.t()
-  def new(slice = %Slice{}, slice_type, module),
+  @spec new(Slice.t(), atom()) :: OccurrenceDetectionOperation.t()
+  def new(slice = %Slice{}, module),
     do:
       %OccurrenceDetectionOperation{
         slice: slice |> Repo.preload(Slice.preloads()),
-        slice_type: slice_type,
         module: module
       }
       |> set_retry_strategy(&default_strategy/2)
@@ -94,8 +91,7 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
            slice: %{id: slice_id},
            show_id: show_id,
            airing_time: airing_time,
-           time_slot: {slot_start, slot_end},
-           slice_type: type
+           time_slot: {slot_start, slot_end}
          }
        ) do
     occurrence_attrs = %{
@@ -105,7 +101,7 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
       slot_end: slot_end
     }
 
-    slice_usage_attrs = %{slice_id: slice_id, type: type}
+    slice_usage_attrs = %{slice_id: slice_id}
 
     multi =
       Multi.new()

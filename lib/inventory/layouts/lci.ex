@@ -50,6 +50,9 @@ defmodule MediaWatchInventory.Layout.LCI do
     page_url |> URI.merge(path) |> URI.to_string()
   end
 
+  def get_slice_kind(%{html_preview_card: %{link: link}}, lci), do: lci.get_type_from_link(link)
+  def get_slice_kind(_, _), do: nil
+
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
       @behaviour LCI
@@ -59,6 +62,9 @@ defmodule MediaWatchInventory.Layout.LCI do
 
       @impl MediaWatch.Parsing.Sliceable
       def into_list_of_slice_attrs(parsed), do: LCI.into_list_of_slice_attrs(parsed, __MODULE__)
+
+      @impl MediaWatch.Parsing.Sliceable
+      def get_slice_kind(slice), do: LCI.get_slice_kind(slice, __MODULE__)
     end
   end
 end

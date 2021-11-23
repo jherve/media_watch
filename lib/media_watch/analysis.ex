@@ -96,23 +96,21 @@ defmodule MediaWatch.Analysis do
         preload: [show: {s, item: i}]
       )
 
-  def classify(slice, analyzable), do: analyzable.classify(slice)
-
-  def run_occurrence_pipeline(slice, type, module, run_details?),
+  def run_occurrence_pipeline(slice, module),
     do:
-      OccurrenceSliceAnalysisPipeline.new(slice, type, module, run_details?)
+      OccurrenceSliceAnalysisPipeline.new(slice, module)
       |> OccurrenceSliceAnalysisPipeline.run()
 
-  def run_description_pipeline(slice, type, module),
+  def run_description_pipeline(slice, module),
     do:
-      DescriptionSliceAnalysisPipeline.new(slice, type, module)
+      DescriptionSliceAnalysisPipeline.new(slice, module)
       |> DescriptionSliceAnalysisPipeline.run()
 
   defdelegate recognize_entities(slice, module), to: EntityRecognitionServer
-  defdelegate detect_occurrence(slice, slice_type, module), to: ShowOccurrencesServer
+  defdelegate detect_occurrence(slice, module), to: ShowOccurrencesServer
   defdelegate add_details(occurrence, slice), to: ShowOccurrencesServer
   defdelegate do_guest_detection(occurrence, recognizable, hosted), to: ShowOccurrencesServer
-  defdelegate do_description(slice, slice_type, module), to: ItemDescriptionServer
+  defdelegate do_description(slice, module), to: ItemDescriptionServer
 
   def delete_invitation(invitation, manual? \\ false)
 

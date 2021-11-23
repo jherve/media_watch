@@ -15,9 +15,9 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     GenServer.start_link(__MODULE__, opts, name: @name)
   end
 
-  def detect_occurrence(slice, slice_type, module),
+  def detect_occurrence(slice, module),
     do:
-      fn -> GenServer.call(@name, {:detect_occurrence, slice, slice_type, module}, :infinity) end
+      fn -> GenServer.call(@name, {:detect_occurrence, slice, module}, :infinity) end
       |> Telemetry.span_function_call(@prefix ++ [:detect_occurrence], %{module: module})
 
   def add_details(occurrence, slice),
@@ -37,8 +37,8 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     do: {:ok, AsyncGenServer.init_state(%{unmatched_slices: MapSet.new()})}
 
   @impl true
-  def handle_call({operation = :detect_occurrence, slice, slice_type, module}, pid, state) do
-    fn -> {operation, pid, do_detect_occurrence(slice, slice_type, module)} end
+  def handle_call({operation = :detect_occurrence, slice, module}, pid, state) do
+    fn -> {operation, pid, do_detect_occurrence(slice, module)} end
     |> AsyncGenServer.start_async_task(state, %{slice_id: slice.id})
   end
 
@@ -52,9 +52,9 @@ defmodule MediaWatch.Analysis.ShowOccurrencesServer do
     |> AsyncGenServer.start_async_task(state)
   end
 
-  defp do_detect_occurrence(slice, slice_type, module),
+  defp do_detect_occurrence(slice, module),
     do:
-      OccurrenceDetectionOperation.new(slice, slice_type, module)
+      OccurrenceDetectionOperation.new(slice, module)
       |> OccurrenceDetectionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
       |> OccurrenceDetectionOperation.run()
 

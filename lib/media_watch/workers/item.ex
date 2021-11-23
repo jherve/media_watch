@@ -59,35 +59,29 @@ defmodule MediaWatch.Catalog.ItemWorker do
   end
 
   def handle_info(slice = %Slice{}, state) do
-    type = slice |> Analysis.classify(state.module)
-
-    case type do
-      :show_occurrence_description ->
-        run_occurrence_pipeline(state, slice, type, true)
+    cond do
+      Slice.is_show_occurrence?(slice) ->
+        run_occurrence_pipeline(state, slice)
         {:noreply, state}
 
-      :show_occurrence_excerpt ->
-        run_occurrence_pipeline(state, slice, type, false)
-        {:noreply, state}
-
-      :item_description ->
-        run_description_pipeline(state, slice, type)
+      Slice.is_description?(slice) ->
+        run_description_pipeline(state, slice)
         {:noreply, state}
 
       true ->
-        raise "Unknown type"
+        raise "Unknown slice type/kind"
     end
   end
 
-  defp run_occurrence_pipeline(state, slice, type, run_details?) do
-    case Analysis.run_occurrence_pipeline(slice, type, state.module, run_details?) do
+  defp run_occurrence_pipeline(state, slice) do
+    case Analysis.run_occurrence_pipeline(slice, state.module) do
       {:ok, %{occurrence: occ}} -> PubSub.broadcast("item:#{state.id}", occ)
       {:error, step, e} -> log(:warning, state, "(#{step}) #{Utils.inspect_error(e)}")
     end
   end
 
-  defp run_description_pipeline(state, slice, type) do
-    case Analysis.run_description_pipeline(slice, type, state.module) do
+  defp run_description_pipeline(state, slice) do
+    case Analysis.run_description_pipeline(slice, state.module) do
       {:ok, %{description: desc}} -> PubSub.broadcast("item:#{state.id}", desc)
       {:ok, %{}} -> nil
       {:error, e} -> log(:warning, state, Utils.inspect_error(e))

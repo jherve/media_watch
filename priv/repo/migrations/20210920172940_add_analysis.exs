@@ -34,24 +34,16 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
     create table(:slices_usages) do
       add :show_occurrence_id, references(:show_occurrences, column: :id, on_delete: :delete_all),
         check: %{
-          name: "slices_usages_show_occurrence_id_when_occurrence",
+          name: "slices_usages_only_one_fk",
           expr: """
-          (type = 'show_occurrence_description' OR type = 'show_occurrence_excerpt' AND show_occurrence_id IS NOT NULL)
-            OR (type != 'show_occurrence_description' AND type != 'show_occurrence_excerpt')
+          show_occurrence_id IS NOT NULL AND description_id IS NULL
+          OR show_occurrence_id IS NULL AND description_id IS NOT NULL
           """
         }
 
-      add :description_id, references(:descriptions, column: :item_id, on_delete: :delete_all),
-        check: %{
-          name: "slices_usages_description_id_when_item_description",
-          expr: """
-          (type = 'item_description' AND description_id IS NOT NULL)
-            OR type != 'item_description'
-          """
-        }
+      add :description_id, references(:descriptions, column: :item_id, on_delete: :delete_all)
 
       add :slice_id, references(:slices, column: :id, on_delete: :delete_all), null: false
-      add :type, :string, null: false
     end
 
     create unique_index(:slices_usages, [:show_occurrence_id, :slice_id],

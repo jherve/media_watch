@@ -50,9 +50,9 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
   def get_guests_attrs(list, hosted) when is_list(list),
     do: list |> Enum.map(&get_guests_attrs(&1, hosted))
 
-  def get_guests_attrs(%ShowOccurrence{slice_usages: usages}, hosted) do
+  def get_guests_attrs(%ShowOccurrence{slices: slices}, hosted) do
     entities =
-      usages |> organize_entities |> EntitiesClassification.cleanup() |> reject_hosts(hosted)
+      slices |> organize_entities |> EntitiesClassification.cleanup() |> reject_hosts(hosted)
 
     entities
     |> EntitiesClassification.get_guests()
@@ -60,12 +60,11 @@ defmodule MediaWatch.Analysis.Recognisable.Generic do
     |> Enum.map(&%{person: %{label: &1}})
   end
 
-  defp organize_entities(slice_usages),
+  defp organize_entities(slices),
     do:
-      slice_usages
-      |> Enum.map(&{&1.slice, &1.type})
-      |> Enum.flat_map(fn {%{entities: entities}, type} ->
-        entities |> Enum.map(&%{label: &1.label, type: type, field: &1.field})
+      slices
+      |> Enum.flat_map(fn %{entities: entities, type: type, kind: kind} ->
+        entities |> Enum.map(&%{label: &1.label, type: {type, kind}, field: &1.field})
       end)
 
   defp reject_hosts(entities, hosted) do

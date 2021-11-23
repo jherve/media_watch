@@ -4,6 +4,7 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
   def change do
     create table(:slices) do
       add :type, :string, null: false
+      add :kind, :string
 
       add :source_id, references(:catalog_sources, column: :id, on_delete: :delete_all),
         null: false
@@ -48,7 +49,9 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false
-      add :type, :string, null: false
+      # TODO: This field should eventually be removed, but it a bit more work as it is
+      # used as one of the components of the unique index for this table
+      add :type, :string, null: false, default: "unknown"
       add :text, :string
       add :link, :string
       add :image, :map

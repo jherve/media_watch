@@ -9,11 +9,13 @@ defmodule MediaWatch.Parsing.Slice do
 
   alias __MODULE__, as: Slice
   @valid_types [:rss_entry, :rss_channel_description, :html_preview_card, :open_graph]
+  @valid_kinds [:replay, :excerpt, :main_page]
   @required_fields [:type]
   @preloads [:rss_entry, :rss_channel_description, :entities]
 
   schema "slices" do
     field :type, Ecto.Enum, values: @valid_types
+    field :kind, Ecto.Enum, values: @valid_kinds
 
     belongs_to :source, Source
     belongs_to :parsed_snapshot, ParsedSnapshot
@@ -114,6 +116,9 @@ defmodule MediaWatch.Parsing.Slice do
       do: {:unique, e}
 
   def get_error_reason(e = {:error, _cs}), do: e
+
+  def is_show_occurrence?(%Slice{type: type}), do: type in [:rss_entry, :html_preview_card]
+  def is_description?(%Slice{type: type}), do: type in [:rss_channel_description, :open_graph]
 
   defp set_type(cs) do
     case get_type(cs) do

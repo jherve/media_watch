@@ -10,7 +10,7 @@ defmodule MediaWatchInventory.Item.RuthElkrief2022 do
     case link |> URI.parse() |> Map.get(:path) do
       "/replay-lci/video-ruth-elkrief" <> _ -> :replay
       "/replay-lci/" <> _ -> :excerpt
-      _ -> :article
+      _ -> nil
     end
   end
 end

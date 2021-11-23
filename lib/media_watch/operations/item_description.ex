@@ -11,7 +11,6 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
   @type error_reason :: :max_db_retries
   @opaque t :: %ItemDescriptionOperation{
             slice: Slice.t(),
-            slice_type: atom(),
             describable: atom(),
             description_cs: Ecto.Changeset.t() | nil,
             description: Description.t() | nil,
@@ -22,7 +21,6 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
   @derive {Inspect, except: [:slice, :description, :description_cs, :retry_strategy]}
   defstruct [
     :slice,
-    :slice_type,
     :describable,
     :description_cs,
     :multi,
@@ -31,12 +29,11 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
     :retry_strategy
   ]
 
-  @spec new(Slice.t(), atom(), module()) :: ItemDescriptionOperation.t()
-  def new(slice = %Slice{}, slice_type, describable),
+  @spec new(Slice.t(), module()) :: ItemDescriptionOperation.t()
+  def new(slice = %Slice{}, describable),
     do:
       %ItemDescriptionOperation{
         slice: slice |> Repo.preload(Slice.preloads()),
-        slice_type: slice_type,
         describable: describable
       }
       |> set_retry_strategy(&default_strategy/2)
@@ -78,12 +75,11 @@ defmodule MediaWatch.Analysis.ItemDescriptionOperation do
 
   defp create_multi(%ItemDescriptionOperation{
          description_cs: cs,
-         slice: %{id: slice_id},
-         slice_type: type
+         slice: %{id: slice_id}
        }) do
     Multi.new()
     |> Multi.run(:insert_description, &insert_description(cs, &1, &2))
-    |> Multi.run(:mark_slice_usage, &mark_slice_usage(%{slice_id: slice_id, type: type}, &1, &2))
+    |> Multi.run(:mark_slice_usage, &mark_slice_usage(%{slice_id: slice_id}, &1, &2))
   end
 
   defp insert_description(description_cs, repo, _changes) do

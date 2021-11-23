@@ -3,28 +3,23 @@ defmodule MediaWatch.Analysis.OccurrenceSliceAnalysisPipeline do
   alias MediaWatch.Analysis
   alias MediaWatch.Parsing.Slice
   alias __MODULE__
-  defstruct [:slice, :slice_type, :module, :run_details?]
+  defstruct [:slice, :module, :run_details?]
 
-  def new(slice = %Slice{}, slice_type, module, run_details? \\ true),
+  def new(slice = %Slice{kind: kind}, module),
     do: %OccurrenceSliceAnalysisPipeline{
       slice: slice,
-      slice_type: slice_type,
       module: module,
-      run_details?: run_details?
+      run_details?: kind != :excerpt
     }
 
   def run(progress \\ %{}, pipeline, stage \\ :occurrence_detection)
 
   def run(
         progress,
-        pipeline = %OccurrenceSliceAnalysisPipeline{
-          slice: slice,
-          slice_type: type,
-          module: module
-        },
+        pipeline = %OccurrenceSliceAnalysisPipeline{slice: slice, module: module},
         :occurrence_detection
       ) do
-    case Analysis.detect_occurrence(slice, type, module) do
+    case Analysis.detect_occurrence(slice, module) do
       {status, occ} when status in [:ok, :already] ->
         next = if pipeline.run_details?, do: :add_details, else: :guest_detection
         progress |> Map.put(:occurrence, occ) |> run(pipeline, next)

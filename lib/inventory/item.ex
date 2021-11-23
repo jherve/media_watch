@@ -16,7 +16,6 @@ defmodule MediaWatchInventory.Item do
 
       use MediaWatch.Parsing.Parsable.Generic
       use MediaWatch.Parsing.Sliceable.Generic
-      use MediaWatch.Analysis.Analyzable.Generic
       use MediaWatch.Analysis.Describable.Generic
       use MediaWatch.Analysis.Recognisable.Generic
       use MediaWatch.Analysis.Hosted.Generic, @show

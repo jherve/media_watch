@@ -6,7 +6,7 @@ defmodule MediaWatchInventory.Item.LInterviewPolitiqueLCI do
   def get_type_from_link(link) do
     case link |> URI.parse() |> Map.get(:path) do
       "/replay-lci" <> _ -> :replay
-      _ -> :article
+      _ -> nil
     end
   end
 end

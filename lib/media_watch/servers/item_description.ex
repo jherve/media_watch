@@ -9,23 +9,23 @@ defmodule MediaWatch.Analysis.ItemDescriptionServer do
     GenServer.start_link(__MODULE__, opts, name: @name)
   end
 
-  def do_description(slice, slice_type, module),
+  def do_description(slice, module),
     do:
-      fn -> GenServer.call(@name, {:do_description, slice, slice_type, module}, :infinity) end
+      fn -> GenServer.call(@name, {:do_description, slice, module}, :infinity) end
       |> Telemetry.span_function_call(@prefix ++ [:do_description], %{module: module})
 
   @impl true
   def init([]), do: {:ok, AsyncGenServer.init_state()}
 
   @impl true
-  def handle_call({:do_description, slice, slice_type, module}, pid, state) do
-    fn -> {pid, do_description_(slice, slice_type, module)} end
+  def handle_call({:do_description, slice, module}, pid, state) do
+    fn -> {pid, do_description_(slice, module)} end
     |> AsyncGenServer.start_async_task(state)
   end
 
-  defp do_description_(slice, slice_type, module),
+  defp do_description_(slice, module),
     do:
-      ItemDescriptionOperation.new(slice, slice_type, module)
+      ItemDescriptionOperation.new(slice, module)
       |> ItemDescriptionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
       |> ItemDescriptionOperation.run()
 
