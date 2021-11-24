@@ -7,11 +7,13 @@ defmodule MediaWatch.Analysis do
   alias MediaWatch.Analysis.{
     ShowOccurrence,
     ShowOccurrence.Invitation,
-    EntityRecognitionServer,
-    ShowOccurrencesServer,
-    ItemDescriptionServer,
     DescriptionSliceAnalysisPipeline,
-    OccurrenceSliceAnalysisPipeline
+    OccurrenceSliceAnalysisPipeline,
+    EntityRecognitionOperation,
+    OccurrenceDetectionOperation,
+    OccurrenceDetailOperation,
+    GuestDetectionOperation,
+    ItemDescriptionOperation
   }
 
   alias MediaWatch.Actions.GuestAddition
@@ -106,11 +108,41 @@ defmodule MediaWatch.Analysis do
       DescriptionSliceAnalysisPipeline.new(slice, module)
       |> DescriptionSliceAnalysisPipeline.run()
 
-  defdelegate recognize_entities(slice, module), to: EntityRecognitionServer
-  defdelegate detect_occurrence(slice, module), to: ShowOccurrencesServer
-  defdelegate add_details(occurrence, slice), to: ShowOccurrencesServer
-  defdelegate do_guest_detection(occurrence, recognizable, hosted), to: ShowOccurrencesServer
-  defdelegate do_description(slice, module), to: ItemDescriptionServer
+  def recognize_entities(slice, module),
+    do:
+      EntityRecognitionOperation.new(slice, module)
+      |> EntityRecognitionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> EntityRecognitionOperation.run()
+      |> Enum.filter(&match?({:ok, _}, &1))
+      |> Enum.map(&elem(&1, 1))
+
+  def detect_occurrence(slice, module) do
+    with result = {status, _} when status in [:ok, :already] <-
+           OccurrenceDetectionOperation.new(slice, module)
+           |> OccurrenceDetectionOperation.set_retry_strategy(fn :database_busy, _ ->
+             :retry_exp
+           end)
+           |> OccurrenceDetectionOperation.run(),
+         do: result
+  end
+
+  def add_details(occurrence, slice),
+    do:
+      OccurrenceDetailOperation.new(occurrence, slice)
+      |> OccurrenceDetailOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> OccurrenceDetailOperation.run()
+
+  def do_guest_detection(occurrence, recognizable, hosted),
+    do:
+      GuestDetectionOperation.new(occurrence, recognizable, hosted)
+      |> GuestDetectionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> GuestDetectionOperation.run()
+
+  def do_description(slice, module),
+    do:
+      ItemDescriptionOperation.new(slice, module)
+      |> ItemDescriptionOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> ItemDescriptionOperation.run()
 
   def delete_invitation(invitation, manual? \\ false)
 

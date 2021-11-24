@@ -17,8 +17,7 @@ defmodule MediaWatch.Application do
         # Start the Endpoint (http/https)
         MediaWatchWeb.Endpoint,
         {Finch, name: MediaWatch.Finch},
-        MediaWatch.Scheduler,
-        {Task.Supervisor, name: MediaWatch.TaskSupervisor}
+        MediaWatch.Scheduler
       ] ++ additional_children()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
