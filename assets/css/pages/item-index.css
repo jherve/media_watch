@@ -1,0 +1,7 @@
+ul.card.item-index-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 1.2em;
+  align-items: center;
+  justify-items: center;
+}

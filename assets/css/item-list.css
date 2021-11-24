@@ -1,0 +1,7 @@
+li.item {
+  background: #eee;
+}
+
+li.item:hover {
+  background: #ddd;
+}

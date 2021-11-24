@@ -11,20 +11,11 @@
   </head>
   <body>
     <header>
-      <nav role="navigation">
-        <ul>
-          <li><%= live_redirect "Emissions", to: Routes.item_index_path(@conn, :index) %></li>
-          <li><%= live_redirect "Par date", to: Routes.show_occurrence_index_path(@conn, :index) %></li>
-          <li><%= live_redirect "Personnes", to: Routes.person_index_path(@conn, :index) %></li>
-        </ul>
-      </nav>
+      <%= MediaWatchWeb.LayoutView.render_navigation(assigns) %>
     </header>
     <%= @inner_content %>
     <footer>
-      <nav>
-        <span><a href={Routes.changelog_path(@conn, :index)}>Nouveautés</a></span>
-      </nav>
-      <span class="version">Version <%= Application.spec(:media_watch) |> Keyword.get(:vsn) %></span>
+      <%= MediaWatchWeb.LayoutView.render_footer(assigns) %>
     </footer>
   </body>
 </html>

@@ -57,7 +57,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       <h1><%= render_title(assigns) %></h1>
       <%= render_nav_links(assigns) %>
 
-      <List.ul let={occurrence} list={@occurrences} class="card occurrence">
+      <List.ul let={occurrence} list={@occurrences} ul_class="card occurrence" li_class="card occurrence">
         <.live_component module={ShowOccurrenceLiveComponent}
                          id={occurrence.id}
                          occurrence={occurrence}

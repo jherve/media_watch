@@ -1,30 +1,26 @@
-.item.banner {
+main > #item-banner {
+  margin-bottom: 2em;
+}
+
+#item-banner {
   display: grid;
   grid-template-areas: "header header"
   ". link"
   "image content";
   grid-template-columns: 25vw 1fr;
 }
-.item.banner h1 {
+#item-banner h1 {
   grid-area: header;
 }
-.item.banner > a {
+#item-banner > a {
   grid-area: link;
   justify-self: end;
 }
-.item.banner > p {
+#item-banner > p {
   grid-area: content;
   align-self: center;
   margin: 0 1em;
 }
-.item.banner > img {
+#item-banner > img {
   grid-area: image;
-}
-
-li.item {
-  background: #eee;
-}
-
-li.item:hover {
-  background: #ddd;
 }

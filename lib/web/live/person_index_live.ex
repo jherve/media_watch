@@ -37,7 +37,7 @@ defmodule MediaWatchWeb.PersonIndexLive do
 
       <%= render_search_form(assigns) %>
 
-      <List.ul let={person} list={@persons_displayed} id="person-full-list" class="person">
+      <List.ul let={person} list={@persons_displayed} id="person-full-list" ul_class="person" li_class="person">
         <.live_component module={PersonLiveComponent}
                          id={person.id}
                          person={person}

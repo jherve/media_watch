@@ -1,18 +1,3 @@
-ul.card {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-}
-
-ul.card > li ~ li {
-  margin-top: 2em;
-}
-
-li.card > a {
-  text-decoration: none;
-  color: inherit;
-}
-
 article.card {
   display: grid;
   grid-template-areas: "image header"

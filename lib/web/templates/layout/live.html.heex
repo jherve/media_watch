@@ -1,11 +1,9 @@
-<main role="main" class="container">
-  <p class="alert alert-info" role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="info"><%= live_flash(@flash, :info) %></p>
-
-  <p class="alert alert-danger" role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="error"><%= live_flash(@flash, :error) %></p>
+<main {MediaWatchWeb.LayoutView.main_css_attributes()}>
+  <%= for level <- [:info, :error] do %>
+    <p {MediaWatchWeb.LayoutView.flash_css_attributes(level)}
+      phx-click="lv:clear-flash"
+      phx-value-key={level}><%= live_flash(@flash, level) %></p>
+  <% end %>
 
   <%= @inner_content %>
 </main>

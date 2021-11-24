@@ -95,7 +95,7 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
 
   defp render_invitations(assigns),
     do: ~H"""
-    <List.ul let={invitation} list={@invitations} class="invitations">
+    <List.ul let={invitation} list={@invitations} ul_class="invitations" li_class="invitations">
       <.live_component module={InvitationLiveComponent}
                        id={invitation_id(invitation)}
                        invitation={invitation}

@@ -25,7 +25,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
       <%= for {channel, item_list} <- @items_by_channel do %>
         <h2><%= channel.name %></h2>
 
-        <List.ul let={item} list={item_list} class="item card" id="item-index-list">
+        <List.ul let={item} list={item_list} ul_class="item card item-index-list" li_class="item card">
           <a href={ItemView.detail_link(item.id)}>
             <.live_component module={ItemLiveComponent} id={item.id} item={item} display_channel={false}/>
           </a>

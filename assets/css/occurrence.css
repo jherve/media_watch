@@ -15,7 +15,3 @@ article.card.occurrence .content ul.invitations > li {
 article.card.occurrence .content ul.invitations > li ~ li {
   margin-right: 0.5em;
 }
-
-li.occurrence {
-  background: #eee;
-}

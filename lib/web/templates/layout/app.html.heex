@@ -1,5 +1,6 @@
-<main role="main" class="container">
-  <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-  <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+<main {MediaWatchWeb.LayoutView.main_css_attributes()}>
+  <%= for level <- [:info, :error] do %>
+    <p {MediaWatchWeb.LayoutView.flash_css_attributes(level)}><%= get_flash(@conn, level) %></p>
+  <% end %>
   <%= @inner_content %>
 </main>
