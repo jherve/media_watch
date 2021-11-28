@@ -11,6 +11,7 @@ defmodule MediaWatchWeb.PersonIndexLive do
     {:ok,
      socket
      |> assign(
+       page_title: "Personnes apparues dans les émissions",
        css_page_id: "person-index",
        all_persons: all_persons,
        persons_displayed: all_persons,
@@ -38,7 +39,7 @@ defmodule MediaWatchWeb.PersonIndexLive do
   @impl true
   def render(assigns),
     do: ~H"""
-      <h1>Personnes apparues dans les émissions</h1>
+      <h1><%= @page_title %></h1>
 
       <%= render_search_form(assigns) %>
 

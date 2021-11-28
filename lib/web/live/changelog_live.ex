@@ -5,12 +5,13 @@ defmodule MediaWatchWeb.ChangelogLive do
   use MediaWatchWeb, :live_view
 
   @impl true
-  def mount(_params, _session, socket), do: {:ok, socket |> assign(css_page_id: "changelog")}
+  def mount(_params, _session, socket),
+    do: {:ok, socket |> assign(page_title: "Nouveautés", css_page_id: "changelog")}
 
   @impl true
   def render(assigns),
     do: ~H"""
-    <h1>Nouveautés</h1>
+    <h1><%= @page_title %></h1>
 
     <%= get_changelog() %>
     """

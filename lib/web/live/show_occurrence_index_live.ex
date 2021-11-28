@@ -38,6 +38,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       |> set_dates()
       |> set_datetimes()
       |> set_dates_url()
+      |> set_title
 
   defp switch_mode(socket, opts = [person_id: person_id]),
     do:
@@ -46,6 +47,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       |> assign(opts)
       |> assign(@reset_by_date)
       |> assign(person: Catalog.get_person(person_id))
+      |> set_title
 
   @impl true
   def handle_info({:display_admin?, display_admin?}, socket),
@@ -55,7 +57,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   def render(assigns),
     do: ~H"""
       <%= MediaWatchWeb.AdminToggleLiveComponent.as_component(assigns) %>
-      <h1><%= render_title(assigns) %></h1>
+      <h1><%= @page_title %></h1>
       <%= render_nav_links(assigns) %>
 
       <List.ul let={occurrence} list={@occurrences} ul_class="show-occurrence">
@@ -68,12 +70,6 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
                          can_edit_invitations?={@display_admin?}/>
       </List.ul>
     """
-
-  defp render_title(assigns = %{mode: :by_date}),
-    do: ~H[Émissions diffusées le <%= @day |> DateTime.to_string() %>]
-
-  defp render_title(assigns = %{mode: :by_person}),
-    do: ~H|Liste des apparitions de <%= @person.label %> (<%= @person.description %>)|
 
   defp render_nav_links(assigns = %{mode: :by_date}),
     do: ~H"""
@@ -122,4 +118,14 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
     do:
       socket
       |> assign(occurrences: Analysis.list_show_occurrences(person_id: assigns.person_id))
+
+  defp set_title(socket = %{assigns: %{mode: :by_date, day: day}}),
+    do:
+      socket
+      |> assign(page_title: "Émissions diffusées le #{day |> DateTime.to_string()}")
+
+  defp set_title(socket = %{assigns: %{mode: :by_person, person: person}}),
+    do:
+      socket
+      |> assign(page_title: "Liste des apparitions de #{person.label} (#{person.description})")
 end

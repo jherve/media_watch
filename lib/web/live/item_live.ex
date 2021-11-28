@@ -14,6 +14,7 @@ defmodule MediaWatchWeb.ItemLive do
     {:ok,
      socket
      |> assign(
+       page_title: ItemView.title(item),
        css_page_id: "item-detail",
        item: item,
        description: item.description,
@@ -59,7 +60,7 @@ defmodule MediaWatchWeb.ItemLive do
   defp as_banner(assigns),
     do: ~H"""
       <div id="item-banner" class="item banner">
-        <h1><%= ItemView.title(@item) %></h1>
+        <h1><%= @page_title %></h1>
         <span class="channel"><%= ItemView.channels(@item) %></span>
         <p><%= ItemDescriptionView.description(@description) %></p>
         <%= if url = ItemDescriptionView.image_url(@description) do %><img src={url}/><% end %>

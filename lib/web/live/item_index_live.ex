@@ -3,13 +3,13 @@ defmodule MediaWatchWeb.ItemIndexLive do
   alias MediaWatch.Analysis
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ItemLiveComponent
-  alias MediaWatchWeb.ItemView
 
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(
+       page_title: "Liste des émissions",
        css_page_id: "item-index",
        items_by_channel:
          Analysis.get_all_analyzed_items()
@@ -21,7 +21,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
   @impl true
   def render(assigns),
     do: ~H"""
-      <h1>Liste des émissions</h1>
+      <h1><%= @page_title %></h1>
 
       <%= for {channel, item_list} <- @items_by_channel do %>
         <h2><%= channel.name %></h2>

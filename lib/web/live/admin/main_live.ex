@@ -9,6 +9,7 @@ defmodule MediaWatchWeb.AdminMainLive do
       {:ok,
        socket
        |> assign(
+         page_title: "Administration",
          css_page_id: "admin-main",
          items: Analysis.get_all_analyzed_items(),
          display_nuke_command: open_bar_admin?
@@ -49,7 +50,7 @@ defmodule MediaWatchWeb.AdminMainLive do
   @impl true
   def render(assigns),
     do: ~H"""
-    <h1>Admin</h1>
+    <h1><%= @page_title %></h1>
 
     <p>Spacy server is.. <%= if @spacy_is_alive?, do: "alive", else: "unavailable" %></p>
     <p><button phx-click="trigger_all_snapshots">Lancer tous les snapshots</button></p>
