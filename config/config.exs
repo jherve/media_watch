@@ -29,7 +29,17 @@ config :phoenix, :json_library, Jason
 config :esbuild,
   version: "0.13.12",
   default: [
-    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
+    args: ~w(
+      js/app.js
+      --bundle
+      --loader:.svg=file
+      --loader:.eot=file
+      --loader:.ttf=file
+      --loader:.woff=file
+      --loader:.woff2=file
+      --target=es2016
+      --outdir=../priv/static/assets
+      ),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
