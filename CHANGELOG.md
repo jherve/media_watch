@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 (2021-11-28)
+
+* UI: Get rid of all "default" CSS and improve site design
+* UI: Make site mobile-friendly
+* UI: Make site [a bit more] accessible
+* UI: Set page title to a relevant value instead of default
+* [BREAKING] Internals: Review entity recognition and slice analysis
+* Internals: Remove GenServers used in pipelines
+* Fix: Resolve most dialyzer warnings
+
 ## 1.5.0 (2021-11-22)
 
 * UI: Add a search-by-name feature in persons' index
