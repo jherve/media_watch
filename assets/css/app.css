@@ -10,6 +10,7 @@
 @import "item-list.css";
 @import "show-occurrence.css";
 @import "show-occurrence-list.css";
+@import "invitation.css";
 
 @import "pages/changelog.css";
 @import "pages/item-index.css";
@@ -28,6 +29,11 @@ a {
 
 *:focus {
   outline: auto;
+}
+
+:root {
+  --c-green: green;
+  --c-brown: rgb(168, 96, 19);
 }
 
 /* LiveView specific classes for your customizations */

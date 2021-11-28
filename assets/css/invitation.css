@@ -1,0 +1,17 @@
+div.invitation {
+  position: relative;
+}
+
+div.invitation i {
+  position: absolute;
+  top: -1em;
+  right: -1em;
+  background: white;
+  border-radius: 50%;
+  color: var(--c-brown);
+}
+
+div.invitation.verified i {
+  color: var(--c-green);
+}
+

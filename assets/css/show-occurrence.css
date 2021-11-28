@@ -38,6 +38,7 @@ article.show-occurrence ul.invitations {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.5em;
+  margin-right: 0.5em;
 }
 
 article.show-occurrence ul.invitations > li {

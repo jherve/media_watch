@@ -1,6 +1,7 @@
 defmodule MediaWatchWeb.InvitationLiveComponent do
   use MediaWatchWeb, :live_component
   alias MediaWatch.Analysis
+  alias MediaWatchWeb.Component.Icon
   alias MediaWatchWeb.PersonLiveComponent
 
   @impl true
@@ -28,8 +29,13 @@ defmodule MediaWatchWeb.InvitationLiveComponent do
   @impl true
   def render(assigns),
     do: ~H"""
-      <div class="invitation">
+      <div class={"invitation #{if @verified?, do: "verified"}"}>
         <.live_component module={PersonLiveComponent} id={person_id(@invitation)} person={@person} wrap_in_link={true} />
+        <%= if @verified? do %>
+          <Icon.icon icon="ok" title="Cette invitation a été vérifiée"/>
+        <% else %>
+          <Icon.icon icon="question-mark" title="Cette invitation n'a pas encore été vérifiée"/>
+        <% end %>
         <%= if @display_edit_buttons do %><button phx-click="delete" phx-target={@myself}>Enlever</button><% end %>
         <%= if @display_edit_buttons and not @verified? do %>
           <button phx-click="confirm" phx-target={@myself}>Confirmer</button>
