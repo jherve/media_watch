@@ -46,12 +46,15 @@ defmodule MediaWatch.Analysis do
       |> Repo.one()
 
   def list_show_occurrences(person_id: person_id) do
+    # "guests" association is preloaded in-full instead of using the
+    # invitation / person used in the join on purpose ; we need to get ALL the
+    # guests of the shows we look for, not just the person we were querying.
     from([so, s, item] in show_occurrence_query(),
       join: i in Invitation,
       on: i.show_occurrence_id == so.id,
       join: p in Person,
       on: p.id == i.person_id,
-      preload: [:detail, invitations: {i, person: p}, guests: p, show: [item: :description]],
+      preload: [:detail, :invitations, :guests, show: [item: :description]],
       where: p.id == ^person_id,
       order_by: [desc: so.airing_time]
     )
