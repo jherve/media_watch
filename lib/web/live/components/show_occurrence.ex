@@ -1,7 +1,7 @@
 defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   use MediaWatchWeb, :live_component
   alias MediaWatch.{DateTime, Analysis}
-  alias MediaWatchWeb.Component.{List, Card}
+  alias MediaWatchWeb.Component.{List, Icon}
   alias MediaWatchWeb.{ItemView, ShowOccurrenceView}
   alias MediaWatchWeb.InvitationLiveComponent
   alias __MODULE__
@@ -72,9 +72,12 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
     do: ~H"""
       <article class="show-occurrence">
         <h1><%= render_title(assigns) %></h1>
-        <div class="invitations"><%= render_invitations(assigns) %></div>
-        <%= render_guest_form_toggle(assigns) %>
-        <%= render_add_guest_form(assigns) %>
+        <div class="invitations">
+          <%= render_guest_form_toggle(assigns) %>
+          <%= render_add_guest_form(assigns) %>
+          <%= render_invitations(assigns) %>
+        </div>
+
         <p phx-click="toggle_truncate" phx-target={@myself}><%= render_description(assigns) %></p>
         <%= if @display_link_to_item do %>
           <div class="image">
@@ -113,7 +116,9 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
 
   defp render_guest_form_toggle(assigns = %{can_edit_invitations?: true}),
     do: ~H"""
-      <button phx-click="show_guest_form" phx-target={@myself}>Ajouter un(e) invité(e)</button>
+      <button phx-click="show_guest_form" phx-target={@myself}>
+        <Icon.icon icon="user-plus" title="Ajouter un(e) invité(e)"/>
+      </button>
     """
 
   defp render_guest_form_toggle(assigns), do: ~H""

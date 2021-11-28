@@ -2,7 +2,7 @@ div.invitation {
   position: relative;
 }
 
-div.invitation i {
+div.invitation i.status {
   position: absolute;
   top: -1em;
   right: -1em;
@@ -11,7 +11,7 @@ div.invitation i {
   color: var(--c-brown);
 }
 
-div.invitation.verified i {
+div.invitation.verified i.status {
   color: var(--c-green);
 }
 
