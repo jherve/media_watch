@@ -70,28 +70,33 @@ defmodule MediaWatchWeb.ShowOccurrenceLiveComponent do
   @impl true
   def render(assigns),
     do: ~H"""
-      <div>
-        <Card.card class="occurrence">
-          <:header><%= @title %></:header>
-
-          <:content>
-            <%= render_invitations(assigns) %>
-            <%= render_guest_form_toggle(assigns) %>
-            <%= render_add_guest_form(assigns) %>
-            <p phx-click="toggle_truncate" phx-target={@myself}><%= render_description(assigns) %></p>
-            <%= if @display_link_to_item, do: live_redirect("Toutes les émissions", to: @link_to_item) %>
-            <%= if @external_link_to_occurrence, do: link("Lien vers l'émission", to: @external_link_to_occurrence) %>
-          </:content>
-
-          <:image><%= if @image_url do %><img src={@image_url}><% end %></:image>
-
-          <:footer><%= render_airing_time(assigns) %></:footer>
-        </Card.card>
-      </div>
+      <article class="show-occurrence">
+        <h1><%= render_title(assigns) %></h1>
+        <div class="invitations"><%= render_invitations(assigns) %></div>
+        <%= render_guest_form_toggle(assigns) %>
+        <%= render_add_guest_form(assigns) %>
+        <p phx-click="toggle_truncate" phx-target={@myself}><%= render_description(assigns) %></p>
+        <%= if @display_link_to_item do %>
+          <div class="image">
+            <%= live_redirect to: @link_to_item do %>
+              <%= if @image_url do %><img src={@image_url}><% else %>Toutes les émissions<% end %>
+            <% end %>
+          </div>
+        <% end %>
+        <div class="footer"><%= render_airing_time(assigns) %></div>
+      </article>
     """
 
+  defp render_title(assigns = %{external_link_to_occurrence: link_}) when not is_nil(link_),
+    do: ~H"<%= link(@title, to: link_) %>"
+
+  defp render_title(assigns = %{display_link_to_item: true}),
+    do: ~H"<%= live_redirect(@title, to: @link_to_item) %>"
+
+  defp render_title(assigns), do: ~H"<%= @title %>"
+
   defp render_invitations(assigns = %{invitations: []}),
-    do: ~H|<div class="guests">Pas d'invités detectés</div>|
+    do: ~H|Pas d'invités detectés|
 
   defp render_invitations(assigns),
     do: ~H"""

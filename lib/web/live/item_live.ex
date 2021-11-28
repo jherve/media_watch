@@ -14,6 +14,7 @@ defmodule MediaWatchWeb.ItemLive do
     {:ok,
      socket
      |> assign(
+       css_page_id: "item-detail",
        item: item,
        description: item.description,
        occurrences: Analysis.list_show_occurrences(id),
@@ -58,7 +59,8 @@ defmodule MediaWatchWeb.ItemLive do
   defp as_banner(assigns),
     do: ~H"""
       <div id="item-banner" class="item banner">
-        <h1><%= ItemView.title(@item) %> (<%= ItemView.channels(@item) %>)</h1>
+        <h1><%= ItemView.title(@item) %></h1>
+        <span class="channel"><%= ItemView.channels(@item) %></span>
         <p><%= ItemDescriptionView.description(@description) %></p>
         <%= if url = ItemDescriptionView.image_url(@description) do %><img src={url}/><% end %>
         <%= if link_ = ItemDescriptionView.link(@description) do %>
@@ -74,7 +76,7 @@ defmodule MediaWatchWeb.ItemLive do
 
   defp render_occurrences(assigns),
     do: ~H"""
-      <List.ul let={occ} list={@occurrences} ul_class="occurrence card" li_class="occurrence card">
+      <List.ul let={occ} list={@occurrences} ul_class="show-occurrence">
         <.live_component module={ShowOccurrenceLiveComponent}
                          id={occ.id}
                          occurrence={occ}

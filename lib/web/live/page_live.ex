@@ -3,6 +3,6 @@ defmodule MediaWatchWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, socket |> assign(css_page_id: "index")}
   end
 end

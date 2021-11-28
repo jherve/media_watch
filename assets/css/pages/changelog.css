@@ -1,0 +1,14 @@
+#changelog > h1 {
+  font-size: 2rem;
+  margin-top: 1em;
+}
+
+#changelog > h2 {
+  font-size: 1.5rem;
+  margin: 1em 0;
+}
+
+#changelog > ul {
+  margin-inline-start: 1.5em;
+  list-style: disc;
+}

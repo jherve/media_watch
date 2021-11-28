@@ -11,7 +11,8 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   @reset_by_date start_time: nil, end_time: nil, next_day: nil, previous_day: nil
 
   @impl true
-  def mount(_, _, socket), do: {:ok, socket |> assign(display_admin?: false)}
+  def mount(_, _, socket),
+    do: {:ok, socket |> assign(css_page_id: "show-occurrence-index", display_admin?: false)}
 
   @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
@@ -57,7 +58,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
       <h1><%= render_title(assigns) %></h1>
       <%= render_nav_links(assigns) %>
 
-      <List.ul let={occurrence} list={@occurrences} ul_class="card occurrence" li_class="card occurrence">
+      <List.ul let={occurrence} list={@occurrences} ul_class="show-occurrence">
         <.live_component module={ShowOccurrenceLiveComponent}
                          id={occurrence.id}
                          occurrence={occurrence}
@@ -69,14 +70,18 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
     """
 
   defp render_title(assigns = %{mode: :by_date}),
-    do: ~H[Liste des diffusions le <%= @day |> DateTime.to_string() %>]
+    do: ~H[Émissions diffusées le <%= @day |> DateTime.to_string() %>]
 
   defp render_title(assigns = %{mode: :by_person}),
     do: ~H|Liste des apparitions de <%= @person.label %> (<%= @person.description %>)|
 
   defp render_nav_links(assigns = %{mode: :by_date}),
-    do:
-      ~H[<%= live_patch @previous_day |> DateTime.to_string(), to: @previous_day_link %> / <%= live_patch @next_day |> DateTime.to_string(), to: @next_day_link %>]
+    do: ~H"""
+    <div class="navigation">
+      <%= live_patch @previous_day |> DateTime.to_string(), to: @previous_day_link, class: "previous" %>
+      <%= live_patch @next_day |> DateTime.to_string(), to: @next_day_link, class: "next" %>
+    </div>
+    """
 
   defp render_nav_links(%{mode: :by_person}), do: []
 

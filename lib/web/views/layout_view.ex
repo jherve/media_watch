@@ -4,7 +4,7 @@ defmodule MediaWatchWeb.LayoutView do
   def render_navigation(assigns),
     do: ~H"""
       <nav>
-        <ul>
+        <ul class="navbar">
           <%= for {text, url} <- navigation_items(@conn) do %>
             <li><%= live_redirect text, to: url %></li>
           <% end %>
@@ -32,7 +32,7 @@ defmodule MediaWatchWeb.LayoutView do
   defp footer_items(conn), do: [{"Nouveautés", Routes.changelog_path(conn, :index)}]
   defp version_string(), do: Application.spec(:media_watch) |> Keyword.get(:vsn)
 
-  def main_css_attributes(), do: [role: "main", class: "container"]
+  def main_css_attributes(%{css_page_id: id}), do: [id: id, role: "main", class: "container"]
 
   def flash_css_attributes(level), do: [class: "alert alert-#{level}", role: "alert"]
 end

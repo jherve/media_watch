@@ -1,0 +1,9 @@
+ul.show-occurrence {
+  display: flex;
+  flex-direction: column;  
+  gap: 2em;
+}
+
+ul.show-occurrence > li {
+  background: #eee;
+}

@@ -1,0 +1,69 @@
+article.show-occurrence {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-row-gap: 1em;
+  grid-column-gap: 0.2em;
+  grid-template-rows: auto min-content 1fr min-content;
+}
+
+article.show-occurrence h1 {
+  grid-area: 1/1/2/-1;
+  font-size: 1.5em;
+}
+article.show-occurrence .invitations {
+  grid-area: 2/2/3/-1;
+  justify-self: end;
+}
+article.show-occurrence p {
+  grid-area: 3/1/4/-1;
+  text-align: justify;
+}
+article.show-occurrence .footer {
+  grid-area: 4/1/5/-1;
+  justify-self: end;
+}
+article.show-occurrence .footer a {
+  text-decoration: underline;
+  color: blue;
+}
+article.show-occurrence .image {
+  grid-area: 2/1/3/2;
+}
+article.show-occurrence .image img {
+  max-width: 100%;
+}
+
+article.show-occurrence ul.invitations {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+article.show-occurrence ul.invitations > li {
+  background: #ccc;
+  padding: 0.5em;
+}
+
+@media screen and (min-width: 641px) {
+  article.show-occurrence {
+    grid-template-columns: 25vw 1fr;
+  }
+  article.show-occurrence h1 {
+    grid-area: 1/2/2/-1;
+  }
+  article.show-occurrence .invitations {
+    grid-area: 2/2/3/-1;
+  }
+  article.show-occurrence p {
+    grid-area: 3/2/4/-1;
+    align-self: center;
+  }
+  article.show-occurrence .footer {
+    grid-area: 4/2/5/-1;
+  }
+  article.show-occurrence .image {
+    grid-area: 1/1/-1/2;
+    align-self: center;
+  }
+}

@@ -1,26 +1,56 @@
-main > #item-banner {
-  margin-bottom: 2em;
+#item-detail #item-banner {
+  margin: 2em 0;
 }
 
-#item-banner {
+#item-detail #item-banner {
   display: grid;
-  grid-template-areas: "header header"
-  ". link"
-  "image content";
-  grid-template-columns: 25vw 1fr;
+  grid-template-areas: "header"
+  "channel"
+  "image"
+  "content"
+  "link";
+  gap: 0.5em;
 }
+
+@media screen and (min-width: 641px) {
+  #item-detail #item-banner {
+    grid-template-areas: "header channel"
+    ". link"
+    "content image";
+    grid-template-columns: 1fr 25vw;
+  }
+}
+
 #item-banner h1 {
   grid-area: header;
+  font-size: 2rem;
+}
+#item-banner .channel {
+  grid-area: channel;
+  font-weight: lighter;
+  justify-self: end;
 }
 #item-banner > a {
   grid-area: link;
   justify-self: end;
+  text-decoration: underline;
+  color: blue;
 }
 #item-banner > p {
   grid-area: content;
+  justify-self: center;
   align-self: center;
-  margin: 0 1em;
+  text-align: justify;
+  font-weight: lighter;
 }
 #item-banner > img {
   grid-area: image;
+  justify-self: center;
+  max-height: 50vh;
+  max-width: 100%;
+}
+
+#item-detail h2 {
+  font-size: 1.5em;
+  margin: 1.5em 0;
 }

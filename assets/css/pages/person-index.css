@@ -1,5 +1,38 @@
-ul#person-full-list {
-  list-style: none;
+#person-index > h1 {
+  font-size: 2rem;
+  margin-top: 1em;
+}
+
+#person-index > form {
+  display: flex;
+  align-self: center;
+  max-width: 80ch;
+  margin: 1em 0;
+}
+
+#person-index > form > label {
+  flex-shrink: 0;
+  flex-grow: 1;
+  flex-basis: min-content;
+  word-break: initial;
+}
+
+#person-index > form > input {
+  flex-grow: 1;
+  align-self: center;
+}
+
+#person-index > h2 {
+  font-size: 1.5rem;
+  margin: 1em 0;
+}
+
+#person-index > ul {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+#person-index > ul > li {
+  margin: 0.5em 0.25em;
 }

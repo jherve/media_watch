@@ -10,6 +10,7 @@ defmodule MediaWatchWeb.ItemIndexLive do
     {:ok,
      socket
      |> assign(
+       css_page_id: "item-index",
        items_by_channel:
          Analysis.get_all_analyzed_items()
          |> Enum.group_by(& &1.channels)
@@ -25,10 +26,8 @@ defmodule MediaWatchWeb.ItemIndexLive do
       <%= for {channel, item_list} <- @items_by_channel do %>
         <h2><%= channel.name %></h2>
 
-        <List.ul let={item} list={item_list} ul_class="item card item-index-list" li_class="item card">
-          <a href={ItemView.detail_link(item.id)}>
-            <.live_component module={ItemLiveComponent} id={item.id} item={item} display_channel={false}/>
-          </a>
+        <List.ul let={item} list={item_list}>
+          <.live_component module={ItemLiveComponent} id={item.id} item={item} display_channel={false}/>
         </List.ul>
       <% end %>
     """

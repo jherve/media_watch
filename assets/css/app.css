@@ -1,17 +1,33 @@
-/* This file is for your main application css. */
-@import "./phoenix.css";
+@import "sanitize.css";
+@import "reset.css";
 
 @import "layout.css";
 
+@import "admin-toggle.css";
 @import "card.css";
 @import "card-list.css";
 @import "item-list.css";
-@import "occurrence.css";
-@import "occurrence-list.css";
-@import "person.css";
+@import "show-occurrence.css";
+@import "show-occurrence-list.css";
 
+@import "pages/changelog.css";
 @import "pages/item-index.css";
 @import "pages/item.css";
+@import "pages/show-occurrence-index.css";
+@import "pages/person-index.css";
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+*:focus {
+  outline: auto;
+}
 
 /* LiveView specific classes for your customizations */
 .phx-no-feedback.invalid-feedback,
@@ -30,8 +46,4 @@
 
 .phx-disconnected *{
   pointer-events: none;
-}
-
-* {
- box-sizing: border-box;
 }

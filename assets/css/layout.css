@@ -1,23 +1,48 @@
-html, body {
-  height: 99%;
-}
-
 body {
+  font-family: "Open Sans";
   display: grid;
   grid-template-rows: auto 1fr auto;
+  min-height: 99vh;
 }
 
-footer {
+body > header ul.navbar {
+  list-style: none;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-around;
+  background-color: #eee;
 }
 
-footer > nav {
-  margin-right: auto;
-  margin-left: auto;
+body > header ul.navbar > li {
+  flex: 1;
+  padding: 1em 0;
+  background-color: #eee;
+  text-align: center;
+  font-weight: bold;
 }
 
-footer > .version {
+body > header ul.navbar > li:hover {
+  background-color: #ddd;
+}
+
+body > * > main {
+  display: flex;
+  flex-direction: column;
+  max-width: 100ch;
+  margin: 0 auto;
+}
+
+body > footer {
+  margin-top: 1.5em;
+  display: grid;
+}
+
+body > footer > nav {
+  align-self: center;
+  margin: auto;
+}
+
+body > footer > .version {
   font-size: 0.5em;
+  font-weight: 300;
+  justify-self: end;
 }

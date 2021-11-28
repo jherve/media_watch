@@ -10,7 +10,12 @@ defmodule MediaWatchWeb.PersonIndexLive do
 
     {:ok,
      socket
-     |> assign(all_persons: all_persons, persons_displayed: all_persons, search_cs: changeset())}
+     |> assign(
+       css_page_id: "person-index",
+       all_persons: all_persons,
+       persons_displayed: all_persons,
+       search_cs: changeset()
+     )}
   end
 
   @impl true
@@ -33,16 +38,11 @@ defmodule MediaWatchWeb.PersonIndexLive do
   @impl true
   def render(assigns),
     do: ~H"""
-      <h1>Liste des personnes</h1>
+      <h1>Personnes apparues dans les émissions</h1>
 
       <%= render_search_form(assigns) %>
 
-      <List.ul let={person} list={@persons_displayed} id="person-full-list" ul_class="person" li_class="person">
-        <.live_component module={PersonLiveComponent}
-                         id={person.id}
-                         person={person}
-                         wrap_in_link={true}/>
-      </List.ul>
+      <%= render_persons(assigns) %>
     """
 
   defp render_search_form(assigns),
@@ -54,10 +54,28 @@ defmodule MediaWatchWeb.PersonIndexLive do
         id="person-search-form"
         phx-change="change">
 
-        <%= label f, :label, "Rechercher" %>
+        <%= label f, :label, "Rechercher une personne" %>
         <%= text_input f, :label %>
       </.form>
     """
+
+  defp render_persons(assigns) do
+    assigns =
+      assigns
+      |> assign(grouped: assigns.persons_displayed |> Enum.group_by(&(&1.label |> String.at(0))))
+
+    ~H"""
+      <%= for {first_letter, list} <- @grouped do %>
+        <h2><%= first_letter %></h2>
+        <List.ul let={person} list={list}>
+          <.live_component module={PersonLiveComponent}
+                          id={person.id}
+                          person={person}
+                          wrap_in_link={true}/>
+        </List.ul>
+      <% end %>
+    """
+  end
 
   defp changeset(params \\ %{}) do
     types = %{label: :string}

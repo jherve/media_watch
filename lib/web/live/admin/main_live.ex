@@ -8,7 +8,11 @@ defmodule MediaWatchWeb.AdminMainLive do
     do:
       {:ok,
        socket
-       |> assign(items: Analysis.get_all_analyzed_items(), display_nuke_command: open_bar_admin?)
+       |> assign(
+         css_page_id: "admin-main",
+         items: Analysis.get_all_analyzed_items(),
+         display_nuke_command: open_bar_admin?
+       )
        |> spacy_heartbeat}
 
   @impl true

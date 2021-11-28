@@ -1,0 +1,22 @@
+#show-occurrence-index > h1 {
+  font-size: 2rem;
+  margin-top: 1em;  
+}
+
+#show-occurrence-index .navigation {
+  margin-top: 2em;
+  display: flex;
+  gap: 2em;
+}
+
+#show-occurrence-index .navigation .previous {
+  margin-inline-end: auto;
+}
+
+#show-occurrence-index .navigation .next {
+  text-align: end;
+}
+
+#show-occurrence-index > ul {
+  margin-top: 2em;
+}

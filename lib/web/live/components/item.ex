@@ -1,6 +1,5 @@
 defmodule MediaWatchWeb.ItemLiveComponent do
   use MediaWatchWeb, :live_component
-  alias MediaWatchWeb.Component.Card
   alias MediaWatchWeb.{ItemView, ItemDescriptionView}
 
   @impl true
@@ -9,11 +8,19 @@ defmodule MediaWatchWeb.ItemLiveComponent do
   @impl true
   def render(assigns),
     do: ~H"""
-      <div>
-        <Card.card class="item">
-          <:header><%= ItemView.title(@item) %><%= if @display_channel do %>(<%= ItemView.channels(@item) %>)<% end %></:header>
-          <:image><%= if url = ItemDescriptionView.image_url(@item.description) do %><img src={url}/><% end %></:image>
-        </Card.card>
+      <div class="item">
+        <%= live_redirect to: ItemView.detail_link(@item.id) do %>
+          <%= if url = ItemDescriptionView.image_url(@item.description) do %>
+            <img src={url} alt={title(assigns)}/>
+          <% else %>
+            <h2><%= title(assigns) %>
+          <% end %>
+        <% end %>
       </div>
+    """
+
+  defp title(assigns),
+    do: ~H"""
+    <%= ItemView.title(@item) %><%= if @display_channel do %>(<%= ItemView.channels(@item) %>)<% end %>
     """
 end

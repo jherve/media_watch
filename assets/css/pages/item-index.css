@@ -1,7 +1,38 @@
-ul.card.item-index-list {
+:root {
+  --item-index-grid-cols: 1;
+}
+
+@media screen and (min-width: 321px) {
+  :root {
+    --item-index-grid-cols: 2;
+  }
+}
+
+@media screen and (min-width: 641px) {
+  :root {
+    --item-index-grid-cols: 3;
+  }
+}
+
+#item-index > h1 {
+  font-size: 2rem;
+  margin-top: 1em;
+}
+
+#item-index > h2 {
+  font-size: 1.5rem;
+  margin: 1em 0;
+}
+
+#item-index > ul {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--item-index-grid-cols), 1fr);
   grid-gap: 1.2em;
   align-items: center;
   justify-items: center;
+}
+
+#item-index ul img {
+  max-width: 100%;
+  max-height: 50vh;
 }
