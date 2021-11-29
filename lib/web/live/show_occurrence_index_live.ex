@@ -1,12 +1,10 @@
 defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
   use MediaWatchWeb, :live_view
-  alias Timex.Timezone
   alias MediaWatch.{Catalog, Analysis, DateTime}
   alias MediaWatchWeb.Component.List
   alias MediaWatchWeb.ShowOccurrenceLiveComponent
   alias MediaWatchWeb.ItemDescriptionView
-  @one_day Timex.Duration.from_days(1)
-  @timezone "Europe/Paris"
+  @timezone DateTime.default_tz()
   @reset_by_person person: nil, person_id: nil
   @reset_by_date start_time: nil, end_time: nil, next_day: nil, previous_day: nil
 
@@ -16,7 +14,7 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
 
   @impl true
   def handle_params(_params = %{"date" => date_string}, _, socket) do
-    case date_string |> Timex.parse("{YYYY}-{0M}-{0D}") do
+    case date_string |> DateTime.parse_date() do
       {:ok, date} ->
         {:noreply, socket |> switch_mode(day: date |> Timex.to_date()) |> set_occurrences()}
     end
@@ -85,18 +83,15 @@ defmodule MediaWatchWeb.ShowOccurrenceIndexLive do
     do:
       socket
       |> assign(
-        next_day: day |> Timex.add(@one_day) |> Timex.to_date(),
-        previous_day: day |> Timex.subtract(@one_day) |> Timex.to_date()
+        next_day: day |> DateTime.next_day(),
+        previous_day: day |> DateTime.previous_day()
       )
 
   defp set_datetimes(socket) do
-    day_as_dt = socket.assigns.day |> Timex.to_datetime(@timezone)
+    {start_time, end_time} = DateTime.into_day_slot(socket.assigns.day, @timezone)
 
     socket
-    |> assign(
-      start_time: day_as_dt |> Timezone.beginning_of_day(),
-      end_time: day_as_dt |> Timezone.end_of_day()
-    )
+    |> assign(start_time: start_time, end_time: end_time)
   end
 
   defp set_dates_url(socket),

@@ -1,4 +1,5 @@
 defmodule MediaWatchInventory.Layout.SudRadio do
+  alias MediaWatch.DateTime
   alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Parsing.ParsedSnapshot
   alias MediaWatch.Parsing.Slice.OpenGraph
@@ -39,7 +40,7 @@ defmodule MediaWatchInventory.Layout.SudRadio do
     do:
       with(
         [date_str] <- item |> Floki.attribute("time", "datetime"),
-        {:ok, date} <- date_str |> Timex.parse("{YYYY}-{0M}-{0D}"),
+        {:ok, date} <- date_str |> DateTime.parse_date(),
         do: date
       )
 

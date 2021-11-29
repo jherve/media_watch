@@ -9,7 +9,7 @@ defmodule MediaWatch.Analysis.Recurrent do
 
   @spec get_airing_time(DateTime.t(), atom()) :: DateTime.t() | {:error, atom()}
   def get_airing_time(dt, recurrent) do
-    dt_tz = dt |> to_time_zone(recurrent)
+    dt_tz = dt |> MediaWatch.DateTime.into_tz(recurrent.get_time_zone())
 
     recurrent.get_airing_schedule()
     |> Schedule.get_airing_time(dt_tz)
@@ -17,9 +17,7 @@ defmodule MediaWatch.Analysis.Recurrent do
 
   @spec get_time_slot(DateTime.t(), atom()) :: time_slot()
   def get_time_slot(dt, recurrent) do
-    dt_tz = dt |> to_time_zone(recurrent)
+    dt_tz = dt |> MediaWatch.DateTime.into_tz(recurrent.get_time_zone())
     recurrent.get_airing_schedule() |> Schedule.get_time_slot!(dt_tz)
   end
-
-  defp to_time_zone(dt, recurrent), do: dt |> Timex.Timezone.convert(recurrent.get_time_zone())
 end

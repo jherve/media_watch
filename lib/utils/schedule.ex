@@ -1,20 +1,20 @@
 defmodule MediaWatch.Schedule do
   alias Crontab.{CronExpression, Scheduler}
-  alias Timex.{Timezone, TimezoneInfo}
+  alias MediaWatch.DateTime, as: MyDateTime
 
   def get_time_slot!(
         %CronExpression{hour: [hour], minute: [minute], second: [second]},
         dt = %DateTime{}
       )
       when not is_tuple(hour) and not is_tuple(minute) and not is_tuple(second) do
-    dt |> to_day_time_slot
+    dt |> MyDateTime.into_day_slot()
   end
 
   def get_time_slot!(cron = %CronExpression{}, %DateTime{}),
     do: raise("Can not figure out time slot from expression `#{inspect(cron)}`")
 
   def get_airing_time(cron = %CronExpression{}, dt = %DateTime{}) do
-    tz = dt |> TimezoneInfo.from_datetime()
+    tz = dt |> MyDateTime.extract_tz()
 
     with {start, end_} <- get_time_slot!(cron, dt),
          {:ok, next_run} <-
@@ -25,6 +25,4 @@ defmodule MediaWatch.Schedule do
       1 -> {:error, :no_run_within_slot}
     end
   end
-
-  defp to_day_time_slot(dt), do: {Timezone.beginning_of_day(dt), Timezone.end_of_day(dt)}
 end

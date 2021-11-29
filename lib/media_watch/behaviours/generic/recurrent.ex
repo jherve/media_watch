@@ -5,7 +5,7 @@ defmodule MediaWatch.Analysis.Recurrent.Generic do
                          raise("`airing_schedule` not set in #{inspect(opts)}")
       @duration opts[:duration_minutes] * 60 ||
                   raise("duration_minutes` not set in #{inspect(opts)}")
-      @time_zone opts[:timezone] || "Europe/Paris"
+      @time_zone opts[:timezone] || MediaWatch.DateTime.default_tz()
 
       alias MediaWatch.Analysis.Recurrent
       @behaviour Recurrent
