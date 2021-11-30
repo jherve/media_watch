@@ -21,6 +21,8 @@ defmodule MediaWatch.Catalog.Item do
     has_many :channel_items, ChannelItem
     has_many :channels, through: [:channel_items, :channel]
     has_one :description, Description
+
+    Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
   @doc false

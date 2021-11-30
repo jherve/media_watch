@@ -11,6 +11,8 @@ defmodule MediaWatch.Catalog.Person do
     field :wikidata_qid, :id
     field :label, :string
     field :description, :string
+
+    Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
   @doc false

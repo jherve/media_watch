@@ -12,6 +12,7 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
 
     create table(:catalog_items) do
       add :module, :string, null: false
+      timestamps(type: :utc_datetime)
     end
 
     create unique_index(:catalog_items, [:module])

@@ -18,6 +18,8 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
       add :slot_start, :utc_datetime, null: false
       add :slot_end, :utc_datetime, null: false
       add :manual_edited?, :boolean, default: false, null: false
+
+      timestamps(type: :utc_datetime)
     end
 
     create unique_index(:show_occurrences, [:show_id, :airing_time])

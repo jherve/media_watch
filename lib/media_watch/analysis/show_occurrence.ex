@@ -24,6 +24,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
 
     has_many :invitations, Invitation
     has_many :guests, through: [:invitations, :person]
+
+    Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
   @doc false

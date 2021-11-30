@@ -11,6 +11,8 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
     belongs_to :show_occurrence, ShowOccurrence
     field :auto?, :boolean
     field :verified?, :boolean
+
+    Ecto.Schema.timestamps(type: :utc_datetime)
   end
 
   @doc false
