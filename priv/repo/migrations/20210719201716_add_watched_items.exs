@@ -32,6 +32,7 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :duration_minutes, :integer, null: false
       add :host_names, {:array, :string}, null: false
       add :alternate_hosts, {:array, :string}, default: []
+      add :columnists, {:array, :string}, default: []
     end
 
     create unique_index(:catalog_shows, [:name, :url])
