@@ -6,7 +6,7 @@ defmodule MediaWatch.Parsing.Slice.RssChannelDescription do
   @optional_fields [:link, :image]
   @all_fields @required_fields ++ @optional_fields
 
-  schema "rss_channel_descriptions" do
+  schema "slices_rss_channel_descriptions" do
     field :title, :string
     field :description, :string
     field :link, :string

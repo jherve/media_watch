@@ -16,7 +16,7 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
 
     create unique_index(:catalog_items, [:module])
 
-    create table(:channel_items, primary_key: false) do
+    create table(:catalog_channel_items, primary_key: false) do
       add :channel_id, references(:catalog_channels, column: :id, on_delete: :delete_all),
         primary_key: true
 

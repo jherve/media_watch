@@ -24,7 +24,7 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
              name: :slices_open_graphs_index
            )
 
-    create table(:rss_entries, primary_key: false) do
+    create table(:slices_rss_entries, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :guid, :string, null: false
@@ -34,9 +34,9 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :pub_date, :utc_datetime, null: false
     end
 
-    create unique_index(:rss_entries, [:guid])
+    create unique_index(:slices_rss_entries, [:guid])
 
-    create table(:rss_channel_descriptions, primary_key: false) do
+    create table(:slices_rss_channel_descriptions, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false
@@ -45,7 +45,7 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :image, :map
     end
 
-    create table(:html_preview_cards, primary_key: false) do
+    create table(:slices_html_preview_cards, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false
@@ -58,9 +58,9 @@ defmodule MediaWatch.Repo.Migrations.AddSlices do
       add :date, :utc_datetime, null: false
     end
 
-    create unique_index(:html_preview_cards, [:title, :date, :type])
+    create unique_index(:slices_html_preview_cards, [:title, :date, :type])
 
-    create table(:open_graphs, primary_key: false) do
+    create table(:slices_open_graphs, primary_key: false) do
       add :id, references(:slices, column: :id, on_delete: :delete_all), primary_key: true
 
       add :title, :string, null: false

@@ -7,7 +7,7 @@ defmodule MediaWatch.Parsing.Slice.HtmlPreviewCard do
   @all_fields @required_fields ++ @optional_fields
   @valid_types [:replay, :excerpt, :excerpt_short, :article, :reference_page]
 
-  schema "html_preview_cards" do
+  schema "slices_html_preview_cards" do
     field :title, :string
     field :text, :string
     field :type, Ecto.Enum, values: @valid_types

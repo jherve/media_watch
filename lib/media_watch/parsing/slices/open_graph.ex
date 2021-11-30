@@ -6,7 +6,7 @@ defmodule MediaWatch.Parsing.Slice.OpenGraph do
   @optional_fields [:type, :description]
   @all_fields @required_fields ++ @optional_fields
 
-  schema "open_graphs" do
+  schema "slices_open_graphs" do
     field :title, :string
     field :type, :string
     field :url, :string

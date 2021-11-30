@@ -6,7 +6,7 @@ defmodule MediaWatch.Parsing.Slice.RssEntry do
   @optional_fields [:link]
   @all_fields @required_fields ++ @optional_fields
 
-  schema "rss_entries" do
+  schema "slices_rss_entries" do
     field :guid, :string
     field :title, :string
     field :description, :string

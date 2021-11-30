@@ -9,7 +9,7 @@ defmodule MediaWatch.Analysis.Description do
   @optional_fields [:link, :image]
   @all_fields @required_fields ++ @optional_fields
 
-  schema "descriptions" do
+  schema "item_descriptions" do
     belongs_to :item, Item
 
     field :title, :string
@@ -33,7 +33,8 @@ defmodule MediaWatch.Analysis.Description do
         {:error,
          cs = %{
            errors: [
-             item_id: {_, [constraint: :unique, constraint_name: "descriptions_item_id_index"]}
+             item_id:
+               {_, [constraint: :unique, constraint_name: "item_descriptions_item_id_index"]}
            ]
          }},
         repo

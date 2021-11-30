@@ -87,7 +87,8 @@ defmodule MediaWatch.Parsing.Slice do
            changes: %{
              rss_entry: %{
                errors: [
-                 guid: {_, [constraint: :unique, constraint_name: "rss_entries_guid_index"]}
+                 guid:
+                   {_, [constraint: :unique, constraint_name: "slices_rss_entries_guid_index"]}
                ]
              }
            }
@@ -106,7 +107,7 @@ defmodule MediaWatch.Parsing.Slice do
                    {_,
                     [
                       constraint: :unique,
-                      constraint_name: "html_preview_cards_title_date_type_index"
+                      constraint_name: "slices_html_preview_cards_title_date_type_index"
                     ]}
                ]
              }

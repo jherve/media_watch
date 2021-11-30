@@ -2,7 +2,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
   use Ecto.Migration
 
   def change do
-    create table(:descriptions, primary_key: false) do
+    create table(:item_descriptions, primary_key: false) do
       add :item_id, references(:catalog_items, column: :id, on_delete: :delete_all),
         primary_key: true
 
@@ -41,7 +41,8 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
           """
         }
 
-      add :description_id, references(:descriptions, column: :item_id, on_delete: :delete_all)
+      add :description_id,
+          references(:item_descriptions, column: :item_id, on_delete: :delete_all)
 
       add :slice_id, references(:slices, column: :id, on_delete: :delete_all), null: false
     end

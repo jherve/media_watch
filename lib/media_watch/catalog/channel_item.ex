@@ -6,7 +6,7 @@ defmodule MediaWatch.Catalog.ChannelItem do
   @primary_key false
   @fields [:channel_id, :item_id]
 
-  schema "channel_items" do
+  schema "catalog_channel_items" do
     belongs_to :item, Item, primary_key: true
     belongs_to :channel, Channel, primary_key: true
   end
@@ -22,7 +22,11 @@ defmodule MediaWatch.Catalog.ChannelItem do
   def is_unique_error?(%{
         errors: [
           channel_id:
-            {_, [constraint: :unique, constraint_name: "channel_items_channel_id_item_id_index"]}
+            {_,
+             [
+               constraint: :unique,
+               constraint_name: "catalog_channel_items_channel_id_item_id_index"
+             ]}
         ]
       }),
       do: true
