@@ -5,6 +5,10 @@ body {
   min-height: 99vh;
 }
 
+body > header {
+  font-size: 0.9rem;
+}
+
 body > header ul.navbar {
   list-style: none;
   display: flex;

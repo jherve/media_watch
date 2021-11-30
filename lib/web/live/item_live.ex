@@ -18,7 +18,7 @@ defmodule MediaWatchWeb.ItemLive do
        css_page_id: "item-detail",
        item: item,
        description: item.description,
-       occurrences: Analysis.list_show_occurrences(id),
+       occurrences: Analysis.list_show_occurrences(item_id: id),
        display_admin?: false
      )}
   end

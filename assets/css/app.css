@@ -12,6 +12,7 @@
 @import "show-occurrence-list.css";
 @import "invitation.css";
 
+@import "pages/home.css";
 @import "pages/changelog.css";
 @import "pages/item-index.css";
 @import "pages/item.css";

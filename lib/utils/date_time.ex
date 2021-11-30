@@ -30,4 +30,18 @@ defmodule MediaWatch.DateTime do
     dt = date |> Timex.to_datetime(tz)
     dt |> into_day_slot()
   end
+
+  def week_slot(dt = %DateTime{}),
+    do: {dt |> Timex.beginning_of_week(), dt |> Timex.end_of_week()}
+
+  def current_week_slot(), do: DateTime.utc_now() |> week_slot()
+
+  def past_week_slot(),
+    do: DateTime.utc_now() |> Timex.subtract(Timex.Duration.from_weeks(1)) |> week_slot()
+
+  def month_slot(dt = %DateTime{}),
+    do: {dt |> Timex.beginning_of_month(), dt |> Timex.end_of_month()}
+
+  def current_month_slot(), do: DateTime.utc_now() |> month_slot()
+  def last_month_slot(), do: DateTime.utc_now() |> Timex.shift(months: -1) |> month_slot()
 end

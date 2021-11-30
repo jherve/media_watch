@@ -26,7 +26,7 @@ defmodule MediaWatchWeb.Router do
     pipe_through :browser
 
     live_session :default, on_mount: MediaWatchWeb.Auth do
-      live "/", PageLive, :index
+      live "/", HomeLive, :index
       live "/changes", ChangelogLive, :index
       live "/items", ItemIndexLive, :index
       live "/items/:id", ItemLive, :detail

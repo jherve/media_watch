@@ -1,8 +1,8 @@
 <main {MediaWatchWeb.LayoutView.main_css_attributes(assigns)}>
   <%= for level <- [:info, :error] do %>
-    <p {MediaWatchWeb.LayoutView.flash_css_attributes(level)}
+    <span {MediaWatchWeb.LayoutView.flash_css_attributes(level)}
       phx-click="lv:clear-flash"
-      phx-value-key={level}><%= live_flash(@flash, level) %></p>
+      phx-value-key={level}><%= live_flash(@flash, level) %></span>
   <% end %>
 
   <%= @inner_content %>

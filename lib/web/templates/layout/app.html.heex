@@ -1,6 +1,6 @@
 <main {MediaWatchWeb.LayoutView.main_css_attributes(assigns)}>
   <%= for level <- [:info, :error] do %>
-    <p {MediaWatchWeb.LayoutView.flash_css_attributes(level)}><%= get_flash(@conn, level) %></p>
+    <span {MediaWatchWeb.LayoutView.flash_css_attributes(level)}><%= get_flash(@conn, level) %></span>
   <% end %>
   <%= @inner_content %>
 </main>

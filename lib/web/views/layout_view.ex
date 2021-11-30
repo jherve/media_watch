@@ -14,6 +14,7 @@ defmodule MediaWatchWeb.LayoutView do
 
   defp navigation_items(conn),
     do: [
+      {"Accueil", Routes.home_path(conn, :index)},
       {"Emissions", Routes.item_index_path(conn, :index)},
       {"Par date", Routes.show_occurrence_index_path(conn, :index)},
       {"Personnes", Routes.person_index_path(conn, :index)}

@@ -61,8 +61,7 @@ defmodule MediaWatch.Analysis do
     |> Repo.all()
   end
 
-  @spec list_show_occurrences(integer()) :: [ShowOccurrence.t()]
-  def list_show_occurrences(item_id),
+  def list_show_occurrences(item_id: item_id),
     do:
       from([so, _, i] in show_occurrence_query(),
         preload: [:detail, :guests, show: [item: :description]],
@@ -70,6 +69,15 @@ defmodule MediaWatch.Analysis do
         order_by: [desc: so.airing_time]
       )
       |> Repo.all()
+
+  def list_show_occurrences(latest: latest) do
+    from([so, s, i] in show_occurrence_query(),
+      preload: [:detail, :guests, show: [item: :description]],
+      order_by: [{:desc, so.airing_time}, i.id],
+      limit: ^latest
+    )
+    |> Repo.all()
+  end
 
   @spec list_show_occurrences(DateTime.t(), DateTime.t()) :: [ShowOccurrence.t()]
   def list_show_occurrences(dt_start = %DateTime{}, dt_end = %DateTime{}) do
@@ -99,6 +107,37 @@ defmodule MediaWatch.Analysis do
         join: i in Item,
         on: s.id == i.id,
         preload: [show: {s, item: i}]
+      )
+
+  def list_persons_by_invitations_count(date_or_slot, limit \\ 10)
+
+  def list_persons_by_invitations_count(date = %DateTime{}, limit),
+    do:
+      from([show_occurrence: so] in query_persons_by_invitations_count(),
+        where: so.airing_time >= ^date,
+        limit: ^limit
+      )
+      |> Repo.all()
+
+  def list_persons_by_invitations_count({start_ = %DateTime{}, end_ = %DateTime{}}, limit),
+    do:
+      from([show_occurrence: so] in query_persons_by_invitations_count(),
+        where: so.airing_time >= ^start_ and so.airing_time <= ^end_,
+        limit: ^limit
+      )
+      |> Repo.all()
+
+  defp query_persons_by_invitations_count(),
+    do:
+      from(soi in Invitation,
+        join: p in Person,
+        on: p.id == soi.person_id,
+        join: so in ShowOccurrence,
+        as: :show_occurrence,
+        on: soi.show_occurrence_id == so.id,
+        group_by: p.id,
+        select: %{person: p, count: count(soi.id)},
+        order_by: {:desc, count(soi.id)}
       )
 
   def run_occurrence_pipeline(slice, module),

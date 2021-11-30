@@ -1,0 +1,76 @@
+#home > h1 {
+  font-size: 2rem;
+  margin: 1em 0;
+}
+
+#home > p {
+  margin: 1em 0;
+}
+
+#home > p a {
+  text-decoration: underline;
+  color: blue;
+}
+
+#lists-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-flow: dense;
+  gap: 2em;
+}
+
+#lists-grid > * > h2 {
+  font-size: 1.5rem;
+  margin: 1em 0;
+}
+
+#latest-shows {
+  order: 5;
+}
+
+@media screen and (min-width: 641px) {
+  #lists-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  #latest-shows {
+    max-width: 40vw;
+  }
+}
+
+#home article.show-occurrence {
+  grid-template-columns: 1fr 2fr;
+}
+
+#home article.show-occurrence p {
+  visibility: hidden;
+  position: absolute;
+}
+
+#home article.show-occurrence .image {
+  grid-area: 1/1/-1/2;
+  align-self: center;
+}
+
+#home article.show-occurrence .footer {
+  grid-area: 4/2/5/-1;
+}
+
+#home article.show-occurrence h1 {
+  grid-area: 1/2/2/-1;
+}
+
+#home ol.persons-top {
+  max-width: 60ch;
+}
+
+#home ol.persons-top > li {
+  display: grid;
+  grid-template-columns: 1fr min-content;
+  padding: 0.2em 0;
+}
+#home ol.persons-top > li:nth-child(2n) {
+  background: #eee;
+}
+#home ol.persons-top > li:nth-child(2n+1) {
+  background: #ccc;
+}
