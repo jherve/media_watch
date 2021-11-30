@@ -7,7 +7,8 @@ import Config
 # Run `mix help test` for more information.
 config :media_watch, MediaWatch.Repo,
   database: "db-test.sqlite",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  migration_source: "_migrations"
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

@@ -47,7 +47,8 @@ if config_env() == :prod do
   config :media_watch, MediaWatch.Repo,
     database: "db.sqlite",
     busy_timeout: 0,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    migration_source: "_migrations"
 
   config :media_watch, MediaWatch.Spacy, host: spacy_host, port: spacy_port
 end

@@ -1,7 +1,10 @@
 import Config
 
 # Configure your database
-config :media_watch, MediaWatch.Repo, database: "db.sqlite", busy_timeout: 0
+config :media_watch, MediaWatch.Repo,
+  database: "db.sqlite",
+  busy_timeout: 0,
+  migration_source: "_migrations"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
