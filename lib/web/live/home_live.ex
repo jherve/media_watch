@@ -5,14 +5,8 @@ defmodule MediaWatchWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {current_month_start, _} = current_month_slot = DateTime.current_month_slot()
-    {last_month_start, _} = last_month_slot = DateTime.last_month_slot()
-
-    current_month_name =
-      current_month_start |> MediaWatch.Cldr.Date.to_string!(format: "LLLL", locale: "fr")
-
-    last_month_name =
-      last_month_start |> MediaWatch.Cldr.Date.to_string!(format: "LLLL", locale: "fr")
+    current_month_slot = DateTime.current_month_slot()
+    last_month_slot = DateTime.last_month_slot()
 
     {:ok,
      socket
@@ -23,11 +17,10 @@ defmodule MediaWatchWeb.HomeLive do
        current_week_top:
          DateTime.current_week_slot() |> Analysis.list_persons_by_invitations_count(),
        last_week_top: DateTime.past_week_slot() |> Analysis.list_persons_by_invitations_count(),
-       current_month_top:
-         DateTime.current_month_slot() |> Analysis.list_persons_by_invitations_count(),
-       last_month_top: DateTime.last_month_slot() |> Analysis.list_persons_by_invitations_count(),
-       current_month_name: current_month_name,
-       last_month_name: last_month_name
+       current_month_top: current_month_slot |> Analysis.list_persons_by_invitations_count(),
+       last_month_top: last_month_slot |> Analysis.list_persons_by_invitations_count(),
+       current_month_name: current_month_slot |> DateTime.to_month_name(),
+       last_month_name: last_month_slot |> DateTime.to_month_name()
      )}
   end
 

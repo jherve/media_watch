@@ -44,4 +44,7 @@ defmodule MediaWatch.DateTime do
 
   def current_month_slot(), do: DateTime.utc_now() |> month_slot()
   def last_month_slot(), do: DateTime.utc_now() |> Timex.shift(months: -1) |> month_slot()
+
+  def to_month_name(_month_slot = {month_start, _}, locale \\ "fr"),
+    do: month_start |> MediaWatch.Cldr.Date.to_string!(format: "LLLL", locale: locale)
 end
