@@ -6,6 +6,7 @@
   display: grid;
   grid-template-areas: "header"
   "channel"
+  "schedule"
   "image"
   "content"
   "link";
@@ -15,6 +16,7 @@
 @media screen and (min-width: 641px) {
   #item-detail #item-banner {
     grid-template-areas: "header channel"
+    ". schedule"
     ". link"
     "content image";
     grid-template-columns: 1fr 25vw;
@@ -27,6 +29,11 @@
 }
 #item-banner .channel {
   grid-area: channel;
+  font-weight: lighter;
+  justify-self: end;
+}
+#item-banner .schedule {
+  grid-area: schedule;
   font-weight: lighter;
   justify-self: end;
 }
