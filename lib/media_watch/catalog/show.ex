@@ -4,7 +4,7 @@ defmodule MediaWatch.Catalog.Show do
   alias MediaWatch.Catalog.Item
   alias MediaWatch.Analysis.ShowOccurrence
   alias __MODULE__, as: Show
-  @required_fields [:name, :url, :airing_schedule, :duration_minutes, :host_names]
+  @required_fields [:name, :url, :airing_schedule, :duration, :host_names]
   @optional_fields [:alternate_hosts, :columnists]
   @all_fields @required_fields ++ @optional_fields
 
@@ -12,7 +12,7 @@ defmodule MediaWatch.Catalog.Show do
     field :name, :string
     field :url, :string
     field :airing_schedule, Crontab.CronExpression.Ecto.Type
-    field :duration_minutes, :integer
+    field :duration, :integer
     field :host_names, {:array, :string}
     field :alternate_hosts, {:array, :string}
     field :columnists, {:array, :string}
