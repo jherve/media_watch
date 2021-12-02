@@ -33,16 +33,19 @@ defmodule MediaWatch.Catalog do
       |> Repo.one()
 
   def show_id_from_source_id(source_id),
+    do: from([s, _, _] in query_show_from_source(source_id), select: s.id) |> Repo.one()
+
+  def show_from_source_id(source_id), do: query_show_from_source(source_id) |> Repo.one()
+
+  defp query_show_from_source(source_id),
     do:
       from(s in Show,
         join: i in Item,
         on: i.id == s.id,
         join: so in Source,
         on: so.item_id == i.id,
-        where: so.id == ^source_id,
-        select: s.id
+        where: so.id == ^source_id
       )
-      |> Repo.one()
 
   def item_id_from_source_id(source_id),
     do:

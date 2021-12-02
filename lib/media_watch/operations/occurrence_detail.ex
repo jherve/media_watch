@@ -1,5 +1,6 @@
 defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
-  alias MediaWatch.{Repo, OperationWithRetry}
+  alias MediaWatch.{Catalog, Repo, OperationWithRetry}
+  alias MediaWatch.Catalog.Show
   alias MediaWatch.Parsing.Slice
   alias MediaWatch.Analysis.ShowOccurrence
   alias MediaWatch.Analysis.ShowOccurrence.Detail
@@ -13,6 +14,7 @@ defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
   @type t :: %OccurrenceDetailOperation{
           occurrence: ShowOccurrence.t(),
           slice: Slice.t(),
+          show: Show.t(),
           detail: Detail.t() | nil,
           detail_created?: boolean() | nil,
           retry_strategy: OperationWithRetry.retry_strategy_fun(),
@@ -23,6 +25,7 @@ defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
   defstruct [
     :occurrence,
     :slice,
+    :show,
     :detail_cs,
     :detail,
     :detail_created?,
@@ -35,7 +38,8 @@ defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
     do:
       %OccurrenceDetailOperation{
         occurrence: occurrence |> Repo.preload(@preloads),
-        slice: slice |> Repo.preload(Slice.preloads())
+        slice: slice |> Repo.preload(Slice.preloads()),
+        show: slice.source_id |> Catalog.show_from_source_id()
       }
       |> set_retry_strategy(&default_strategy/2)
       |> OperationWithRetry.init_retries(@errors_with_retry)
@@ -47,13 +51,18 @@ defmodule MediaWatch.Analysis.OccurrenceDetailOperation do
         operation = %OccurrenceDetailOperation{
           occurrence: occurrence,
           slice: slice,
+          show: show,
           detail_cs: nil
         }
       ) do
     %{
       operation
       | detail_cs:
-          slice |> Detail.attrs_from_slice() |> Map.put(:id, occurrence.id) |> Detail.changeset()
+          slice
+          |> Detail.attrs_from_slice()
+          |> Map.put(:id, occurrence.id)
+          |> Map.put(:duration, show.duration)
+          |> Detail.changeset()
     }
     |> run()
   end

@@ -9,7 +9,7 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
   @behaviour OperationWithRetry
   @errors_with_retry [:database_busy]
   @max_db_retries 20
-  @preloads [:detail, slices: Slice.preloads()]
+  @preloads [:detail, :show, slices: Slice.preloads()]
 
   @type error_reason :: :max_db_retries
   @type t :: %GuestDetectionOperation{
@@ -52,10 +52,20 @@ defmodule MediaWatch.Analysis.GuestDetectionOperation do
          }
        ) do
     with list_of_attrs <- recognisable.get_guests_attrs(occ, hosted),
-         cs_list <- Invitation.get_guests_cs(occ, list_of_attrs) do
+         with_duration <- list_of_attrs |> Enum.map(&set_duration(&1, occ)),
+         cs_list <- Invitation.get_guests_cs(occ, with_duration) do
       %{operation | guests_cs: cs_list}
     end
   end
+
+  defp set_duration(attrs, %{show: %{main_guest_duration: duration}}) when not is_nil(duration),
+    do: attrs |> Map.put(:duration, duration)
+
+  defp set_duration(attrs, %{show: %{detail: %{duration: duration}}}),
+    do: attrs |> Map.put(:duration, duration)
+
+  defp set_duration(attrs, %{show: %{duration: duration}}),
+    do: attrs |> Map.put(:duration, duration)
 
   defp do_insertion(operation = %GuestDetectionOperation{guests_cs: guests_cs})
        when is_list(guests_cs) do

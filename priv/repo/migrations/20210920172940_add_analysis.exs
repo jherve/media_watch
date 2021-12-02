@@ -31,6 +31,7 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
       add :title, :string, null: false
       add :description, :string
       add :link, :string
+      add :duration, :integer, null: false
     end
 
     create table(:slices_usages) do

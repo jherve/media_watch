@@ -5,7 +5,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Detail do
   alias MediaWatch.Analysis.ShowOccurrence
   alias __MODULE__, as: Detail
   @primary_key false
-  @required_fields [:title, :id]
+  @required_fields [:title, :id, :duration]
   @optional_fields [:link, :description]
   @all_fields @required_fields ++ @optional_fields
 
@@ -14,6 +14,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Detail do
     field :title, :string
     field :description, :string
     field :link, :string
+    field :duration, :integer
   end
 
   @doc false

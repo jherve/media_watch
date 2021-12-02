@@ -31,6 +31,8 @@ defmodule MediaWatch.Repo.Migrations.AddWatchedItems do
       add :url, :string, null: false
       add :airing_schedule, :map, null: false
       add :duration, :integer, null: false
+      add :main_guest_duration, :integer
+      add :secondary_guest_duration, :integer
       add :host_names, {:array, :string}, null: false
       add :alternate_hosts, {:array, :string}, default: []
       add :columnists, {:array, :string}, default: []

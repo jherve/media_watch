@@ -5,10 +5,12 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   alias MediaWatch.Catalog.Person
   alias MediaWatch.Analysis.ShowOccurrence
   alias __MODULE__, as: Invitation
+  @optional_fields [:duration]
 
   schema "show_occurrences_invitations" do
     belongs_to :person, Person
     belongs_to :show_occurrence, ShowOccurrence
+    field :duration, :integer
     field :auto?, :boolean
     field :verified?, :boolean
 
@@ -18,7 +20,7 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
   @doc false
   def changeset(invite \\ %Invitation{}, attrs) do
     invite
-    |> cast(attrs, [])
+    |> cast(attrs, @optional_fields)
     |> cast_assoc(:person, required: true)
     |> cast_assoc(:show_occurrence, required: true)
     |> unique_constraint([:person_id, :show_occurrence_id])
@@ -64,9 +66,11 @@ defmodule MediaWatch.Analysis.ShowOccurrence.Invitation do
 
   defp rescue_error_on_person(cs = %Ecto.Changeset{changes: %{person: person_cs}}, repo) do
     with {_, occ} <- cs |> fetch_field(:show_occurrence),
+         {_, duration} <- cs |> fetch_field(:duration),
          person when not is_nil(person) <- Person.get_existing_person_from_cs!(person_cs, repo) do
       {:error,
-       {:person_exists, changeset(%Invitation{show_occurrence: occ, person: person}, %{})}}
+       {:person_exists,
+        changeset(%Invitation{show_occurrence: occ, person: person, duration: duration}, %{})}}
     end
   end
 
