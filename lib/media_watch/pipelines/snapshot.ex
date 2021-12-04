@@ -37,11 +37,12 @@ defmodule MediaWatch.Snapshots.SnapshotPipeline do
         :slicing
       ) do
     case Parsing.slice(parsed, module) do
-      {:ok, new_slices} ->
-        progress |> Map.put(:slices, new_slices) |> run(pipeline, :entity_recognition)
+      {:ok, ok, _} ->
+        progress |> Map.put(:slices, ok) |> run(pipeline, :entity_recognition)
 
-      {:error, e} ->
-        {:error, :slicing, e}
+      {:error, ok, _, errors} ->
+        Logger.warning("#{errors |> Enum.count()} errors on slices insertion in #{module}")
+        progress |> Map.put(:slices, ok) |> run(pipeline, :entity_recognition)
     end
   end
 

@@ -12,17 +12,10 @@ defmodule MediaWatch.Parsing do
       |> ParsingOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
       |> ParsingOperation.run()
 
-  def slice(_parsed = %{id: id}, sliceable) do
-    case get(id)
-         |> SlicingOperation.new(sliceable)
-         |> SlicingOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
-         |> SlicingOperation.run() do
-      {:ok, ok, _} ->
-        {:ok, ok}
-
-      {:error, ok, _, errors} ->
-        Logger.warning("#{errors |> Enum.count()} errors on slices insertion in #{sliceable}")
-        {:ok, ok}
-    end
-  end
+  def slice(_parsed = %{id: id}, sliceable),
+    do:
+      get(id)
+      |> SlicingOperation.new(sliceable)
+      |> SlicingOperation.set_retry_strategy(fn :database_busy, _ -> :retry_exp end)
+      |> SlicingOperation.run()
 end
