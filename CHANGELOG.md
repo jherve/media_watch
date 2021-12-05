@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0 (2021-12-05)
+
+* UI: Add a welcome page with various info summaries
+* UI: Add an icon to display invitation confirmation status
+* UI: Make the invitations' edit interface nicer
+* UI: Display show schedule in "human language" (e.g. "on weekdays, at 7.30")
+* Fix: When showing show occurrences for a given person, all the invitations are now displayed
+* Fix: Snapshots that do not produce any new slice are now retried, which should
+ensure more reliability for shows that publish their information rather late
+* [BREAKING] Feature: Keep track of show occurrence and invitation duration
+* [BREAKING] Internals: Rename some tables and add some fields that might eventually be useful
+
 ## 1.6.0 (2021-11-28)
 
 * UI: Get rid of all "default" CSS and improve site design
