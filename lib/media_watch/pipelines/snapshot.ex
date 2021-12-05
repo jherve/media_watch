@@ -1,6 +1,7 @@
 defmodule MediaWatch.Snapshots.SnapshotPipeline do
   require Logger
-  alias MediaWatch.{Snapshots, Parsing, Analysis}
+  alias Ecto.Multi
+  alias MediaWatch.{Repo, Snapshots, Parsing, Analysis}
   alias MediaWatch.Catalog.Source
   alias __MODULE__
   defstruct [:source, :module]
@@ -37,6 +38,14 @@ defmodule MediaWatch.Snapshots.SnapshotPipeline do
         :slicing
       ) do
     case Parsing.slice(parsed, module) do
+      {:ok, [], _} ->
+        progress |> revert()
+        {:error, :slicing, :no_new_slice}
+
+      {:error, [], _, _errors} ->
+        progress |> revert()
+        {:error, :slicing, :no_new_slice}
+
       {:ok, ok, _} ->
         progress |> Map.put(:slices, ok) |> run(pipeline, :entity_recognition)
 
@@ -65,4 +74,19 @@ defmodule MediaWatch.Snapshots.SnapshotPipeline do
        entities: progress.entities
      }}
   end
+
+  defp revert(result) do
+    case do_revert(result) do
+      {:ok, _} -> :ok
+      {:error, :database_busy} -> do_revert(result)
+      e = {:error, _, _, _} -> e
+    end
+  end
+
+  defp do_revert(%{snapshot: snapshot, parsed_snapshot: parsed_snapshot}),
+    do:
+      Multi.new()
+      |> Multi.delete(:parsed, parsed_snapshot)
+      |> Multi.delete(:snapshot, snapshot)
+      |> Repo.safe_transaction()
 end

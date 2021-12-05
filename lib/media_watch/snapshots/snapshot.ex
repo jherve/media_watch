@@ -40,6 +40,14 @@ defmodule MediaWatch.Snapshots.Snapshot do
 
   def preloads(), do: @preloads
 
+  def explain_error({:error, %Ecto.Changeset{errors: [], changes: %{xml: xml}}}),
+    do: {:error, xml |> Xml.explain_error()}
+
+  def explain_error({:error, %Ecto.Changeset{errors: [], changes: %{html: html}}}),
+    do: {:error, html |> Html.explain_error()}
+
+  def explain_error(e = {:error, %Ecto.Changeset{}}), do: e
+
   defp set_type(cs) do
     cond do
       has_field?(cs, :xml) -> cs |> put_change(:type, :xml)

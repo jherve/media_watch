@@ -1,5 +1,6 @@
 defmodule MediaWatch.Snapshots.SnapshotOperation do
   alias MediaWatch.{Snapshots, Repo, OperationWithRetry}
+  alias MediaWatch.Snapshots.Snapshot
   alias MediaWatch.Catalog.Source
   alias __MODULE__
   @behaviour OperationWithRetry
@@ -39,7 +40,7 @@ defmodule MediaWatch.Snapshots.SnapshotOperation do
     case cs |> Repo.safe_insert() do
       ok = {:ok, _snap} -> ok
       {:error, :database_busy} -> operation |> OperationWithRetry.maybe_retry(:database_busy)
-      e = {:error, %Ecto.Changeset{}} -> e
+      e = {:error, %Ecto.Changeset{}} -> e |> Snapshot.explain_error()
     end
   end
 

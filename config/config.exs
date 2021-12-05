@@ -46,6 +46,8 @@ config :esbuild,
 
 config :media_watch, MediaWatch.Auth, open_bar_admin?: false
 
+config :media_watch, MediaWatch.Catalog.SourceWorker, no_slice_retry_period: 5 * 60 * 1_000
+
 import_config "inventory.exs"
 
 # Import environment specific config. This must remain at the bottom

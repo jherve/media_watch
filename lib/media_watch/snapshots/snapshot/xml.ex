@@ -24,4 +24,15 @@ defmodule MediaWatch.Snapshots.Snapshot.Xml do
 
   def parse_snapshot(%Xml{content: content}), do: content |> RssFeed.parse()
   def prune_snapshot(parsed_data) when is_map(parsed_data), do: parsed_data |> RssFeed.prune()
+
+  def explain_error(cs = %Ecto.Changeset{errors: errors}) do
+    if errors |> Enum.any?(&has_same_content?/1), do: :unique_content, else: cs
+  end
+
+  defp has_same_content?(
+         {:content, {_, [constraint: :unique, constraint_name: "snapshots_xml_content_index"]}}
+       ),
+       do: true
+
+  defp has_same_content?(_), do: false
 end
