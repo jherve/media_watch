@@ -1,6 +1,6 @@
 #changelog > h1 {
   font-size: 2rem;
-  margin-top: 1em;
+  margin: 1em 0;
 }
 
 #changelog > h2 {
@@ -11,4 +11,14 @@
 #changelog > ul {
   margin-inline-start: 1.5em;
   list-style: disc;
+}
+
+#changelog li {
+  line-height: 1.25em;
+  margin: 0.25em;
+}
+
+#changelog a {
+  text-decoration: underline;
+  color: blue;
 }
