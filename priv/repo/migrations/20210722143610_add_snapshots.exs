@@ -6,24 +6,20 @@ defmodule MediaWatch.Repo.Migrations.AddSnapshots do
       add :source_id, references(:catalog_sources, column: :id, on_delete: :delete_all)
       add :url, :string, null: false
       add :type, :string, null: false
+      add :content_hash, :string, null: false
       timestamps(type: :utc_datetime)
     end
+
+    create unique_index(:snapshots, [:source_id, :content_hash])
 
     create table(:snapshots_xml, primary_key: false) do
       add :id, references(:snapshots, column: :id, on_delete: :delete_all), primary_key: true
       add :content, :string, null: false
     end
 
-    # This should ideally be a trigger that checks uniqueness on content + source_id
-    # (from snapshots table) but it's highly unlikely that two distinct sources
-    # produce exactly the same snapshot.
-    create unique_index(:snapshots_xml, [:content])
-
     create table(:snapshots_html, primary_key: false) do
       add :id, references(:snapshots, column: :id, on_delete: :delete_all), primary_key: true
       add :content, :string, null: false
     end
-
-    create unique_index(:snapshots_html, [:content])
   end
 end

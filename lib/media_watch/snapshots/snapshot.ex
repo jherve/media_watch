@@ -13,12 +13,13 @@ defmodule MediaWatch.Snapshots.Snapshot do
   alias MediaWatch.Catalog.Source
   alias MediaWatch.Snapshots.Snapshot.{Xml, Html}
   alias __MODULE__, as: Snapshot
-  @required_fields [:type, :url]
+  @required_fields [:type, :url, :content_hash]
   @preloads [:source, :xml, :html]
 
   schema "snapshots" do
     field :url, :string
     field :type, Ecto.Enum, values: [:xml, :html]
+    field :content_hash, :string
 
     belongs_to :source, Source
     has_one :xml, Xml, foreign_key: :id
@@ -35,18 +36,24 @@ defmodule MediaWatch.Snapshots.Snapshot do
     |> cast_assoc(:xml)
     |> cast_assoc(:html)
     |> set_type()
+    |> set_hash()
     |> validate_required(@required_fields)
+    |> unique_constraint([:source_id, :content_hash])
   end
 
   def preloads(), do: @preloads
 
-  def explain_error({:error, %Ecto.Changeset{errors: [], changes: %{xml: xml}}}),
-    do: {:error, xml |> Xml.explain_error()}
+  def explain_error(e = {:error, %Ecto.Changeset{errors: errors}}) do
+    if errors |> Enum.any?(&has_same_content?/1), do: {:error, :unique_content}, else: e
+  end
 
-  def explain_error({:error, %Ecto.Changeset{errors: [], changes: %{html: html}}}),
-    do: {:error, html |> Html.explain_error()}
+  defp has_same_content?(
+         {:source_id,
+          {_, [constraint: :unique, constraint_name: "snapshots_source_id_content_hash_index"]}}
+       ),
+       do: true
 
-  def explain_error(e = {:error, %Ecto.Changeset{}}), do: e
+  defp has_same_content?(_), do: false
 
   defp set_type(cs) do
     cond do
@@ -62,4 +69,16 @@ defmodule MediaWatch.Snapshots.Snapshot do
       _ -> false
     end
   end
+
+  defp set_hash(cs) do
+    content =
+      case cs |> apply_changes() do
+        %{xml: %{content: content}} -> content
+        %{html: %{content: content}} -> content
+      end
+
+    cs |> put_change(:content_hash, md5sum(content))
+  end
+
+  defp md5sum(data), do: :crypto.hash(:md5, data |> :erlang.term_to_binary()) |> Base.encode64()
 end
