@@ -15,8 +15,6 @@ defmodule MediaWatch.DateTime do
   def default_tz(), do: @default_tz
   def into_tz(dt, tz), do: dt |> Timex.Timezone.convert(tz)
 
-  def extract_tz(dt), do: dt |> Timex.TimezoneInfo.from_datetime()
-
   def parse_date(string, pattern \\ "{YYYY}-{0M}-{0D}") when is_binary(string),
     do: string |> Timex.parse(pattern)
 

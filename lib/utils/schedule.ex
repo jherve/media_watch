@@ -17,17 +17,10 @@ defmodule MediaWatch.Schedule do
   def get_time_slot!(cron = %CronExpression{}, %DateTime{}),
     do: raise("Can not figure out time slot from expression `#{inspect(cron)}`")
 
-  def get_airing_time(cron = %CronExpression{}, dt = %DateTime{}) do
-    tz = dt |> MyDateTime.extract_tz()
-
-    with {start, end_} <- get_time_slot!(cron, dt),
-         {:ok, next_run} <-
-           cron |> Scheduler.get_next_run_date(start |> Timex.to_naive_datetime()),
-         -1 <- Timex.compare(next_run, end_) do
-      next_run |> Timex.to_datetime(tz)
-    else
-      1 -> {:error, :no_run_within_slot}
-    end
+  def get_airing_time(cron = %CronExpression{}, dt = %DateTime{time_zone: tz}) do
+    with {:ok, prev_run} <- cron |> Scheduler.get_previous_run_date(dt |> DateTime.to_naive()),
+         {:ok, dt} <- prev_run |> DateTime.from_naive(tz),
+         do: dt
   end
 
   def to_string(cron = %CronExpression{}, locale \\ "fr"),
