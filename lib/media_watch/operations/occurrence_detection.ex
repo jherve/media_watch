@@ -14,7 +14,6 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
           module: atom(),
           show_id: integer() | nil,
           slice_date: DateTime.t() | nil,
-          time_slot: Recurrent.time_slot() | nil,
           airing_time: DateTime.t() | nil,
           slice_usage_done?: boolean(),
           multi: Multi.t() | nil,
@@ -28,7 +27,6 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
     :module,
     :show_id,
     :slice_date,
-    :time_slot,
     :airing_time,
     :multi,
     :retries,
@@ -77,10 +75,9 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
   defp search_matching_slot(
          operation = %OccurrenceDetectionOperation{module: recurrent, slice_date: date}
        ) do
-    with time_slot <- date |> Recurrent.get_time_slot(recurrent),
-         airing_time when is_struct(airing_time, DateTime) <-
+    with airing_time when is_struct(airing_time, DateTime) <-
            Recurrent.get_airing_time(date, recurrent) do
-      %{operation | airing_time: airing_time, time_slot: time_slot}
+      %{operation | airing_time: airing_time}
     else
       e = {:error, :no_run_within_slot} -> e
     end
@@ -90,17 +87,10 @@ defmodule MediaWatch.Analysis.OccurrenceDetectionOperation do
          operation = %OccurrenceDetectionOperation{
            slice: %{id: slice_id},
            show_id: show_id,
-           airing_time: airing_time,
-           time_slot: {slot_start, slot_end}
+           airing_time: airing_time
          }
        ) do
-    occurrence_attrs = %{
-      show_id: show_id,
-      airing_time: airing_time,
-      slot_start: slot_start,
-      slot_end: slot_end
-    }
-
+    occurrence_attrs = %{show_id: show_id, airing_time: airing_time}
     slice_usage_attrs = %{slice_id: slice_id}
 
     multi =

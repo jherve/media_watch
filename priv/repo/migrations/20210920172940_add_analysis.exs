@@ -15,8 +15,6 @@ defmodule MediaWatch.Repo.Migrations.AddAnalysis do
     create table(:show_occurrences) do
       add :show_id, references(:catalog_shows, column: :id, on_delete: :delete_all), null: false
       add :airing_time, :utc_datetime, null: false
-      add :slot_start, :utc_datetime, null: false
-      add :slot_end, :utc_datetime, null: false
       add :manual_edited?, :boolean, default: false, null: false
 
       timestamps(type: :utc_datetime)

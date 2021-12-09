@@ -14,10 +14,4 @@ defmodule MediaWatch.Analysis.Recurrent do
     recurrent.get_airing_schedule()
     |> Schedule.get_airing_time(dt_tz)
   end
-
-  @spec get_time_slot(DateTime.t(), atom()) :: time_slot()
-  def get_time_slot(dt, recurrent) do
-    dt_tz = dt |> MediaWatch.DateTime.into_tz(recurrent.get_time_zone())
-    recurrent.get_airing_schedule() |> Schedule.get_time_slot!(dt_tz)
-  end
 end

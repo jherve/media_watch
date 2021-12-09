@@ -1,21 +1,9 @@
 defmodule MediaWatch.Schedule do
   alias Crontab.{CronExpression, Scheduler}
-  alias MediaWatch.DateTime, as: MyDateTime
 
   defguardp has_only_weekdays(cron)
             when is_struct(cron, CronExpression) and cron.day == [:*] and cron.month == [:*] and
                    cron.year == [:*]
-
-  def get_time_slot!(
-        %CronExpression{hour: [hour], minute: [minute], second: [second]},
-        dt = %DateTime{}
-      )
-      when not is_tuple(hour) and not is_tuple(minute) and not is_tuple(second) do
-    dt |> MyDateTime.into_day_slot()
-  end
-
-  def get_time_slot!(cron = %CronExpression{}, %DateTime{}),
-    do: raise("Can not figure out time slot from expression `#{inspect(cron)}`")
 
   def get_airing_time(cron = %CronExpression{}, dt = %DateTime{time_zone: tz}) do
     with {:ok, prev_run} <- cron |> Scheduler.get_previous_run_date(dt |> DateTime.to_naive()),

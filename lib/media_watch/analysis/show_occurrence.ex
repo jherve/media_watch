@@ -6,15 +6,13 @@ defmodule MediaWatch.Analysis.ShowOccurrence do
   alias MediaWatch.Catalog.Show
   alias MediaWatch.Analysis.{ShowOccurrence.Invitation, SliceUsage}
   alias __MODULE__, as: ShowOccurrence
-  @required_fields [:airing_time, :slot_start, :slot_end, :show_id]
+  @required_fields [:airing_time, :show_id]
   @optional_fields []
   @all_fields @required_fields ++ @optional_fields
 
   schema "show_occurrences" do
     belongs_to :show, Show, on_replace: :mark_as_invalid
     field :airing_time, :utc_datetime
-    field :slot_start, :utc_datetime
-    field :slot_end, :utc_datetime
     field :manual_edited?, :boolean
 
     has_one :detail, ShowOccurrence.Detail, foreign_key: :id
