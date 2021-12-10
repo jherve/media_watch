@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0 (2021-12-10)
+
+* Internals: Change computation of airing time
+* [BREAKING] Internals: Use a more precise and less costly unique index for snapshots
+
 ## 1.7.0 (2021-12-05)
 
 * UI: Add a welcome page with various info summaries
