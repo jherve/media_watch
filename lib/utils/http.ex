@@ -11,7 +11,7 @@ defmodule MediaWatch.Http do
       {:ok, %{body: body, status: 200}} ->
         {:ok, body}
 
-      {:ok, %{headers: headers, status: 301}} ->
+      {:ok, %{headers: headers, status: redirect}} when redirect in [301, 308] ->
         headers |> Map.new() |> Map.get("location") |> get_body
 
       {:ok, e = %{status: status}} when status >= 400 ->
